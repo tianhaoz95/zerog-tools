@@ -76,3 +76,9 @@ ln -s /Users/tianhaozhou/.gemini/config/plugins/science/skills/alphafold_databas
 
 ### 3. Creating Project-Scoped Rules
 To append workspace-specific style guidelines or rules that only apply when editing *this* repository, create a markdown file at `.agents/AGENTS.md` and document your custom directives.
+
+---
+
+## 📋 Workspace Rules
+
+- **AI Powered Badging**: Any AI-powered tool must be labeled with the "AI Powered" badge (`.tool-badge.ai`) in the main tools grid view. This check should be implemented dynamically in `src/main.js` (e.g., checking if the tool title starts with `"AI"` or its ID starts with `"ai-"`) so that any new AI-powered tools added to the metadata registry automatically receive the badge.
