@@ -1594,7 +1594,8 @@ h1, h2, h3, h4 {
   background-size: 20px 20px;
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
-.bg-remover-swatch {
+.bg-remover-swatch,
+.video-bg-swatch {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-xs);
@@ -1602,10 +1603,12 @@ h1, h2, h3, h4 {
   cursor: pointer;
   transition: var(--transition);
 }
-.bg-remover-swatch:hover {
+.bg-remover-swatch:hover,
+.video-bg-swatch:hover {
   transform: translateY(-2px);
 }
-.bg-remover-swatch.active {
+.bg-remover-swatch.active,
+.video-bg-swatch.active {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4);
 }

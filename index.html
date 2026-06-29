@@ -2181,6 +2181,93 @@ Supported browsers:
         </div>
       </main>
 
+      <!-- VIEW 35: AI VIDEO BACKGROUND SWAP (MODNet) -->
+      <main id="video-bg-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-video-bg-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Video Background Swap</h2>
+            <p>Upload a short clip and replace its background with a solid color or your own image using the MODNet matting model. Everything runs 100% locally and exports a WebM video.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select Source Video</label>
+              <div class="upload-box" id="video-bg-upload-container">
+                <div class="upload-icon">🎬</div>
+                <p>Drag &amp; drop a clip here, or <span>browse files</span></p>
+                <input type="file" id="video-bg-file-input" class="file-input" accept="video/*" />
+              </div>
+
+              <div id="video-bg-file-name" style="display: none; font-size: 0.85rem; color: var(--primary); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <div class="control-group" id="video-bg-options-group" style="display: none; flex-direction: column; gap: 0.75rem;">
+              <label>New Background</label>
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <div class="video-bg-swatch active" data-bg="#3b82f6" title="Blue" style="background-color: #3b82f6;"></div>
+                <div class="video-bg-swatch" data-bg="#10b981" title="Green Screen" style="background-color: #10b981;"></div>
+                <div class="video-bg-swatch" data-bg="#ffffff" title="White" style="background-color: #ffffff;"></div>
+                <div class="video-bg-swatch" data-bg="#000000" title="Black" style="background-color: #000000;"></div>
+                <label title="Custom color" style="display: inline-flex; align-items: center; cursor: pointer;">
+                  <input type="color" id="video-bg-custom-color" value="#ff6b6b" style="width: 28px; height: 28px; border: none; background: none; cursor: pointer; padding: 0;" />
+                </label>
+              </div>
+
+              <label style="margin-top: 0.25rem;">Or use a background image</label>
+              <input type="file" id="video-bg-image-input" class="input-custom" accept="image/*" style="font-size: 0.8rem;" />
+              <div id="video-bg-image-name" style="display: none; font-size: 0.8rem; color: var(--accent); font-weight: 500; word-break: break-all;"></div>
+
+              <div class="control-group" style="margin-top: 0.5rem;">
+                <label for="video-bg-fps">Processing Frame Rate</label>
+                <select id="video-bg-fps" class="input-custom">
+                  <option value="8">8 fps (fastest)</option>
+                  <option value="12" selected>12 fps (balanced)</option>
+                  <option value="15">15 fps</option>
+                  <option value="24">24 fps (smoothest, slow)</option>
+                </select>
+              </div>
+
+              <button class="btn-primary" id="btn-run-video-bg" style="width: 100%;" disabled>🎬 Swap Background</button>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">⚠️ Matting runs frame-by-frame on the CPU/GPU locally — keep clips short (a few seconds) for the best experience.</p>
+            </div>
+
+            <div class="control-group" id="video-bg-result-group" style="display: none; flex-direction: column; gap: 0.75rem;">
+              <label>Result</label>
+              <button class="btn-secondary" id="btn-download-video-bg" style="width: 100%;" disabled>⬇️ Download WebM</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
+            <div id="video-bg-loading-overlay" class="loading-overlay-custom" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-md);">
+              <div class="spinner"></div>
+              <div id="video-bg-loading-text" style="font-weight: 500; font-size: 0.9rem;">Loading MODNet model...</div>
+              <div id="video-bg-loading-progress" style="font-size: 0.8rem; color: var(--text-secondary);">0%</div>
+            </div>
+
+            <label>Source Clip</label>
+            <video id="video-bg-source-preview" controls muted playsinline style="display: none; max-width: 100%; max-height: 220px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #000;"></video>
+
+            <div id="video-bg-progress-wrap" style="display: none;">
+              <div style="height: 8px; width: 100%; background: var(--border); border-radius: 4px; overflow: hidden;">
+                <div id="video-bg-progress-bar" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.2s ease;"></div>
+              </div>
+              <div id="video-bg-progress-label" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem;">Frame 0 / 0</div>
+            </div>
+
+            <label>Live Composite Preview</label>
+            <div class="bg-checkerboard" style="position: relative; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+              <canvas id="video-bg-output-canvas" style="max-width: 100%; max-height: 320px; display: block;"></canvas>
+            </div>
+
+            <label>Swapped Result</label>
+            <video id="video-bg-result-video" controls playsinline style="display: none; max-width: 100%; max-height: 320px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #000;"></video>
+          </div>
+        </div>
+      </main>
+
       <!-- App Footer -->
       <footer class="app-footer">
         <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless. <a href="#" id="link-privacy" style="margin-left: 1rem; color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" id="link-terms" style="color: var(--primary); text-decoration: none;">User Agreement</a></p>

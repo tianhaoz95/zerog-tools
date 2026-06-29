@@ -309,6 +309,15 @@ const TOOLS = [
     category: 'Graphics',
     icon: '✂️',
     uiClass: 'ready'
+  },
+  {
+    id: 'video-bg-swap',
+    title: 'AI Video Background Swap',
+    description: 'Upload a short clip and replace its background with a solid color or your own image using the MODNet matting AI, 100% locally. Exports a WebM video.',
+    keywords: ['video background', 'green screen', 'chroma key', 'background swap', 'replace background', 'modnet', 'video matting', 'virtual background', 'remove video background'],
+    category: 'Graphics',
+    icon: '🎬',
+    uiClass: 'ready'
   }
 ];
 
@@ -349,8 +358,9 @@ Here are the available tools:
 32. AI Language Translator (ID: ai-translator)
 33. AI Object Detector & Image Classifier (ID: ai-detector)
 34. AI Background Remover (ID: bg-remover)
+35. AI Video Background Swap (ID: video-bg-swap)
 
-If the user asks for a task, recommend the appropriate tool. 
+If the user asks for a task, recommend the appropriate tool.
 CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. Keep your responses short, friendly, and structured.`;
 
 // --- WORKER VARIABLES ---
@@ -358,11 +368,13 @@ let chatWorker = null;
 let bgWorker = null;
 let rmbgWorker = null;
 let transcribeWorker = null;
+let videoBgWorker = null;
 
 let isChatModelLoaded = false;
 let isBgModelLoaded = false;
 let isRmbgModelLoaded = false;
 let isTranscribeModelLoaded = false;
+let isVideoBgModelLoaded = false;
 
 // Global AI Status Widget variables
 let chatLoadingProgress = 0;
@@ -550,6 +562,69 @@ function initRmbgWorker() {
     };
   } catch (err) {
     console.error('Could not start RMBG worker:', err);
+  }
+}
+
+// Lazy load MODNet Video Background Swap worker when tool is opened
+function initVideoBgWorker() {
+  if (videoBgWorker) return; // already running
+
+  try {
+    videoBgWorker = new Worker(
+      new URL('./videobg.worker.js', import.meta.url),
+      { type: 'module' }
+    );
+    videoBgWorker.postMessage({ type: 'init' });
+
+    videoBgWorker.onmessage = (e) => {
+      const { type, data, progress, error } = e.data;
+
+      if (type === 'status') {
+        const btnRun = document.getElementById('btn-run-video-bg');
+        const overlay = document.getElementById('video-bg-loading-overlay');
+        const overlayText = document.getElementById('video-bg-loading-text');
+        const overlayProgress = document.getElementById('video-bg-loading-progress');
+
+        if (data === 'loading') {
+          overlay.style.display = 'flex';
+          overlayText.innerText = 'Loading MODNet model...';
+          overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          btnRun.disabled = true;
+          btnRun.innerText = 'Loading Model...';
+        } else if (data === 'ready') {
+          overlay.style.display = 'none';
+          isVideoBgModelLoaded = true;
+          btnRun.disabled = !videoBgSwapVideoEl;
+          btnRun.innerText = '🎬 Swap Background';
+        } else if (data === 'error') {
+          overlay.style.display = 'none';
+          btnRun.innerText = 'AI Model Error';
+          btnRun.disabled = true;
+        }
+      }
+
+      else if (type === 'matte_frame_result') {
+        if (videoBgFrameResolver) {
+          const resolve = videoBgFrameResolver;
+          videoBgFrameResolver = null;
+          resolve(data);
+        }
+      }
+
+      else if (type === 'error') {
+        console.error('Video BG Worker Error:', error);
+        if (videoBgFrameRejector) {
+          const reject = videoBgFrameRejector;
+          videoBgFrameRejector = null;
+          videoBgFrameResolver = null;
+          reject(new Error(error));
+        } else {
+          alert('Video background swap error: ' + error);
+        }
+      }
+    };
+  } catch (err) {
+    console.error('Could not start video bg worker:', err);
   }
 }
 
@@ -799,7 +874,7 @@ function renderToolsGrid(toolsList) {
     const badges = document.createElement('div');
     badges.className = 'tool-badges-row';
     
-    if (tool.id === 'passport-photo' || tool.id === 'audio-transcriber' || tool.id === 'ocr-scanner' || tool.id === 'ai-sentiment' || tool.id === 'ai-translator' || tool.id === 'ai-detector' || tool.id === 'bg-remover') {
+    if (tool.id === 'passport-photo' || tool.id === 'audio-transcriber' || tool.id === 'ocr-scanner' || tool.id === 'ai-sentiment' || tool.id === 'ai-translator' || tool.id === 'ai-detector' || tool.id === 'bg-remover' || tool.id === 'video-bg-swap') {
       badges.innerHTML += `<span class="tool-badge ai">AI Powered</span>`;
     }
     
@@ -943,6 +1018,10 @@ function navigateTo(viewId) {
     document.getElementById('bg-remover-view').classList.add('active');
     resetBgRemoverState();
     initRmbgWorker();
+  } else if (viewId === 'video-bg-swap') {
+    document.getElementById('video-bg-view').classList.add('active');
+    resetVideoBgState();
+    initVideoBgWorker();
   }
 }
 
@@ -981,6 +1060,7 @@ document.getElementById('btn-sentiment-back').addEventListener('click', () => na
 document.getElementById('btn-translator-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-detector-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-bg-remover-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-video-bg-back').addEventListener('click', () => navigateTo('home'));
 
 
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
@@ -5069,6 +5149,355 @@ document.getElementById('btn-download-bg-remover').addEventListener('click', () 
   const link = document.createElement('a');
   link.download = 'background-removed.png';
   link.href = exportCanvas.toDataURL('image/png');
+  link.click();
+});
+
+
+// --- AI VIDEO BACKGROUND SWAP LOGIC (MODNet) ---
+let videoBgSwapVideoEl = null;     // <video> element holding the loaded source clip
+let videoBgSwapVideoUrl = null;    // object URL for the source clip (revoked on reset)
+let videoBgSwapBgImage = null;     // optional background <img>
+let videoBgSwapBgMode = '#3b82f6'; // hex color string, or 'image'
+let videoBgSwapResultUrl = null;   // object URL for the rendered WebM
+let isVideoBgProcessing = false;
+
+// Promise plumbing for the sequential per-frame worker round-trips
+let videoBgFrameResolver = null;
+let videoBgFrameRejector = null;
+
+function resetVideoBgState() {
+  if (videoBgSwapVideoUrl) { URL.revokeObjectURL(videoBgSwapVideoUrl); videoBgSwapVideoUrl = null; }
+  if (videoBgSwapResultUrl) { URL.revokeObjectURL(videoBgSwapResultUrl); videoBgSwapResultUrl = null; }
+  videoBgSwapVideoEl = null;
+  videoBgSwapBgImage = null;
+  videoBgSwapBgMode = '#3b82f6';
+  isVideoBgProcessing = false;
+  videoBgFrameResolver = null;
+  videoBgFrameRejector = null;
+
+  document.getElementById('video-bg-upload-container').style.display = 'flex';
+  document.getElementById('video-bg-file-name').style.display = 'none';
+  document.getElementById('video-bg-options-group').style.display = 'none';
+  document.getElementById('video-bg-result-group').style.display = 'none';
+  document.getElementById('video-bg-image-name').style.display = 'none';
+
+  const sourcePreview = document.getElementById('video-bg-source-preview');
+  sourcePreview.style.display = 'none';
+  sourcePreview.removeAttribute('src');
+
+  const resultVideo = document.getElementById('video-bg-result-video');
+  resultVideo.style.display = 'none';
+  resultVideo.removeAttribute('src');
+
+  const progressWrap = document.getElementById('video-bg-progress-wrap');
+  progressWrap.style.display = 'none';
+  document.getElementById('video-bg-progress-bar').style.width = '0%';
+
+  const canvas = document.getElementById('video-bg-output-canvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  canvas.width = 0;
+  canvas.height = 0;
+
+  const btnRun = document.getElementById('btn-run-video-bg');
+  btnRun.disabled = !isVideoBgModelLoaded;
+  btnRun.innerText = isVideoBgModelLoaded ? '🎬 Swap Background' : 'Loading Model...';
+  document.getElementById('btn-download-video-bg').disabled = true;
+
+  // Reset background swatch selection back to the default blue
+  document.querySelectorAll('.video-bg-swatch').forEach(s => s.classList.remove('active'));
+  const blueSwatch = document.querySelector('.video-bg-swatch[data-bg="#3b82f6"]');
+  if (blueSwatch) blueSwatch.classList.add('active');
+}
+
+const videoBgUploadContainer = document.getElementById('video-bg-upload-container');
+const videoBgFileInput = document.getElementById('video-bg-file-input');
+
+videoBgUploadContainer.addEventListener('click', () => videoBgFileInput.click());
+videoBgUploadContainer.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  videoBgUploadContainer.classList.add('dragover');
+});
+videoBgUploadContainer.addEventListener('dragleave', () => {
+  videoBgUploadContainer.classList.remove('dragover');
+});
+videoBgUploadContainer.addEventListener('drop', (e) => {
+  e.preventDefault();
+  videoBgUploadContainer.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) loadVideoBgClip(e.dataTransfer.files[0]);
+});
+videoBgFileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) loadVideoBgClip(e.target.files[0]);
+});
+
+function loadVideoBgClip(file) {
+  if (!file.type.startsWith('video/')) {
+    alert('Please select a video file (MP4, WebM, MOV).');
+    return;
+  }
+
+  if (videoBgSwapVideoUrl) URL.revokeObjectURL(videoBgSwapVideoUrl);
+  videoBgSwapVideoUrl = URL.createObjectURL(file);
+
+  const video = document.createElement('video');
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.src = videoBgSwapVideoUrl;
+
+  video.onloadedmetadata = () => {
+    videoBgSwapVideoEl = video;
+
+    const nameDiv = document.getElementById('video-bg-file-name');
+    nameDiv.innerText = `Clip: ${file.name} (${Math.round(video.duration * 10) / 10}s, ${video.videoWidth}×${video.videoHeight})`;
+    nameDiv.style.display = 'block';
+
+    document.getElementById('video-bg-options-group').style.display = 'flex';
+
+    const sourcePreview = document.getElementById('video-bg-source-preview');
+    sourcePreview.src = videoBgSwapVideoUrl;
+    sourcePreview.style.display = 'block';
+
+    const btnRun = document.getElementById('btn-run-video-bg');
+    btnRun.disabled = !isVideoBgModelLoaded;
+  };
+
+  video.onerror = () => {
+    alert('Could not load that video file. Try an MP4 or WebM clip.');
+  };
+}
+
+// Background image upload
+const videoBgImageInput = document.getElementById('video-bg-image-input');
+videoBgImageInput.addEventListener('change', (e) => {
+  if (!e.target.files.length) return;
+  const file = e.target.files[0];
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      videoBgSwapBgImage = img;
+      videoBgSwapBgMode = 'image';
+      document.querySelectorAll('.video-bg-swatch').forEach(s => s.classList.remove('active'));
+      const nameDiv = document.getElementById('video-bg-image-name');
+      nameDiv.innerText = `Background: ${file.name}`;
+      nameDiv.style.display = 'block';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Background color swatch selection
+document.querySelectorAll('.video-bg-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    document.querySelectorAll('.video-bg-swatch').forEach(s => s.classList.remove('active'));
+    swatch.classList.add('active');
+    videoBgSwapBgMode = swatch.getAttribute('data-bg');
+  });
+});
+
+const videoBgCustomColor = document.getElementById('video-bg-custom-color');
+videoBgCustomColor.addEventListener('input', () => {
+  document.querySelectorAll('.video-bg-swatch').forEach(s => s.classList.remove('active'));
+  videoBgSwapBgMode = videoBgCustomColor.value;
+});
+
+// Seek the source video to a precise timestamp and resolve once the frame is ready
+function seekVideoTo(video, time) {
+  return new Promise((resolve) => {
+    const onSeeked = () => { video.removeEventListener('seeked', onSeeked); resolve(); };
+    video.addEventListener('seeked', onSeeked);
+    video.currentTime = Math.min(time, Math.max(0, video.duration - 0.001));
+  });
+}
+
+// Post one RGBA frame to the MODNet worker and await its alpha matte
+function matteFrameOnWorker(frameData, frameId) {
+  return new Promise((resolve, reject) => {
+    videoBgFrameResolver = resolve;
+    videoBgFrameRejector = reject;
+    videoBgWorker.postMessage({
+      type: 'matte_frame',
+      data: {
+        frameId,
+        width: frameData.width,
+        height: frameData.height,
+        rgbaData: frameData.data
+      }
+    });
+  });
+}
+
+// Expand a worker mask result into a per-pixel alpha array at the target dims
+function extractAlphaMatte(maskResult, targetW, targetH) {
+  const { width, height, channels, pixelData } = maskResult;
+  if (width === targetW && height === targetH && channels === 1) {
+    return pixelData;
+  }
+  // Rasterize the mask, then resize to the frame dimensions via canvas scaling
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = width;
+  maskCanvas.height = height;
+  const maskCtx = maskCanvas.getContext('2d');
+  const maskImgData = maskCtx.createImageData(width, height);
+  for (let i = 0; i < width * height; i++) {
+    const v = pixelData[i * channels];
+    maskImgData.data[i * 4] = v;
+    maskImgData.data[i * 4 + 1] = v;
+    maskImgData.data[i * 4 + 2] = v;
+    maskImgData.data[i * 4 + 3] = 255;
+  }
+  maskCtx.putImageData(maskImgData, 0, 0);
+
+  const resizeCanvas = document.createElement('canvas');
+  resizeCanvas.width = targetW;
+  resizeCanvas.height = targetH;
+  const resizeCtx = resizeCanvas.getContext('2d');
+  resizeCtx.drawImage(maskCanvas, 0, 0, targetW, targetH);
+  const resized = resizeCtx.getImageData(0, 0, targetW, targetH).data;
+
+  const alpha = new Uint8ClampedArray(targetW * targetH);
+  for (let i = 0; i < targetW * targetH; i++) alpha[i] = resized[i * 4];
+  return alpha;
+}
+
+// Paint the chosen backdrop (cover-fit image or solid color) onto a context
+function drawVideoBackdrop(ctx, w, h) {
+  if (videoBgSwapBgMode === 'image' && videoBgSwapBgImage) {
+    const img = videoBgSwapBgImage;
+    const scale = Math.max(w / img.width, h / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+  } else {
+    ctx.fillStyle = videoBgSwapBgMode === 'image' ? '#3b82f6' : videoBgSwapBgMode;
+    ctx.fillRect(0, 0, w, h);
+  }
+}
+
+document.getElementById('btn-run-video-bg').addEventListener('click', runVideoBgSwap);
+
+async function runVideoBgSwap() {
+  if (!videoBgSwapVideoEl || !videoBgWorker || isVideoBgProcessing) return;
+
+  const video = videoBgSwapVideoEl;
+  const fps = parseInt(document.getElementById('video-bg-fps').value, 10) || 12;
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+  const totalFrames = Math.max(1, Math.floor(video.duration * fps));
+
+  isVideoBgProcessing = true;
+  const btnRun = document.getElementById('btn-run-video-bg');
+  btnRun.disabled = true;
+  btnRun.innerText = 'Processing…';
+  document.getElementById('btn-download-video-bg').disabled = true;
+
+  const progressWrap = document.getElementById('video-bg-progress-wrap');
+  progressWrap.style.display = 'block';
+  const progressBar = document.getElementById('video-bg-progress-bar');
+  const progressLabel = document.getElementById('video-bg-progress-label');
+  progressBar.style.width = '0%';
+
+  // Visible output canvas doubles as the live preview and the recorder source
+  const outCanvas = document.getElementById('video-bg-output-canvas');
+  outCanvas.width = w;
+  outCanvas.height = h;
+  const outCtx = outCanvas.getContext('2d');
+
+  // Reusable scratch canvases
+  const frameCanvas = document.createElement('canvas');
+  frameCanvas.width = w; frameCanvas.height = h;
+  const frameCtx = frameCanvas.getContext('2d');
+  const fgCanvas = document.createElement('canvas');
+  fgCanvas.width = w; fgCanvas.height = h;
+  const fgCtx = fgCanvas.getContext('2d');
+
+  // Record the composited canvas to a WebM. captureStream(0) lets us push one
+  // frame per processed frame via requestFrame() for a frame-accurate result.
+  const stream = outCanvas.captureStream(0);
+  const videoTrack = stream.getVideoTracks()[0];
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+    ? 'video/webm;codecs=vp9'
+    : 'video/webm';
+  const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 8_000_000 });
+  const chunks = [];
+  recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+  const recorderStopped = new Promise((resolve) => { recorder.onstop = resolve; });
+  recorder.start();
+
+  try {
+    for (let i = 0; i < totalFrames; i++) {
+      await seekVideoTo(video, i / fps);
+      frameCtx.drawImage(video, 0, 0, w, h);
+      const frameData = frameCtx.getImageData(0, 0, w, h);
+
+      const maskResult = await matteFrameOnWorker(frameData, i);
+      const alpha = extractAlphaMatte(maskResult, w, h);
+
+      // Foreground = original RGB with the AI alpha matte
+      const fgData = fgCtx.createImageData(w, h);
+      for (let p = 0; p < w * h; p++) {
+        fgData.data[p * 4] = frameData.data[p * 4];
+        fgData.data[p * 4 + 1] = frameData.data[p * 4 + 1];
+        fgData.data[p * 4 + 2] = frameData.data[p * 4 + 2];
+        fgData.data[p * 4 + 3] = alpha[p];
+      }
+      fgCtx.putImageData(fgData, 0, 0);
+
+      // Composite: backdrop first, then the matted foreground on top
+      drawVideoBackdrop(outCtx, w, h);
+      outCtx.drawImage(fgCanvas, 0, 0);
+
+      // Emit exactly one recorded frame for this composite
+      if (videoTrack.requestFrame) videoTrack.requestFrame();
+      else if (stream.requestFrame) stream.requestFrame();
+
+      const pct = Math.round(((i + 1) / totalFrames) * 100);
+      progressBar.style.width = `${pct}%`;
+      progressLabel.innerText = `Frame ${i + 1} / ${totalFrames} (${pct}%)`;
+
+      // Yield to the event loop so the preview repaints between frames
+      await new Promise((r) => setTimeout(r, 0));
+    }
+  } catch (err) {
+    console.error('Video background swap failed:', err);
+    alert('Video background swap failed: ' + err.message);
+    recorder.stop();
+    await recorderStopped;
+    isVideoBgProcessing = false;
+    btnRun.disabled = false;
+    btnRun.innerText = '🎬 Swap Background';
+    return;
+  }
+
+  recorder.stop();
+  await recorderStopped;
+
+  const blob = new Blob(chunks, { type: 'video/webm' });
+  if (videoBgSwapResultUrl) URL.revokeObjectURL(videoBgSwapResultUrl);
+  videoBgSwapResultUrl = URL.createObjectURL(blob);
+
+  document.getElementById('video-bg-result-group').style.display = 'flex';
+  const resultVideo = document.getElementById('video-bg-result-video');
+  resultVideo.src = videoBgSwapResultUrl;
+  resultVideo.style.display = 'block';
+
+  progressLabel.innerText = 'Done ✓';
+  document.getElementById('btn-download-video-bg').disabled = false;
+  isVideoBgProcessing = false;
+  btnRun.disabled = false;
+  btnRun.innerText = '🎬 Swap Background';
+}
+
+document.getElementById('btn-download-video-bg').addEventListener('click', () => {
+  if (!videoBgSwapResultUrl) return;
+  const link = document.createElement('a');
+  link.download = 'background-swapped.webm';
+  link.href = videoBgSwapResultUrl;
   link.click();
 });
 

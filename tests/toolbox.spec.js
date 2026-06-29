@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 34 tool cards rendered
+    // Check that there are 35 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(34);
-    
+    await expect(cards).toHaveCount(35);
+
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools (e.g. password gen, vault/encrypter, hash gen)
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(34);
+    expect(filteredCount).toBeLessThan(35);
     expect(filteredCount).toBeGreaterThan(0);
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(34);
+    await expect(cards).toHaveCount(35);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -313,6 +313,20 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await expect(page.locator('#bg-remover-upload-container')).toBeVisible();
     await expect(page.locator('#btn-run-bg-remover')).toBeVisible();
     await page.locator('#btn-bg-remover-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool 35: AI Video Background Swap view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="video-bg-swap"]').click();
+    await expect(page.locator('#video-bg-view')).toHaveClass(/active/);
+    // Upload control is visible; the run button is wired up but stays hidden
+    // until a clip is loaded (it lives in the options group)
+    await expect(page.locator('#video-bg-upload-container')).toBeVisible();
+    await expect(page.locator('#btn-run-video-bg')).toBeAttached();
+    await expect(page.locator('#video-bg-options-group')).toBeHidden();
+    // Background swatches belong to this tool
+    await expect(page.locator('.video-bg-swatch')).toHaveCount(4);
+    await page.locator('#btn-video-bg-back').click();
     await expect(page.locator('#home-view')).toHaveClass(/active/);
   });
 
