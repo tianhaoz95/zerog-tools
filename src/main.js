@@ -1992,9 +1992,9 @@ btnRunOcr.addEventListener('click', async () => {
     overlayText.innerText = 'Loading language files...';
     
     const worker = await createWorker(lang, 1, {
-      workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@v5.0.5/dist/tesseract-worker.min.js',
-      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-      corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/tesseract-core.wasm.js',
+      workerPath: '/tesseract/tesseract-worker.min.js',
+      langPath: 'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0_best',
+      corePath: '/tesseract/tesseract-core.wasm.js',
     });
 
     overlayText.innerText = 'Analyzing layout & text...';

@@ -54,9 +54,38 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await expect(page.locator('#encrypter-view')).toHaveClass(/active/);
   });
 
-  test('Tool 5: AI Document OCR Scanner view navigation', async ({ page }) => {
+  test('Tool 5: AI Document OCR Scanner functional test', async ({ page }) => {
+    const pageErrors = [];
+    page.on('pageerror', (err) => {
+      pageErrors.push(err);
+    });
+
     await page.locator('.tool-card[data-id="ocr-scanner"]').click();
     await expect(page.locator('#ocr-view')).toHaveClass(/active/);
+
+    // Create a 1x1 transparent mock PNG buffer
+    const mockPngBuffer = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+      'base64'
+    );
+
+    await page.setInputFiles('#ocr-file-input', {
+      name: 'test-doc.png',
+      mimeType: 'image/png',
+      buffer: mockPngBuffer,
+    });
+
+    await expect(page.locator('#btn-run-ocr')).not.toBeDisabled();
+    await page.locator('#btn-run-ocr').click();
+    await expect(page.locator('#ocr-loading-overlay')).toHaveClass(/active/);
+
+    // Wait 2s to allow worker instantiation and importScripts to run
+    await page.waitForTimeout(2000);
+
+    const importErrors = pageErrors.filter(
+      (err) => err.message.includes('NetworkError') || err.message.includes('importScripts')
+    );
+    expect(importErrors).toHaveLength(0);
   });
 
   test('Tool 6: Secure Password Generator functional test', async ({ page }) => {
