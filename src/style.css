@@ -1157,6 +1157,7 @@ h1, h2, h3, h4 {
 .chat-messages {
   flex-grow: 1;
   overflow-y: auto;
+  min-height: 0;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
