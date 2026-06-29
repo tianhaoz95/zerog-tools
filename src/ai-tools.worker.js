@@ -5,6 +5,8 @@ env.allowLocalModels = false;
 let sentimentPipeline = null;
 let translationPipeline = null;
 let detectorPipeline = null;
+let summarizationPipeline = null;
+let embeddingsPipeline = null;
 
 self.onmessage = async (e) => {
   const { type, task, data } = e.data;
@@ -35,6 +37,14 @@ self.onmessage = async (e) => {
         });
       } else if (task === 'detection' && !detectorPipeline) {
         detectorPipeline = await pipeline('object-detection', 'Xenova/yolos-tiny', {
+          progress_callback: progressCallback
+        });
+      } else if (task === 'summarization' && !summarizationPipeline) {
+        summarizationPipeline = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6', {
+          progress_callback: progressCallback
+        });
+      } else if (task === 'embeddings' && !embeddingsPipeline) {
+        embeddingsPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
           progress_callback: progressCallback
         });
       }
@@ -84,6 +94,36 @@ self.onmessage = async (e) => {
         const result = await detectorPipeline(rawImage);
         
         self.postMessage({ type: 'result', task, data: result });
+      }
+
+      else if (task === 'summarization') {
+        if (!summarizationPipeline) throw new Error('Summarization model not initialized');
+        const length = data.length || 'medium';
+        let max_new_tokens = 100;
+        let min_new_tokens = 30;
+        if (length === 'short') {
+          max_new_tokens = 50;
+          min_new_tokens = 15;
+        } else if (length === 'long') {
+          max_new_tokens = 250;
+          min_new_tokens = 80;
+        }
+        
+        const result = await summarizationPipeline(data.text, {
+          max_new_tokens,
+          min_new_tokens
+        });
+        self.postMessage({ type: 'result', task, data: result });
+      }
+
+      else if (task === 'embeddings') {
+        if (!embeddingsPipeline) throw new Error('Embeddings model not initialized');
+        const results = [];
+        for (const text of data.texts) {
+          const out = await embeddingsPipeline(text, { pooling: 'mean', normalize: true });
+          results.push(Array.from(out.data));
+        }
+        self.postMessage({ type: 'result', task, data: results });
       }
     } catch (err) {
       self.postMessage({ type: 'error', task, error: err.message });

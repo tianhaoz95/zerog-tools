@@ -2453,6 +2453,781 @@ Supported browsers:
         </div>
       </main>
 
+      <!-- VIEW 37: AI TEXT SUMMARIZER -->
+      <main id="ai-summarizer-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ai-summarizer-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Text Summarizer</h2>
+            <p>Generate clean summaries or bullet points from articles and transcripts. Done 100% locally in your browser.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="ai-summarizer-text-input">Input Text</label>
+              <textarea id="ai-summarizer-text-input" class="input-custom" style="height: 180px; resize: vertical;" placeholder="Paste long text here to summarize..."></textarea>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="ai-summarizer-length">Summary Length</label>
+              <select id="ai-summarizer-length" class="input-custom">
+                <option value="short">Short &amp; Sweet (~1-2 sentences)</option>
+                <option value="medium" selected>Medium (~3-5 sentences)</option>
+                <option value="long">Detailed Analysis (longer synthesis)</option>
+              </select>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" id="ai-summarizer-bullets-checkbox" style="cursor: pointer;" checked />
+              <label for="ai-summarizer-bullets-checkbox" style="cursor: pointer; margin-bottom: 0;">Convert to Bullet Points</label>
+            </div>
+
+            <button class="btn-primary" id="btn-run-summarizer" style="margin-top: 1rem; width: 100%;">⚡ Summarize Text</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; position: relative;">
+            <!-- Loading overlay inside workspace panel -->
+            <div id="ai-summarizer-loading-overlay" class="status-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9); flex-direction: column; align-items: center; justify-content: center; gap: 1rem; z-index: 10; border-radius: var(--radius-md);">
+              <div class="spinner"></div>
+              <p id="ai-summarizer-loading-text" style="font-weight: 500; color: var(--text-primary);">Downloading local model files...</p>
+              <p id="ai-summarizer-loading-progress" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">0%</p>
+            </div>
+
+            <label>Summarized Output</label>
+            <textarea id="ai-summarizer-output" class="input-custom" style="height: 100%; resize: none; font-size: 0.95rem; line-height: 1.5;" readonly placeholder="Summarized output will appear here..."></textarea>
+            <button class="btn-secondary" id="btn-ai-summarizer-copy" style="width: 100%;">📋 Copy Summary</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 38: AI SEMANTIC SEARCH & EXPLORER -->
+      <main id="ai-semantic-search-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ai-semantic-search-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Semantic Search &amp; Explorer</h2>
+            <p>Paste multiple chunks of text and search through them using natural language concepts instead of raw keywords, 100% locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="control-group">
+              <label>Add Document Chunk</label>
+              <textarea id="ai-semantic-doc-text" class="input-custom" style="height: 90px; resize: vertical;" placeholder="Type or paste a paragraph/document chunk here..."></textarea>
+              <button class="btn-secondary" id="btn-ai-semantic-add" style="margin-top: 0.5rem; width: 100%; font-size: 0.85rem;">➕ Add Chunk</button>
+            </div>
+
+            <div class="control-group" style="flex: 1; display: flex; flex-direction: column;">
+              <label style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Document Repository</span>
+                <button id="btn-ai-semantic-clear-docs" style="background: none; border: none; color: var(--danger); font-size: 0.8rem; cursor: pointer;">Clear All</button>
+              </label>
+              <div id="ai-semantic-docs-list" style="flex: 1; min-height: 150px; max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; background: var(--bg-preview); display: flex; flex-direction: column; gap: 0.5rem;">
+                <div class="text-muted" style="text-align: center; margin-top: 2rem; font-size: 0.85rem;">No chunks added yet. Add some above.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; position: relative;">
+            <div id="ai-semantic-search-loading-overlay" class="status-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9); flex-direction: column; align-items: center; justify-content: center; gap: 1rem; z-index: 10; border-radius: var(--radius-md);">
+              <div class="spinner"></div>
+              <p id="ai-semantic-search-loading-text" style="font-weight: 500; color: var(--text-primary);">Downloading embedding model...</p>
+              <p id="ai-semantic-search-loading-progress" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">0%</p>
+            </div>
+
+            <div class="control-group">
+              <label for="ai-semantic-query">Query Search Concept</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="ai-semantic-query" class="input-custom" placeholder="e.g. 'privacy protection' or 'financial advice'..." />
+                <button class="btn-primary" id="btn-ai-semantic-search" style="white-space: nowrap;">🔍 Search</button>
+              </div>
+            </div>
+
+            <label>Semantic Search Results (Ranked by Relevance)</label>
+            <div id="ai-semantic-results-list" style="flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-input); display: flex; flex-direction: column; gap: 1rem;">
+              <div class="text-muted" style="text-align: center; margin-top: 4rem;">Results will appear after running a query search.</div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 39: AUDIO WAVEFORM EDITOR & TRIMMER -->
+      <main id="audio-trimmer-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-audio-trimmer-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Audio Waveform Editor &amp; Trimmer</h2>
+            <p>Upload an audio file, visually inspect its waveform, trim/crop segments, and apply volume fades 100% locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Upload Audio File</label>
+              <div class="file-upload-box" id="audio-trimmer-upload-box">
+                <span>🎵 Select MP3, WAV, M4A or OGG</span>
+                <input type="file" id="audio-trimmer-file" accept="audio/*" style="display: none;" />
+              </div>
+              <div id="audio-trimmer-file-name" class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem; display: none;"></div>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label>Trim Segment (seconds)</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">Start (s)</span>
+                  <input type="number" id="audio-trimmer-start-input" class="input-custom" value="0" min="0" step="0.1" />
+                </div>
+                <div>
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">End (s)</span>
+                  <input type="number" id="audio-trimmer-end-input" class="input-custom" value="10" min="0" step="0.1" />
+                </div>
+              </div>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="audio-trimmer-vol">Volume Modifier</label>
+              <input type="range" id="audio-trimmer-vol" min="0" max="2" step="0.1" value="1" style="width: 100%; cursor: pointer;" />
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+                <span>Mute</span>
+                <span id="audio-trimmer-vol-val">100%</span>
+                <span>200%</span>
+              </div>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+              <div style="flex: 1;">
+                <label for="audio-trimmer-fadein">Fade In (s)</label>
+                <input type="number" id="audio-trimmer-fadein" class="input-custom" value="0" min="0" max="10" step="0.5" />
+              </div>
+              <div style="flex: 1;">
+                <label for="audio-trimmer-fadeout">Fade Out (s)</label>
+                <input type="number" id="audio-trimmer-fadeout" class="input-custom" value="0" min="0" max="10" step="0.5" />
+              </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+              <button class="btn-secondary" id="audio-trimmer-play" style="flex: 1;" disabled>▶ Play Selected</button>
+              <button class="btn-primary" id="audio-trimmer-trim" style="flex: 1.5;" disabled>✂️ Trim Audio</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; justify-content: center; align-items: stretch;">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); background: #000; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; min-height: 200px; justify-content: center;">
+              <canvas id="audio-trimmer-canvas" style="width: 100%; height: 120px; display: block; background: #000;"></canvas>
+              <div style="display: flex; justify-content: space-between; color: #a1a1aa; font-family: monospace; font-size: 0.8rem;">
+                <span id="audio-trimmer-time-curr">00:00.0</span>
+                <span id="audio-trimmer-time-total">00:00.0</span>
+              </div>
+            </div>
+
+            <div id="audio-trimmer-result-container" style="display: none; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input);">
+              <h4 style="margin-bottom: 0.5rem;">✅ Trimmed Audio Output</h4>
+              <audio id="audio-trimmer-result-player" controls style="width: 100%; margin-bottom: 1rem;"></audio>
+              <button class="btn-primary" id="audio-trimmer-download" style="width: 100%;">💾 Download Edited File</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 40: PDF SIGNER & ANNOTATOR -->
+      <main id="pdf-signer-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-pdf-signer-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>PDF Signer &amp; Form Annotator</h2>
+            <p>Upload a PDF, draw or type signatures, position annotations, and export the signed file locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto;">
+            <div class="control-group">
+              <label>Upload PDF Document</label>
+              <div class="file-upload-box" id="pdf-signer-upload-box">
+                <span>📄 Select PDF File</span>
+                <input type="file" id="pdf-signer-file" accept="application/pdf" style="display: none;" />
+              </div>
+              <div id="pdf-signer-file-name" class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem; display: none;"></div>
+            </div>
+
+            <div id="pdf-signer-tools" style="display: none; margin-top: 1rem;">
+              <div style="border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; display: flex; gap: 0.5rem;">
+                <button class="btn-secondary" id="btn-tab-type-sig" style="flex: 1; padding: 0.4rem; font-size: 0.8rem;">Type Signature</button>
+                <button class="btn-secondary" id="btn-tab-draw-sig" style="flex: 1; padding: 0.4rem; font-size: 0.8rem;">Draw Signature</button>
+              </div>
+
+              <!-- Tab A: Type Sig -->
+              <div id="pdf-signer-tab-type">
+                <div class="control-group">
+                  <label for="pdf-signer-typed-sig">Type Signature Text</label>
+                  <input type="text" id="pdf-signer-typed-sig" class="input-custom" placeholder="John Doe" />
+                </div>
+                <div class="control-group" style="margin-top: 0.5rem;">
+                  <label for="pdf-signer-font-select">Signature Style</label>
+                  <select id="pdf-signer-font-select" class="input-custom" style="font-family: cursive;">
+                    <option value="Alex Brush" style="font-family: 'Alex Brush', cursive;">Alex Brush</option>
+                    <option value="Dancing Script" style="font-family: 'Dancing Script', cursive;">Dancing Script</option>
+                    <option value="Great Vibes" style="font-family: 'Great Vibes', cursive;">Great Vibes</option>
+                  </select>
+                </div>
+                <button class="btn-primary" id="btn-pdf-signer-apply-type" style="width: 100%; margin-top: 0.5rem;">Apply Typed Signature</button>
+              </div>
+
+              <!-- Tab B: Draw Sig -->
+              <div id="pdf-signer-tab-draw" style="display: none;">
+                <div class="control-group">
+                  <label>Draw Signature Below</label>
+                  <canvas id="pdf-signer-draw-canvas" style="width: 100%; height: 120px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: crosshair;"></canvas>
+                  <button class="btn-secondary" id="btn-pdf-signer-clear" style="margin-top: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem; width: 100%;">Clear Draw Canvas</button>
+                </div>
+                <button class="btn-primary" id="btn-pdf-signer-apply-draw" style="width: 100%; margin-top: 0.5rem;">Apply Drawn Signature</button>
+              </div>
+
+              <div class="control-group" style="margin-top: 1rem;">
+                <label>Signature Position on Page</label>
+                <div class="control-group">
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">Page (1-indexed)</span>
+                  <input type="number" id="pdf-signer-page-num" class="input-custom" value="1" min="1" />
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                  <div style="flex: 1;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">X Position (%)</span>
+                    <input type="number" id="pdf-signer-pos-x" class="input-custom" value="20" min="0" max="100" />
+                  </div>
+                  <div style="flex: 1;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Y Position (%)</span>
+                    <input type="number" id="pdf-signer-pos-y" class="input-custom" value="20" min="0" max="100" />
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                  <div style="flex: 1;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Width (px)</span>
+                    <input type="number" id="pdf-signer-width" class="input-custom" value="150" min="20" max="500" />
+                  </div>
+                  <div style="flex: 1;">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Height (px)</span>
+                    <input type="number" id="pdf-signer-height" class="input-custom" value="60" min="10" max="300" />
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn-primary" id="btn-pdf-signer-download" style="width: 100%; margin-top: 1rem;" disabled>💾 Generate &amp; Download Signed PDF</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch; justify-content: center; position: relative;">
+            <div id="pdf-signer-preview-placeholder" class="text-muted" style="text-align: center; padding: 4rem;">
+              📄 Upload a PDF document to view and add your signature overlays.
+            </div>
+            <!-- Dynamic PDF Preview Element -->
+            <iframe id="pdf-signer-preview-iframe" style="display: none; width: 100%; height: 100%; min-height: 400px; border: 1px solid var(--border); border-radius: var(--radius-md);"></iframe>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 41: EXIF METADATA INSPECTOR & STRIPPER -->
+      <main id="exif-stripper-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-exif-stripper-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>EXIF Metadata Inspector &amp; Stripper</h2>
+            <p>View hidden digital fingerprints (timestamps, lens settings, GPS coordinates) and remove them to protect photo privacy.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select Photo</label>
+              <div class="file-upload-box" id="exif-stripper-upload-box">
+                <span>📷 Upload JPEG, JPG, PNG or WebP</span>
+                <input type="file" id="exif-stripper-file" accept="image/jpeg, image/jpg, image/png, image/webp" style="display: none;" />
+              </div>
+              <div id="exif-stripper-file-name" class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem; display: none;"></div>
+            </div>
+
+            <div id="exif-stripper-actions" style="display: none; margin-top: 1rem;">
+              <button class="btn-primary" id="btn-exif-stripper-run" style="width: 100%; margin-bottom: 0.75rem;">🛡️ Strip All EXIF Metadata</button>
+              <button class="btn-secondary" id="btn-exif-stripper-download" style="width: 100%; display: none;">💾 Download Stripped Image</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+            <div id="exif-stripper-info" style="display: none; width: 100%; display: flex; flex-direction: column; gap: 1.5rem;">
+              <div>
+                <h4 style="margin-bottom: 0.5rem;">GPS Geo-Location Map Placement</h4>
+                <div id="exif-stripper-map" style="width: 100%; height: 180px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-preview); display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                  Map view placeholder (No GPS tags found in photo)
+                </div>
+              </div>
+
+              <div>
+                <h4 style="margin-bottom: 0.5rem;">Detected Metadata Tags</h4>
+                <table class="table-custom" id="exif-metadata-table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem; border: 1px solid var(--border);">
+                  <thead>
+                    <tr style="background: var(--bg-preview); border-bottom: 1px solid var(--border); text-align: left;">
+                      <th style="padding: 0.5rem 0.75rem; border-right: 1px solid var(--border);">Tag Name</th>
+                      <th style="padding: 0.5rem 0.75rem;">Metadata Content</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div id="exif-stripper-placeholder" class="text-muted" style="text-align: center; padding: 4rem;">
+              📸 Upload an image to inspect properties.
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 42: INTERACTIVE FLEXBOX & GRID PLAYGROUND -->
+      <main id="css-layout-builder-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-css-layout-builder-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Interactive Flexbox &amp; CSS Grid Builder</h2>
+            <p>Visually mock up CSS layout structures, customize spacing/alignments, and export HTML/CSS styles instantly.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto;">
+            <div class="control-group">
+              <label for="css-layout-type">Layout Type</label>
+              <select id="css-layout-type" class="input-custom">
+                <option value="flex" selected>Flexbox (One-dimensional)</option>
+                <option value="grid">CSS Grid (Two-dimensional)</option>
+              </select>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="css-layout-item-count">Item Count</label>
+              <input type="range" id="css-layout-item-count" min="1" max="12" value="4" style="width: 100%; cursor: pointer;" />
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+                <span>1 Item</span>
+                <span id="css-layout-count-val">4 Items</span>
+                <span>12 Items</span>
+              </div>
+            </div>
+
+            <!-- Flex Properties Section -->
+            <div id="css-flex-properties" style="margin-top: 1rem;">
+              <div class="control-group">
+                <label for="css-flex-dir">flex-direction</label>
+                <select id="css-flex-dir" class="input-custom">
+                  <option value="row" selected>row</option>
+                  <option value="row-reverse">row-reverse</option>
+                  <option value="column">column</option>
+                  <option value="column-reverse">column-reverse</option>
+                </select>
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-flex-wrap">flex-wrap</label>
+                <select id="css-flex-wrap" class="input-custom">
+                  <option value="nowrap">nowrap</option>
+                  <option value="wrap" selected>wrap</option>
+                  <option value="wrap-reverse">wrap-reverse</option>
+                </select>
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-flex-justify">justify-content</label>
+                <select id="css-flex-justify" class="input-custom">
+                  <option value="flex-start" selected>flex-start</option>
+                  <option value="flex-end">flex-end</option>
+                  <option value="center">center</option>
+                  <option value="space-between">space-between</option>
+                  <option value="space-around">space-around</option>
+                  <option value="space-evenly">space-evenly</option>
+                </select>
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-flex-align">align-items</label>
+                <select id="css-flex-align" class="input-custom">
+                  <option value="stretch" selected>stretch</option>
+                  <option value="flex-start">flex-start</option>
+                  <option value="flex-end">flex-end</option>
+                  <option value="center">center</option>
+                  <option value="baseline">baseline</option>
+                </select>
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-flex-gap">gap (px)</label>
+                <input type="number" id="css-flex-gap" class="input-custom" value="16" min="0" max="60" />
+              </div>
+            </div>
+
+            <!-- Grid Properties Section -->
+            <div id="css-grid-properties" style="display: none; margin-top: 1rem;">
+              <div class="control-group">
+                <label for="css-grid-cols">Grid Columns (Grid-Template-Columns)</label>
+                <input type="text" id="css-grid-cols" class="input-custom" value="repeat(3, 1fr)" placeholder="e.g. repeat(3, 1fr) or 100px 1fr" />
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-grid-rows">Grid Rows (Grid-Template-Rows)</label>
+                <input type="text" id="css-grid-rows" class="input-custom" value="auto" placeholder="e.g. auto or repeat(2, 100px)" />
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-grid-gap">Grid Gap (px)</label>
+                <input type="number" id="css-grid-gap" class="input-custom" value="16" min="0" max="60" />
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-grid-align-items">align-items (Vertical Alignment)</label>
+                <select id="css-grid-align-items" class="input-custom">
+                  <option value="stretch" selected>stretch</option>
+                  <option value="start">start</option>
+                  <option value="end">end</option>
+                  <option value="center">center</option>
+                </select>
+              </div>
+              <div class="control-group" style="margin-top: 0.75rem;">
+                <label for="css-grid-justify-items">justify-items (Horizontal Alignment)</label>
+                <select id="css-grid-justify-items" class="input-custom">
+                  <option value="stretch" selected>stretch</option>
+                  <option value="start">start</option>
+                  <option value="end">end</option>
+                  <option value="center">center</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-preview); padding: 1.25rem; min-height: 250px;">
+              <h4 style="margin-bottom: 0.75rem;">Live Viewport Preview</h4>
+              <div id="css-layout-preview" style="display: flex; flex-wrap: wrap; gap: 16px; background: #fff; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 1rem; min-height: 180px;">
+                <!-- items generated dynamically -->
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex: 1; min-height: 200px;">
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                <label>HTML Code</label>
+                <textarea id="css-layout-html" class="input-custom" style="flex: 1; font-family: monospace; resize: none; font-size: 0.85rem;" readonly></textarea>
+                <button class="btn-secondary" id="btn-css-layout-copy-html">📋 Copy HTML</button>
+              </div>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                <label>CSS Code</label>
+                <textarea id="css-layout-css" class="input-custom" style="flex: 1; font-family: monospace; resize: none; font-size: 0.85rem;" readonly></textarea>
+                <button class="btn-secondary" id="btn-css-layout-copy-css">📋 Copy CSS</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 43: REST API CLIENT & REQUEST TESTER -->
+      <main id="api-client-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-api-client-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>REST API Client &amp; Request Tester</h2>
+            <p>Make API requests to public or local endpoints, debug status codes, inspect formatted payloads, and export code scripts.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
+            <div class="control-group">
+              <label>API Endpoint &amp; Method</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <select id="api-client-method" class="input-custom" style="width: 100px; font-weight: bold; color: var(--primary);">
+                  <option value="GET" selected>GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                </select>
+                <input type="url" id="api-client-url" class="input-custom" value="https://jsonplaceholder.typicode.com/posts/1" placeholder="https://api.example.com/endpoint" />
+                <button class="btn-primary" id="btn-api-client-send">⚡ Send</button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="api-client-headers">Headers (JSON Object format)</label>
+              <textarea id="api-client-headers" class="input-custom" style="height: 80px; font-family: monospace; font-size: 0.85rem;" placeholder='{ "Content-Type": "application/json" }'></textarea>
+            </div>
+
+            <div class="control-group">
+              <label for="api-client-body">Request Body (JSON Block)</label>
+              <textarea id="api-client-body" class="input-custom" style="height: 120px; font-family: monospace; font-size: 0.85rem;" placeholder='{ "title": "hello", "body": "world" }'></textarea>
+            </div>
+
+            <div class="control-group" style="flex: 1;">
+              <label>Recent Request History</label>
+              <div id="api-client-history-list" style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; background: var(--bg-preview); min-height: 80px; max-height: 150px; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                <!-- history elements dynamically added -->
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+            <div style="display: flex; gap: 1rem; background: var(--bg-preview); padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+              <div>Status: <span id="api-client-status" style="font-weight: bold; color: var(--success);">—</span></div>
+              <div>Time: <span id="api-client-time" style="font-weight: bold; color: var(--secondary);">—</span></div>
+              <div>Size: <span id="api-client-size" style="font-weight: bold; color: var(--accent);">—</span></div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; min-height: 250px;">
+              <label>Response Content</label>
+              <textarea id="api-client-body-resp" class="input-custom" style="flex: 1; font-family: monospace; font-size: 0.85rem; background: #fff;" readonly placeholder="API response payload will appear here..."></textarea>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <label>Code Snippet Export (JavaScript Fetch)</label>
+              <textarea id="api-client-snippet" class="input-custom" style="height: 90px; font-family: monospace; font-size: 0.8rem;" readonly></textarea>
+              <button class="btn-secondary" id="btn-api-client-copy-snippet" style="width: 100%;">📋 Copy Fetch Snippet</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 44: IMAGE TO PDF & PDF TO IMAGE CONVERTER -->
+      <main id="pdf-image-converter-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-pdf-image-converter-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Image-to-PDF &amp; PDF-to-Image Converter</h2>
+            <p>Compile multiple images into a single PDF, or render and extract PDF pages as PNG images 100% locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <!-- Mode Switcher -->
+            <div style="display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1.5rem; overflow: hidden;">
+              <button class="btn-secondary" id="btn-mode-img-pdf" style="flex: 1; border: none; border-radius: 0; padding: 0.5rem; font-size: 0.85rem;">Images ➔ PDF</button>
+              <button class="btn-secondary" id="btn-mode-pdf-img" style="flex: 1; border: none; border-radius: 0; padding: 0.5rem; font-size: 0.85rem;">PDF ➔ Images</button>
+            </div>
+
+            <!-- Mode A Content: Images to PDF -->
+            <div id="pdf-image-sec-img-pdf">
+              <div class="control-group">
+                <label>Select Images</label>
+                <div class="file-upload-box" id="pdf-image-upload-images-box">
+                  <span>🖼️ Select Image Files</span>
+                  <input type="file" id="pdf-image-file-images" accept="image/png, image/jpeg, image/jpg, image/webp" multiple style="display: none;" />
+                </div>
+              </div>
+              <div class="control-group" style="margin-top: 1rem;">
+                <label>Options</label>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Page Margins (px)</span>
+                <input type="number" id="pdf-image-margin" class="input-custom" value="20" min="0" max="100" />
+              </div>
+              <button class="btn-primary" id="btn-pdf-image-to-pdf" style="width: 100%; margin-top: 1.5rem;" disabled>⚡ Compile &amp; Download PDF</button>
+            </div>
+
+            <!-- Mode B Content: PDF to Images -->
+            <div id="pdf-image-sec-pdf-img" style="display: none;">
+              <div class="control-group">
+                <label>Select PDF Document</label>
+                <div class="file-upload-box" id="pdf-image-upload-pdf-box">
+                  <span>📄 Select PDF File</span>
+                  <input type="file" id="pdf-image-file-pdf" accept="application/pdf" style="display: none;" />
+                </div>
+              </div>
+              <button class="btn-primary" id="btn-pdf-image-to-images" style="width: 100%; margin-top: 1.5rem;" disabled>⚡ Extract Pages to Images</button>
+              <button class="btn-secondary" id="btn-pdf-image-zip" style="width: 100%; margin-top: 0.5rem; display: none;">💾 Download All Pages (ZIP)</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+            <!-- Grid list for uploaded/extracted elements -->
+            <div id="pdf-image-workspace-title" style="font-weight: 600; font-size: 0.95rem;">File Processing Space</div>
+            
+            <div id="pdf-image-grid-list" style="flex: 1; border: 1px dashed var(--border); border-radius: var(--radius-md); padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; min-height: 250px; background: var(--bg-input);">
+              <div class="text-muted" id="pdf-image-placeholder-text" style="grid-column: 1 / -1; text-align: center; margin-top: 5rem;">
+                No files uploaded. Select items on the left to start.
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 45: HOME MORTGAGE & AMORTIZATION DASHBOARD -->
+      <main id="mortgage-calculator-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-mortgage-calculator-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Home Mortgage &amp; Amortization Dashboard</h2>
+            <p>Analyze home loan payments, visualize interest-to-principal cost splits, and simulate extra repayment gains 100% locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
+            <div class="control-group">
+              <label for="mortgage-home-price">Home Purchase Price ($)</label>
+              <input type="number" id="mortgage-home-price" class="input-custom" value="400000" min="1000" step="5000" />
+            </div>
+
+            <div class="control-group">
+              <label for="mortgage-down-payment">Down Payment ($)</label>
+              <input type="number" id="mortgage-down-payment" class="input-custom" value="80000" min="0" step="5000" />
+            </div>
+
+            <div class="control-group">
+              <label for="mortgage-loan-term">Loan Term (years)</label>
+              <input type="number" id="mortgage-loan-term" class="input-custom" value="30" min="1" max="50" />
+            </div>
+
+            <div class="control-group">
+              <label for="mortgage-interest-rate">Interest Rate (%)</label>
+              <input type="number" id="mortgage-interest-rate" class="input-custom" value="6.5" min="0.1" max="25" step="0.1" />
+            </div>
+
+            <div class="control-group">
+              <label for="mortgage-extra-payment">Extra Monthly Payment ($)</label>
+              <input type="number" id="mortgage-extra-payment" class="input-custom" value="0" min="0" step="50" />
+            </div>
+
+            <button class="btn-primary" id="btn-mortgage-calc" style="width: 100%;">⚡ Compute Payments</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1.5rem; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+            <!-- Display Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Estimated Monthly Payment</div>
+                <div id="mortgage-monthly-payment" style="font-size: 1.75rem; font-weight: bold; color: var(--primary);">$2,022.62</div>
+              </div>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Total Interest Cost</div>
+                <div id="mortgage-total-interest" style="font-size: 1.75rem; font-weight: bold; color: var(--danger);">$408,144</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <!-- Donut Chart Container -->
+              <div style="flex: 1; min-width: 250px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; display: flex; flex-direction: column; align-items: center;">
+                <h4 style="margin-bottom: 0.75rem;">Payment Composition</h4>
+                <svg id="mortgage-donut-chart" width="200" height="200" viewBox="0 0 200 200"></svg>
+                <div style="display: flex; gap: 1rem; font-size: 0.75rem; margin-top: 0.5rem;">
+                  <span><i style="display: inline-block; width: 10px; height: 10px; background: var(--primary); border-radius: 2px; margin-right: 4px;"></i> Principal</span>
+                  <span><i style="display: inline-block; width: 10px; height: 10px; background: var(--danger); border-radius: 2px; margin-right: 4px;"></i> Interest</span>
+                </div>
+              </div>
+
+              <!-- Line Chart Container -->
+              <div style="flex: 1.5; min-width: 280px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; display: flex; flex-direction: column; align-items: center;">
+                <h4 style="margin-bottom: 0.75rem;">Balance Decline Curve</h4>
+                <svg id="mortgage-line-chart" width="100%" height="200" viewBox="0 0 350 200" style="width: 100%; height: 200px; display: block; overflow: visible;"></svg>
+              </div>
+            </div>
+
+            <div>
+              <h4 style="margin-bottom: 0.5rem;">Year-by-Year Amortization Schedule</h4>
+              <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md);">
+                <table class="table-custom" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                  <thead>
+                    <tr style="background: var(--bg-preview); border-bottom: 1px solid var(--border); text-align: left;">
+                      <th style="padding: 0.5rem 0.75rem;">Year</th>
+                      <th style="padding: 0.5rem 0.75rem;">Principal Paid</th>
+                      <th style="padding: 0.5rem 0.75rem;">Interest Paid</th>
+                      <th style="padding: 0.5rem 0.75rem;">Ending Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mortgage-table-body">
+                    <!-- schedules appended -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 46: POMODORO SPACE & AMBIENT SOUNDSCAPE -->
+      <main id="pomodoro-space-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-pomodoro-space-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Pomodoro Space &amp; Ambient Soundscape</h2>
+            <p>Customize Pomodoro work blocks, blend background ambient soundtracks, and manage focus tasks in one browser space.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
+            <div class="control-group">
+              <label>Timer Settings</label>
+              <select id="pomodoro-state-select" class="input-custom">
+                <option value="25" selected>Focus Block (25 min)</option>
+                <option value="5">Short Break (5 min)</option>
+                <option value="15">Long Break (15 min)</option>
+              </select>
+            </div>
+
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label>Ambient Sound Mixer</label>
+              
+              <div style="margin-top: 0.75rem;">
+                <span style="font-size: 0.8rem; display: flex; justify-content: space-between;"><span>🎹 Lofi Beats</span><span id="vol-lofi-label">0%</span></span>
+                <input type="range" id="pomodoro-vol-lofi" min="0" max="1" step="0.05" value="0" style="width: 100%; cursor: pointer;" />
+              </div>
+
+              <div style="margin-top: 0.75rem;">
+                <span style="font-size: 0.8rem; display: flex; justify-content: space-between;"><span>🌧️ Gentle Rain</span><span id="vol-rain-label">0%</span></span>
+                <input type="range" id="pomodoro-vol-rain" min="0" max="1" step="0.05" value="0" style="width: 100%; cursor: pointer;" />
+              </div>
+
+              <div style="margin-top: 0.75rem;">
+                <span style="font-size: 0.8rem; display: flex; justify-content: space-between;"><span>🌊 Ocean Waves</span><span id="vol-waves-label">0%</span></span>
+                <input type="range" id="pomodoro-vol-waves" min="0" max="1" step="0.05" value="0" style="width: 100%; cursor: pointer;" />
+              </div>
+
+              <div style="margin-top: 0.75rem;">
+                <span style="font-size: 0.8rem; display: flex; justify-content: space-between;"><span>☕ Cozy Cafe</span><span id="vol-cafe-label">0%</span></span>
+                <input type="range" id="pomodoro-vol-cafe" min="0" max="1" step="0.05" value="0" style="width: 100%; cursor: pointer;" />
+              </div>
+
+              <div style="margin-top: 0.75rem;">
+                <span style="font-size: 0.8rem; display: flex; justify-content: space-between;"><span>🔥 Crackling Campfire</span><span id="vol-campfire-label">0%</span></span>
+                <input type="range" id="pomodoro-vol-campfire" min="0" max="1" step="0.05" value="0" style="width: 100%; cursor: pointer;" />
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1.5rem; align-items: center; justify-content: flex-start; overflow-y: auto;">
+            <!-- Timer Clock Area -->
+            <div style="position: relative; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; margin-top: 1rem;">
+              <svg width="220" height="220" viewBox="0 0 220 220" style="position: absolute; transform: rotate(-90deg);">
+                <circle cx="110" cy="110" r="100" stroke="var(--border)" stroke-width="8" fill="none"></circle>
+                <circle id="pomodoro-timer-ring" cx="110" cy="110" r="100" stroke="var(--primary)" stroke-width="8" fill="none" stroke-dasharray="628" stroke-dashoffset="0" stroke-linecap="round" style="transition: stroke-dashoffset 1s linear;"></circle>
+              </svg>
+              <div id="pomodoro-timer-display" style="font-family: monospace; font-size: 3rem; font-weight: bold; color: var(--text-primary); z-index: 2;">25:00</div>
+            </div>
+
+            <!-- Timer Controls -->
+            <div style="display: flex; gap: 0.75rem; width: 100%; max-width: 320px;">
+              <button class="btn-primary" id="btn-pomodoro-start" style="flex: 1.5;">▶ Start</button>
+              <button class="btn-secondary" id="btn-pomodoro-pause" style="flex: 1;" disabled>⏸ Pause</button>
+              <button class="btn-secondary" id="btn-pomodoro-reset" style="flex: 1;">🔁 Reset</button>
+            </div>
+
+            <!-- Simple Task Checklist -->
+            <div style="width: 100%; max-width: 450px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input);">
+              <h4 style="margin-bottom: 0.75rem;">📋 Study Session Tasks</h4>
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <input type="text" id="pomodoro-task-input" class="input-custom" placeholder="Add a focus task..." />
+                <button class="btn-secondary" id="btn-pomodoro-add-task" style="white-space: nowrap;">Add Task</button>
+              </div>
+              <ul id="pomodoro-tasks-list" style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; max-height: 150px; overflow-y: auto; padding: 0.25rem;">
+                <!-- items generated -->
+                <li class="text-muted" id="pomodoro-task-empty" style="text-align: center; font-size: 0.85rem; padding: 0.5rem;">No tasks defined for this session.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <!-- App Footer -->
       <footer class="app-footer">
         <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless. <a href="#" id="link-privacy" style="margin-left: 1rem; color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" id="link-terms" style="color: var(--primary); text-decoration: none;">User Agreement</a></p>

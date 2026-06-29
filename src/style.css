@@ -2041,6 +2041,185 @@ div[style*="color: var(--danger)"] {
 .ev-gas-breakdown-row span:first-child { color: var(--text-secondary); font-weight: 500; }
 .ev-gas-breakdown-row span:last-child { color: var(--text-primary); font-weight: 600; text-align: right; }
 
+/* 10 NEW TOOLS STYLES */
+
+/* CSS Layout Playground Preview Items */
+.css-preview-item {
+  background: var(--primary-glow);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-weight: 600;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  min-height: 50px;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+/* API Client History */
+.api-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.api-history-item:hover {
+  background: var(--bg-preview);
+  border-color: var(--primary);
+}
+.api-history-method {
+  font-weight: bold;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+.api-history-method.GET { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+.api-history-method.POST { background: rgba(79, 70, 229, 0.1); color: var(--primary); }
+.api-history-method.PUT { background: rgba(245, 158, 11, 0.1); color: #d97706; }
+.api-history-method.DELETE { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+.api-history-url {
+  flex: 1;
+  margin-left: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+/* PDF/Image Converter Cards */
+.pdf-image-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  font-size: 0.75rem;
+  transition: var(--transition);
+}
+.pdf-image-card:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-color: var(--primary);
+}
+.pdf-image-card img {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.pdf-image-card-actions {
+  display: flex;
+  gap: 0.25rem;
+  width: 100%;
+}
+.pdf-image-card-btn {
+  flex: 1;
+  font-size: 0.7rem;
+  padding: 0.2rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-preview);
+  border-radius: 4px;
+}
+.pdf-image-card-btn:hover {
+  background: var(--primary-glow);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Pomodoro Tasks */
+.pomodoro-task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-preview);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  transition: var(--transition);
+}
+.pomodoro-task-item.completed span {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+.pomodoro-task-checkbox {
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+.pomodoro-task-btn-delete {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* Document Search Result */
+.semantic-result-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  background: var(--bg-preview);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: var(--transition);
+}
+.semantic-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.semantic-result-badge {
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+}
+.semantic-result-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+.semantic-doc-repo-card {
+  padding: 0.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  gap: 0.5rem;
+}
+.semantic-doc-repo-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.semantic-doc-repo-delete {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+}
+
+
 
 
 

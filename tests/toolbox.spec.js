@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 35 tool cards rendered
+    // Check that there are 46 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(36);
+    await expect(cards).toHaveCount(46);
 
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools (e.g. password gen, vault/encrypter, hash gen)
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(35);
+    expect(filteredCount).toBeLessThan(45);
     expect(filteredCount).toBeGreaterThan(0);
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(36);
+    await expect(cards).toHaveCount(46);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -365,6 +365,28 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await expect(page.locator('#home-view')).toHaveClass(/active/);
 
     expect(pageErrors).toHaveLength(0);
+  });
+
+  test('New Tools: Navigation and basic rendering tests', async ({ page }) => {
+    const newTools = [
+      { id: 'ai-summarizer', view: '#ai-summarizer-view', backBtn: '#btn-ai-summarizer-back' },
+      { id: 'ai-semantic-search', view: '#ai-semantic-search-view', backBtn: '#btn-ai-semantic-search-back' },
+      { id: 'audio-trimmer', view: '#audio-trimmer-view', backBtn: '#btn-audio-trimmer-back' },
+      { id: 'pdf-signer', view: '#pdf-signer-view', backBtn: '#btn-pdf-signer-back' },
+      { id: 'exif-stripper', view: '#exif-stripper-view', backBtn: '#btn-exif-stripper-back' },
+      { id: 'css-layout-builder', view: '#css-layout-builder-view', backBtn: '#btn-css-layout-builder-back' },
+      { id: 'api-client', view: '#api-client-view', backBtn: '#btn-api-client-back' },
+      { id: 'pdf-image-converter', view: '#pdf-image-converter-view', backBtn: '#btn-pdf-image-converter-back' },
+      { id: 'mortgage-calculator', view: '#mortgage-calculator-view', backBtn: '#btn-mortgage-calculator-back' },
+      { id: 'pomodoro-space', view: '#pomodoro-space-view', backBtn: '#btn-pomodoro-space-back' }
+    ];
+
+    for (const tool of newTools) {
+      await page.locator(`.tool-card[data-id="${tool.id}"]`).click();
+      await expect(page.locator(tool.view)).toHaveClass(/active/);
+      await page.locator(tool.backBtn).click();
+      await expect(page.locator('#home-view')).toHaveClass(/active/);
+    }
   });
 
   test('Routing: deep link, URL sync, and back navigation', async ({ page }) => {

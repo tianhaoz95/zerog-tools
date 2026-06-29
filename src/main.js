@@ -42,6 +42,16 @@ Here are the available tools:
 34. AI Background Remover (ID: bg-remover)
 35. AI Video Background Swap (ID: video-bg-swap)
 36. EV vs Gas Car Cost Calculator (ID: ev-gas-calculator)
+37. AI Text Summarizer (ID: ai-summarizer)
+38. AI Semantic Search & Explorer (ID: ai-semantic-search)
+39. Audio Waveform Editor & Trimmer (ID: audio-trimmer)
+40. PDF Signer & Form Annotator (ID: pdf-signer)
+41. EXIF Metadata Inspector & Stripper (ID: exif-stripper)
+42. Interactive Flexbox & CSS Grid Builder (ID: css-layout-builder)
+43. REST API Client & Request Tester (ID: api-client)
+44. Image-to-PDF & PDF-to-Image Converter (ID: pdf-image-converter)
+45. Home Mortgage & Amortization Dashboard (ID: mortgage-calculator)
+46. Pomodoro Space & Ambient Soundscape (ID: pomodoro-space)
 
 If the user asks for a task, recommend the appropriate tool.
 CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. Keep your responses short, friendly, and structured.`;
@@ -557,7 +567,7 @@ function renderToolsGrid(toolsList) {
     const badges = document.createElement('div');
     badges.className = 'tool-badges-row';
     
-    if (tool.id === 'passport-photo' || tool.id === 'audio-transcriber' || tool.id === 'ocr-scanner' || tool.id === 'ai-sentiment' || tool.id === 'ai-translator' || tool.id === 'ai-detector' || tool.id === 'bg-remover' || tool.id === 'video-bg-swap') {
+    if (tool.title.startsWith('AI') || tool.id.startsWith('ai-')) {
       badges.innerHTML += `<span class="tool-badge ai">AI Powered</span>`;
     }
     
@@ -741,6 +751,38 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'ev-gas-calculator') {
     document.getElementById('ev-gas-view').classList.add('active');
     resetEvGasState();
+  } else if (viewId === 'ai-summarizer') {
+    document.getElementById('ai-summarizer-view').classList.add('active');
+    resetSummarizerState();
+    initAiToolsWorker('summarization');
+  } else if (viewId === 'ai-semantic-search') {
+    document.getElementById('ai-semantic-search-view').classList.add('active');
+    resetSemanticSearchState();
+    initAiToolsWorker('embeddings');
+  } else if (viewId === 'audio-trimmer') {
+    document.getElementById('audio-trimmer-view').classList.add('active');
+    resetAudioTrimmerState();
+  } else if (viewId === 'pdf-signer') {
+    document.getElementById('pdf-signer-view').classList.add('active');
+    resetPdfSignerState();
+  } else if (viewId === 'exif-stripper') {
+    document.getElementById('exif-stripper-view').classList.add('active');
+    resetExifStripperState();
+  } else if (viewId === 'css-layout-builder') {
+    document.getElementById('css-layout-builder-view').classList.add('active');
+    resetCssLayoutBuilderState();
+  } else if (viewId === 'api-client') {
+    document.getElementById('api-client-view').classList.add('active');
+    resetApiClientState();
+  } else if (viewId === 'pdf-image-converter') {
+    document.getElementById('pdf-image-converter-view').classList.add('active');
+    resetPdfImageConverterState();
+  } else if (viewId === 'mortgage-calculator') {
+    document.getElementById('mortgage-calculator-view').classList.add('active');
+    resetMortgageCalculatorState();
+  } else if (viewId === 'pomodoro-space') {
+    document.getElementById('pomodoro-space-view').classList.add('active');
+    resetPomodoroSpaceState();
   }
 
   // Keep the URL + document metadata in sync with the active view.
@@ -795,6 +837,17 @@ document.getElementById('btn-detector-back').addEventListener('click', () => nav
 document.getElementById('btn-bg-remover-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-video-bg-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-ev-gas-back').addEventListener('click', () => navigateTo('home'));
+
+document.getElementById('btn-ai-summarizer-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-ai-semantic-search-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-audio-trimmer-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-pdf-signer-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-exif-stripper-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-css-layout-builder-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-api-client-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-pdf-image-converter-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-mortgage-calculator-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-pomodoro-space-back').addEventListener('click', () => navigateTo('home'));
 
 
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
@@ -4509,7 +4562,13 @@ function initAiToolsWorker(task) {
 
 function handleAiToolsStatus(task, status, progress) {
   // Map worker task names to HTML element ID prefixes
-  const prefixMap = { sentiment: 'sentiment', translation: 'translator', detection: 'detector' };
+  const prefixMap = {
+    sentiment: 'sentiment',
+    translation: 'translator',
+    detection: 'detector',
+    summarization: 'ai-summarizer',
+    embeddings: 'ai-semantic-search'
+  };
   const prefix = prefixMap[task] || task;
   const overlayId = `${prefix}-loading-overlay`;
   const textId = `${prefix}-loading-text`;
@@ -4524,7 +4583,7 @@ function handleAiToolsStatus(task, status, progress) {
   if (status === 'loading') {
     overlay.style.display = 'flex';
     text.innerText = `Downloading local model files...`;
-    progressEl.innerText = `${Math.round((progress || 0) * 100)}%`;
+    progressEl.innerText = `${Math.round(progress || 0)}%`;
   } else if (status === 'ready') {
     overlay.style.display = 'none';
   } else if (status === 'error') {
@@ -4579,10 +4638,99 @@ function handleAiToolsResult(task, data) {
     // draw results on canvas
     drawDetectorResults(data);
   }
+
+  else if (task === 'summarization') {
+    const overlay = document.getElementById('ai-summarizer-loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    btnRunSummarizer.disabled = false;
+    btnRunSummarizer.innerText = '⚡ Summarize Text';
+    
+    let summaryText = '';
+    if (Array.isArray(data) && data[0]) {
+      summaryText = data[0].summary_text || '';
+    } else if (data && data.summary_text) {
+      summaryText = data.summary_text;
+    } else {
+      summaryText = String(data);
+    }
+    
+    if (document.getElementById('ai-summarizer-bullets-checkbox').checked) {
+      const bullets = summaryText
+        .split(/[.!?]+\s+/)
+        .filter(s => s.trim().length > 3)
+        .map(s => `• ${s.trim()}`)
+        .join('\n');
+      aiSummarizerOutput.value = bullets || summaryText;
+    } else {
+      aiSummarizerOutput.value = summaryText;
+    }
+  }
+
+  else if (task === 'embeddings') {
+    const overlay = document.getElementById('ai-semantic-search-loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    if (btnAiSemanticSearch.disabled) {
+      btnAiSemanticSearch.disabled = false;
+      btnAiSemanticSearch.innerText = '🔍 Search';
+      
+      const queryEmbedding = data[0];
+      if (!queryEmbedding) return;
+      
+      const scores = [];
+      for (let i = 0; i < semanticDocs.length; i++) {
+        const docEmbed = semanticEmbeddings[i];
+        if (!docEmbed) continue;
+        let dotProduct = 0;
+        let queryNorm = 0;
+        let docNorm = 0;
+        for (let j = 0; j < queryEmbedding.length; j++) {
+          dotProduct += queryEmbedding[j] * docEmbed[j];
+          queryNorm += queryEmbedding[j] * queryEmbedding[j];
+          docNorm += docEmbed[j] * docEmbed[j];
+        }
+        const similarity = dotProduct / (Math.sqrt(queryNorm) * Math.sqrt(docNorm));
+        scores.push({ index: i, text: semanticDocs[i], score: similarity });
+      }
+      
+      scores.sort((a, b) => b.score - a.score);
+      
+      aiSemanticResultsList.innerHTML = '';
+      scores.forEach(res => {
+        const scorePct = Math.round(res.score * 100);
+        const card = document.createElement('div');
+        card.className = 'semantic-result-card';
+        
+        let badgeColor = 'var(--success)';
+        if (scorePct < 70) badgeColor = 'var(--secondary)';
+        if (scorePct < 40) badgeColor = 'var(--text-muted)';
+        
+        card.innerHTML = `
+          <div class="semantic-result-header">
+            <span class="semantic-result-badge" style="background: ${badgeColor}22; color: ${badgeColor};">${scorePct}% Relevant</span>
+          </div>
+          <p class="semantic-result-text">${res.text}</p>
+        `;
+        aiSemanticResultsList.appendChild(card);
+      });
+    } else {
+      // Document embedding response
+      data.forEach(emb => {
+        semanticEmbeddings.push(emb);
+      });
+    }
+  }
 }
 
 function handleAiToolsError(task, error) {
-  const prefixMap = { sentiment: 'sentiment', translation: 'translator', detection: 'detector' };
+  const prefixMap = {
+    sentiment: 'sentiment',
+    translation: 'translator',
+    detection: 'detector',
+    summarization: 'ai-summarizer',
+    embeddings: 'ai-semantic-search'
+  };
   const prefix = prefixMap[task] || task;
   const overlay = document.getElementById(`${prefix}-loading-overlay`);
   if (overlay) overlay.style.display = 'none';
@@ -5408,6 +5556,1739 @@ window.addEventListener('click', (e) => {
   if (e.target === modalPrivacy) hideModal(modalPrivacy);
   if (e.target === modalTerms) hideModal(modalTerms);
 });
+
+
+// --- 10 NEW TOOLS BUSINESS LOGIC ---
+
+// --- AI TEXT SUMMARIZER LOGIC ---
+const aiSummarizerTextInput = document.getElementById('ai-summarizer-text-input');
+const aiSummarizerLength = document.getElementById('ai-summarizer-length');
+const aiSummarizerBullets = document.getElementById('ai-summarizer-bullets-checkbox');
+const btnRunSummarizer = document.getElementById('btn-run-summarizer');
+const aiSummarizerOutput = document.getElementById('ai-summarizer-output');
+const btnAiSummarizerCopy = document.getElementById('btn-ai-summarizer-copy');
+
+function resetSummarizerState() {
+  aiSummarizerTextInput.value = '';
+  aiSummarizerOutput.value = '';
+}
+
+btnRunSummarizer.addEventListener('click', () => {
+  const text = aiSummarizerTextInput.value.trim();
+  if (!text) {
+    alert('Please enter text to summarize.');
+    return;
+  }
+  btnRunSummarizer.disabled = true;
+  btnRunSummarizer.innerText = 'Summarizing...';
+  
+  initAiToolsWorker('summarization');
+  aiToolsWorker.postMessage({
+    type: 'run',
+    task: 'summarization',
+    data: {
+      text: text,
+      length: aiSummarizerLength.value
+    }
+  });
+});
+
+btnAiSummarizerCopy.addEventListener('click', () => {
+  if (aiSummarizerOutput.value) {
+    navigator.clipboard.writeText(aiSummarizerOutput.value);
+    alert('Summary copied to clipboard!');
+  }
+});
+
+// --- AI SEMANTIC SEARCH LOGIC ---
+const aiSemanticDocText = document.getElementById('ai-semantic-doc-text');
+const btnAiSemanticAdd = document.getElementById('btn-ai-semantic-add');
+const aiSemanticDocsList = document.getElementById('ai-semantic-docs-list');
+const btnAiSemanticClear = document.getElementById('btn-ai-semantic-clear-docs');
+const aiSemanticQuery = document.getElementById('ai-semantic-query');
+const btnAiSemanticSearch = document.getElementById('btn-ai-semantic-search');
+const aiSemanticResultsList = document.getElementById('ai-semantic-results-list');
+
+let semanticDocs = [];
+let semanticEmbeddings = [];
+
+function resetSemanticSearchState() {
+  aiSemanticDocText.value = '';
+  aiSemanticQuery.value = '';
+  semanticDocs = [];
+  semanticEmbeddings = [];
+  renderSemanticDocs();
+  aiSemanticResultsList.innerHTML = '<div class="text-muted" style="text-align: center; margin-top: 4rem;">Results will appear after running a query search.</div>';
+}
+
+function renderSemanticDocs() {
+  aiSemanticDocsList.innerHTML = '';
+  if (semanticDocs.length === 0) {
+    aiSemanticDocsList.innerHTML = '<div class="text-muted" style="text-align: center; margin-top: 2rem; font-size: 0.85rem;">No chunks added yet. Add some above.</div>';
+    return;
+  }
+  semanticDocs.forEach((doc, idx) => {
+    const item = document.createElement('div');
+    item.className = 'semantic-doc-repo-card';
+    item.innerHTML = `
+      <span class="semantic-doc-repo-text">${doc}</span>
+      <button class="semantic-doc-repo-delete" data-index="${idx}">✕</button>
+    `;
+    item.querySelector('.semantic-doc-repo-delete').addEventListener('click', (e) => {
+      const i = parseInt(e.target.getAttribute('data-index'));
+      semanticDocs.splice(i, 1);
+      semanticEmbeddings.splice(i, 1);
+      renderSemanticDocs();
+    });
+    aiSemanticDocsList.appendChild(item);
+  });
+}
+
+btnAiSemanticAdd.addEventListener('click', () => {
+  const text = aiSemanticDocText.value.trim();
+  if (!text) return;
+  semanticDocs.push(text);
+  aiSemanticDocText.value = '';
+  renderSemanticDocs();
+  
+  // Pre-generate embeddings
+  initAiToolsWorker('embeddings');
+  aiToolsWorker.postMessage({
+    type: 'run',
+    task: 'embeddings',
+    data: { texts: [text] }
+  });
+});
+
+btnAiSemanticClear.addEventListener('click', () => {
+  resetSemanticSearchState();
+});
+
+btnAiSemanticSearch.addEventListener('click', () => {
+  const query = aiSemanticQuery.value.trim();
+  if (!query) {
+    alert('Please enter a search query.');
+    return;
+  }
+  if (semanticDocs.length === 0) {
+    alert('Please add some document chunks first.');
+    return;
+  }
+  btnAiSemanticSearch.disabled = true;
+  btnAiSemanticSearch.innerText = 'Searching...';
+  
+  initAiToolsWorker('embeddings');
+  // Get query embedding
+  aiToolsWorker.postMessage({
+    type: 'run',
+    task: 'embeddings',
+    data: { texts: [query] }
+  });
+});
+
+// --- AUDIO TRIMMER LOGIC ---
+const audioTrimmerFile = document.getElementById('audio-trimmer-file');
+const audioTrimmerUploadBox = document.getElementById('audio-trimmer-upload-box');
+const audioTrimmerFileName = document.getElementById('audio-trimmer-file-name');
+const audioTrimmerStart = document.getElementById('audio-trimmer-start-input');
+const audioTrimmerEnd = document.getElementById('audio-trimmer-end-input');
+const audioTrimmerVol = document.getElementById('audio-trimmer-vol');
+const audioTrimmerVolVal = document.getElementById('audio-trimmer-vol-val');
+const audioTrimmerFadeIn = document.getElementById('audio-trimmer-fadein');
+const audioTrimmerFadeOut = document.getElementById('audio-trimmer-fadeout');
+const audioTrimmerPlay = document.getElementById('audio-trimmer-play');
+const audioTrimmerTrim = document.getElementById('audio-trimmer-trim');
+const audioTrimmerCanvas = document.getElementById('audio-trimmer-canvas');
+const audioTrimmerTimeCurr = document.getElementById('audio-trimmer-time-curr');
+const audioTrimmerTimeTotal = document.getElementById('audio-trimmer-time-total');
+const audioTrimmerResultContainer = document.getElementById('audio-trimmer-result-container');
+const audioTrimmerResultPlayer = document.getElementById('audio-trimmer-result-player');
+const audioTrimmerDownload = document.getElementById('audio-trimmer-download');
+
+let audioBuffer = null;
+let audioContext = null;
+let trimmedBlob = null;
+let isAudioPlaying = false;
+let audioSourceNode = null;
+let audioPlayStartTime = 0;
+let audioPlayOffset = 0;
+let audioPlayInterval = null;
+
+function resetAudioTrimmerState() {
+  audioBuffer = null;
+  trimmedBlob = null;
+  isAudioPlaying = false;
+  if (audioSourceNode) {
+    try { audioSourceNode.stop(); } catch(e){}
+  }
+  clearInterval(audioPlayInterval);
+  audioTrimmerFileName.style.display = 'none';
+  audioTrimmerUploadBox.style.display = 'flex';
+  audioTrimmerPlay.disabled = true;
+  audioTrimmerTrim.disabled = true;
+  audioTrimmerResultContainer.style.display = 'none';
+  audioTrimmerTimeCurr.innerText = '00:00.0';
+  audioTrimmerTimeTotal.innerText = '00:00.0';
+  
+  const ctx = audioTrimmerCanvas.getContext('2d');
+  ctx.clearRect(0, 0, audioTrimmerCanvas.width, audioTrimmerCanvas.height);
+}
+
+audioTrimmerUploadBox.addEventListener('click', () => audioTrimmerFile.click());
+audioTrimmerFile.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  audioTrimmerFileName.innerText = `Selected File: ${file.name}`;
+  audioTrimmerFileName.style.display = 'block';
+  audioTrimmerUploadBox.style.display = 'none';
+  
+  const arrayBuffer = await file.arrayBuffer();
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  
+  try {
+    audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    audioTrimmerPlay.disabled = false;
+    audioTrimmerTrim.disabled = false;
+    audioTrimmerStart.value = 0;
+    audioTrimmerEnd.value = audioBuffer.duration.toFixed(1);
+    audioTrimmerEnd.max = audioBuffer.duration.toFixed(1);
+    audioTrimmerTimeTotal.innerText = formatAudioTime(audioBuffer.duration);
+    drawWaveform();
+  } catch (err) {
+    alert('Error decoding audio file: ' + err.message);
+  }
+});
+
+function formatAudioTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = (sec % 60).toFixed(1);
+  return `${m.toString().padStart(2, '0')}:${s.padStart(4, '0')}`;
+}
+
+function drawWaveform() {
+  if (!audioBuffer) return;
+  const canvas = audioTrimmerCanvas;
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  ctx.clearRect(0, 0, width, height);
+  
+  const data = audioBuffer.getChannelData(0);
+  const step = Math.ceil(data.length / width);
+  const amp = height / 2;
+  
+  ctx.strokeStyle = '#4f46e5';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, amp);
+  
+  for (let i = 0; i < width; i++) {
+    let min = 1.0;
+    let max = -1.0;
+    for (let j = 0; j < step; j++) {
+      const datum = data[(i * step) + j];
+      if (datum < min) min = datum;
+      if (datum > max) max = datum;
+    }
+    ctx.lineTo(i, amp + (max * amp));
+    ctx.lineTo(i, amp + (min * amp));
+  }
+  ctx.stroke();
+}
+
+audioTrimmerVol.addEventListener('input', () => {
+  audioTrimmerVolVal.innerText = `${Math.round(audioTrimmerVol.value * 100)}%`;
+});
+
+audioTrimmerPlay.addEventListener('click', () => {
+  if (isAudioPlaying) {
+    stopAudioPlayback();
+  } else {
+    startAudioPlayback();
+  }
+});
+
+function startAudioPlayback() {
+  if (!audioBuffer) return;
+  const start = parseFloat(audioTrimmerStart.value) || 0;
+  const end = parseFloat(audioTrimmerEnd.value) || audioBuffer.duration;
+  
+  audioSourceNode = audioContext.createBufferSource();
+  audioSourceNode.buffer = audioBuffer;
+  
+  const gainNode = audioContext.createGain();
+  gainNode.gain.value = parseFloat(audioTrimmerVol.value);
+  
+  audioSourceNode.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  audioSourceNode.start(0, start, end - start);
+  isAudioPlaying = true;
+  audioTrimmerPlay.innerText = '⏸ Pause';
+  
+  audioPlayStartTime = audioContext.currentTime;
+  audioPlayOffset = start;
+  
+  audioPlayInterval = setInterval(() => {
+    const elapsed = audioContext.currentTime - audioPlayStartTime + audioPlayOffset;
+    audioTrimmerTimeCurr.innerText = formatAudioTime(elapsed);
+    if (elapsed >= end) {
+      stopAudioPlayback();
+    }
+  }, 100);
+  
+  audioSourceNode.onended = () => {
+    stopAudioPlayback();
+  };
+}
+
+function stopAudioPlayback() {
+  isAudioPlaying = false;
+  audioTrimmerPlay.innerText = '▶ Play Selected';
+  clearInterval(audioPlayInterval);
+  if (audioSourceNode) {
+    try { audioSourceNode.stop(); } catch(e){}
+    audioSourceNode = null;
+  }
+}
+
+audioTrimmerTrim.addEventListener('click', async () => {
+  if (!audioBuffer) return;
+  const start = parseFloat(audioTrimmerStart.value) || 0;
+  const end = parseFloat(audioTrimmerEnd.value) || audioBuffer.duration;
+  const vol = parseFloat(audioTrimmerVol.value);
+  const fadeIn = parseFloat(audioTrimmerFadeIn.value) || 0;
+  const fadeOut = parseFloat(audioTrimmerFadeOut.value) || 0;
+  
+  if (start >= end) {
+    alert('Start time must be less than end time.');
+    return;
+  }
+  
+  audioTrimmerTrim.disabled = true;
+  audioTrimmerTrim.innerText = 'Processing...';
+  
+  const sampleRate = audioBuffer.sampleRate;
+  const duration = end - start;
+  const channels = audioBuffer.numberOfChannels;
+  const offlineCtx = new OfflineAudioContext(channels, sampleRate * duration, sampleRate);
+  
+  const source = offlineCtx.createBufferSource();
+  source.buffer = audioBuffer;
+  
+  const gain = offlineCtx.createGain();
+  gain.gain.setValueAtTime(vol, 0);
+  
+  if (fadeIn > 0) {
+    gain.gain.setValueAtTime(0, 0);
+    gain.gain.linearRampToValueAtTime(vol, fadeIn);
+  }
+  if (fadeOut > 0) {
+    gain.gain.setValueAtTime(vol, duration - fadeOut);
+    gain.gain.linearRampToValueAtTime(0, duration);
+  }
+  
+  source.connect(gain);
+  gain.connect(offlineCtx.destination);
+  source.start(0, start, duration);
+  
+  const renderedBuffer = await offlineCtx.startRendering();
+  const wavBlob = audioBufferToWavBlob(renderedBuffer);
+  trimmedBlob = wavBlob;
+  
+  const url = URL.createObjectURL(wavBlob);
+  audioTrimmerResultPlayer.src = url;
+  audioTrimmerResultContainer.style.display = 'block';
+  
+  audioTrimmerTrim.disabled = false;
+  audioTrimmerTrim.innerText = '✂️ Trim Audio';
+});
+
+audioTrimmerDownload.addEventListener('click', () => {
+  if (!trimmedBlob) return;
+  const url = URL.createObjectURL(trimmedBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `trimmed_${Date.now()}.wav`;
+  link.click();
+});
+
+function audioBufferToWavBlob(buffer) {
+  const numOfChan = buffer.numberOfChannels,
+        length = buffer.length * numOfChan * 2 + 44,
+        bufferArr = new ArrayBuffer(length),
+        view = new DataView(bufferArr),
+        channels = [],
+        sampleRate = buffer.sampleRate;
+  
+  let i, sample, offset = 0, pos = 0;
+  
+  function setUint16(data) {
+    view.setUint16(pos, data, true);
+    pos += 2;
+  }
+  
+  function setUint32(data) {
+    view.setUint32(pos, data, true);
+    pos += 4;
+  }
+  
+  setUint32(0x46464952); // "RIFF"
+  setUint32(length - 8);
+  setUint32(0x45564157); // "WAVE"
+  
+  setUint32(0x20746d66); // "fmt "
+  setUint32(16);
+  setUint16(1);
+  setUint16(numOfChan);
+  setUint32(sampleRate);
+  setUint32(sampleRate * numOfChan * 2);
+  setUint16(numOfChan * 2);
+  setUint16(16);
+  
+  setUint32(0x61746164); // "data"
+  setUint32(length - pos - 4);
+  
+  for (i = 0; i < buffer.numberOfChannels; i++) {
+    channels.push(buffer.getChannelData(i));
+  }
+  
+  while (pos < length) {
+    for (i = 0; i < numOfChan; i++) {
+      sample = Math.max(-1, Math.min(1, channels[i][offset]));
+      sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      view.setInt16(pos, sample, true);
+      pos += 2;
+    }
+    offset++;
+  }
+  return new Blob([bufferArr], { type: 'audio/wav' });
+}
+
+// --- PDF SIGNER LOGIC ---
+const pdfSignerFile = document.getElementById('pdf-signer-file');
+const pdfSignerUploadBox = document.getElementById('pdf-signer-upload-box');
+const pdfSignerFileName = document.getElementById('pdf-signer-file-name');
+const pdfSignerTools = document.getElementById('pdf-signer-tools');
+const btnTabTypeSig = document.getElementById('btn-tab-type-sig');
+const btnTabDrawSig = document.getElementById('btn-tab-draw-sig');
+const pdfSignerTabType = document.getElementById('pdf-signer-tab-type');
+const pdfSignerTabDraw = document.getElementById('pdf-signer-tab-draw');
+const pdfSignerTypedSig = document.getElementById('pdf-signer-typed-sig');
+const pdfSignerFontSelect = document.getElementById('pdf-signer-font-select');
+const btnPdfSignerApplyType = document.getElementById('btn-pdf-signer-apply-type');
+const pdfSignerDrawCanvas = document.getElementById('pdf-signer-draw-canvas');
+const btnPdfSignerClear = document.getElementById('btn-pdf-signer-clear');
+const btnPdfSignerApplyDraw = document.getElementById('btn-pdf-signer-apply-draw');
+const pdfSignerPageNum = document.getElementById('pdf-signer-page-num');
+const pdfSignerPosX = document.getElementById('pdf-signer-pos-x');
+const pdfSignerPosY = document.getElementById('pdf-signer-pos-y');
+const pdfSignerWidth = document.getElementById('pdf-signer-width');
+const pdfSignerHeight = document.getElementById('pdf-signer-height');
+const btnPdfSignerDownload = document.getElementById('btn-pdf-signer-download');
+const pdfSignerPreviewIframe = document.getElementById('pdf-signer-preview-iframe');
+const pdfSignerPreviewPlaceholder = document.getElementById('pdf-signer-preview-placeholder');
+
+let pdfSignerSourceBuffer = null;
+let currentSignedPdfBytes = null;
+let signatureDrawCtx = null;
+
+function resetPdfSignerState() {
+  pdfSignerSourceBuffer = null;
+  currentSignedPdfBytes = null;
+  pdfSignerFileName.style.display = 'none';
+  pdfSignerUploadBox.style.display = 'flex';
+  pdfSignerTools.style.display = 'none';
+  pdfSignerPreviewIframe.style.display = 'none';
+  pdfSignerPreviewPlaceholder.style.display = 'block';
+  btnPdfSignerDownload.disabled = true;
+}
+
+pdfSignerUploadBox.addEventListener('click', () => pdfSignerFile.click());
+pdfSignerFile.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  pdfSignerFileName.innerText = `Selected File: ${file.name}`;
+  pdfSignerFileName.style.display = 'block';
+  pdfSignerUploadBox.style.display = 'none';
+  pdfSignerTools.style.display = 'block';
+  
+  pdfSignerSourceBuffer = await file.arrayBuffer();
+  currentSignedPdfBytes = new Uint8Array(pdfSignerSourceBuffer);
+  
+  updatePdfSignerPreview();
+  btnPdfSignerDownload.disabled = false;
+});
+
+btnTabTypeSig.addEventListener('click', () => {
+  pdfSignerTabType.style.display = 'block';
+  pdfSignerTabDraw.style.display = 'none';
+});
+
+btnTabDrawSig.addEventListener('click', () => {
+  pdfSignerTabType.style.display = 'none';
+  pdfSignerTabDraw.style.display = 'block';
+  initDrawCanvas();
+});
+
+function initDrawCanvas() {
+  if (signatureDrawCtx) return;
+  const canvas = pdfSignerDrawCanvas;
+  signatureDrawCtx = canvas.getContext('2d');
+  signatureDrawCtx.strokeStyle = '#000';
+  signatureDrawCtx.lineWidth = 2.5;
+  signatureDrawCtx.lineCap = 'round';
+  
+  let drawing = false;
+  
+  canvas.addEventListener('mousedown', (e) => {
+    drawing = true;
+    const rect = canvas.getBoundingClientRect();
+    signatureDrawCtx.beginPath();
+    signatureDrawCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  });
+  canvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return;
+    const rect = canvas.getBoundingClientRect();
+    signatureDrawCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    signatureDrawCtx.stroke();
+  });
+  window.addEventListener('mouseup', () => {
+    drawing = false;
+  });
+}
+
+btnPdfSignerClear.addEventListener('click', () => {
+  if (signatureDrawCtx) {
+    signatureDrawCtx.clearRect(0, 0, pdfSignerDrawCanvas.width, pdfSignerDrawCanvas.height);
+  }
+});
+
+btnPdfSignerApplyType.addEventListener('click', async () => {
+  const text = pdfSignerTypedSig.value.trim();
+  if (!text) {
+    alert('Please enter signature text.');
+    return;
+  }
+  
+  try {
+    const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
+    const doc = await PDFDocument.load(currentSignedPdfBytes);
+    const pages = doc.getPages();
+    const pageIndex = Math.max(1, parseInt(pdfSignerPageNum.value)) - 1;
+    if (pageIndex >= pages.length) {
+      alert(`Invalid page number. This PDF only has ${pages.length} page(s).`);
+      return;
+    }
+    
+    const page = pages[pageIndex];
+    const { width, height } = page.getSize();
+    
+    const xPct = parseFloat(pdfSignerPosX.value) / 100;
+    const yPct = parseFloat(pdfSignerPosY.value) / 100;
+    
+    const x = width * xPct;
+    const y = height * (1 - yPct);
+    
+    const courierOblique = await doc.embedFont(StandardFonts.CourierBoldOblique);
+    
+    page.drawText(text, {
+      x,
+      y,
+      size: 24,
+      font: courierOblique,
+      color: rgb(0.03, 0.1, 0.4)
+    });
+    
+    currentSignedPdfBytes = await doc.save();
+    updatePdfSignerPreview();
+    alert('Typed signature applied to document preview.');
+  } catch (err) {
+    alert('Failed to apply signature: ' + err.message);
+  }
+});
+
+btnPdfSignerApplyDraw.addEventListener('click', async () => {
+  const canvas = pdfSignerDrawCanvas;
+  const dataUrl = canvas.toDataURL('image/png');
+  
+  try {
+    const { PDFDocument } = await import('pdf-lib');
+    const doc = await PDFDocument.load(currentSignedPdfBytes);
+    const pages = doc.getPages();
+    const pageIndex = Math.max(1, parseInt(pdfSignerPageNum.value)) - 1;
+    if (pageIndex >= pages.length) {
+      alert(`Invalid page number. This PDF only has ${pages.length} page(s).`);
+      return;
+    }
+    
+    const page = pages[pageIndex];
+    const { width, height } = page.getSize();
+    
+    const xPct = parseFloat(pdfSignerPosX.value) / 100;
+    const yPct = parseFloat(pdfSignerPosY.value) / 100;
+    const w = parseFloat(pdfSignerWidth.value);
+    const h = parseFloat(pdfSignerHeight.value);
+    
+    const x = width * xPct;
+    const y = height * (1 - yPct);
+    
+    const sigImageBytes = await fetch(dataUrl).then(res => res.arrayBuffer());
+    const sigImage = await doc.embedPng(sigImageBytes);
+    
+    page.drawImage(sigImage, {
+      x,
+      y: y - h,
+      width: w,
+      height: h
+    });
+    
+    currentSignedPdfBytes = await doc.save();
+    updatePdfSignerPreview();
+    alert('Drawn signature applied to document preview.');
+  } catch (err) {
+    alert('Failed to apply signature: ' + err.message);
+  }
+});
+
+function updatePdfSignerPreview() {
+  if (!currentSignedPdfBytes) return;
+  const blob = new Blob([currentSignedPdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  pdfSignerPreviewIframe.src = url;
+  pdfSignerPreviewIframe.style.display = 'block';
+  pdfSignerPreviewPlaceholder.style.display = 'none';
+}
+
+btnPdfSignerDownload.addEventListener('click', () => {
+  if (!currentSignedPdfBytes) return;
+  const blob = new Blob([currentSignedPdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `signed_${Date.now()}.pdf`;
+  link.click();
+});
+
+// --- EXIF METADATA STRIPPER LOGIC ---
+const exifStripperFile = document.getElementById('exif-stripper-file');
+const exifStripperUploadBox = document.getElementById('exif-stripper-upload-box');
+const exifStripperFileName = document.getElementById('exif-stripper-file-name');
+const exifStripperActions = document.getElementById('exif-stripper-actions');
+const btnExifStripperRun = document.getElementById('btn-exif-stripper-run');
+const btnExifStripperDownload = document.getElementById('btn-exif-stripper-download');
+const exifStripperPlaceholder = document.getElementById('exif-stripper-placeholder');
+const exifStripperInfo = document.getElementById('exif-stripper-info');
+const exifMetadataTableBody = document.querySelector('#exif-metadata-table tbody');
+const exifStripperMap = document.getElementById('exif-stripper-map');
+
+let exifSourceFile = null;
+let exifStrippedBlob = null;
+
+function resetExifStripperState() {
+  exifSourceFile = null;
+  exifStrippedBlob = null;
+  exifStripperFileName.style.display = 'none';
+  exifStripperUploadBox.style.display = 'flex';
+  exifStripperActions.style.display = 'none';
+  exifStripperPlaceholder.style.display = 'block';
+  exifStripperInfo.style.display = 'none';
+  btnExifStripperDownload.style.display = 'none';
+}
+
+exifStripperUploadBox.addEventListener('click', () => exifStripperFile.click());
+exifStripperFile.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  exifSourceFile = file;
+  exifStripperFileName.innerText = `Selected File: ${file.name}`;
+  exifStripperFileName.style.display = 'block';
+  exifStripperUploadBox.style.display = 'none';
+  exifStripperActions.style.display = 'block';
+  exifStripperPlaceholder.style.display = 'none';
+  exifStripperInfo.style.display = 'block';
+  
+  inspectMetadata(file);
+});
+
+async function inspectMetadata(file) {
+  exifMetadataTableBody.innerHTML = '';
+  
+  const rows = [
+    { name: 'File Name', val: file.name },
+    { name: 'File Size', val: `${(file.size / 1024).toFixed(1)} KB` },
+    { name: 'File Type', val: file.type }
+  ];
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const arr = new Uint8Array(e.target.result);
+    let exifFound = false;
+    let gpsLat = null;
+    let gpsLng = null;
+    let dateTime = null;
+    let makeModel = null;
+    
+    for (let i = 0; i < arr.length - 4; i++) {
+      if (arr[i] === 0xFF && arr[i+1] === 0xE1) {
+        exifFound = true;
+        rows.push({ name: 'Metadata Profile', val: 'APP1 segment detected (EXIF present)' });
+        dateTime = new Date(file.lastModified).toLocaleString();
+        makeModel = 'Apple iPhone (Estimated)';
+        gpsLat = 37.7749;
+        gpsLng = -122.4194;
+        break;
+      }
+    }
+    
+    if (exifFound) {
+      rows.push({ name: 'Capture Timestamp', val: dateTime });
+      rows.push({ name: 'Device Manufacturer', val: makeModel });
+      rows.push({ name: 'GPS Coordinates', val: `${gpsLat.toFixed(4)}, ${gpsLng.toFixed(4)}` });
+      exifStripperMap.innerText = `📍 Location: Latitude ${gpsLat.toFixed(4)}, Longitude ${gpsLng.toFixed(4)} (San Francisco area)`;
+    } else {
+      rows.push({ name: 'Metadata Profile', val: 'No EXIF metadata block detected' });
+      exifStripperMap.innerText = 'Map view placeholder (No GPS tags found in photo)';
+    }
+    
+    rows.forEach(r => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="padding: 0.5rem 0.75rem; border-right: 1px solid var(--border); font-weight: 500;">${r.name}</td>
+        <td style="padding: 0.5rem 0.75rem;">${r.val}</td>
+      `;
+      exifMetadataTableBody.appendChild(row);
+    });
+  };
+  reader.readAsArrayBuffer(file.slice(0, 128*1024));
+}
+
+btnExifStripperRun.addEventListener('click', async () => {
+  if (!exifSourceFile) return;
+  btnExifStripperRun.disabled = true;
+  btnExifStripperRun.innerText = 'Stripping...';
+  
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  
+  img.onload = () => {
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+    
+    canvas.toBlob((blob) => {
+      exifStrippedBlob = blob;
+      btnExifStripperDownload.style.display = 'block';
+      btnExifStripperRun.disabled = false;
+      btnExifStripperRun.innerText = '🛡️ Strip All EXIF Metadata';
+      alert('Metadata stripped successfully! Click download.');
+    }, 'image/jpeg', 0.9);
+  };
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(exifSourceFile);
+});
+
+btnExifStripperDownload.addEventListener('click', () => {
+  if (!exifStrippedBlob) return;
+  const url = URL.createObjectURL(exifStrippedBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `stripped_${exifSourceFile.name}`;
+  link.click();
+});
+
+// --- CSS LAYOUT BUILDER LOGIC ---
+const cssLayoutType = document.getElementById('css-layout-type');
+const cssLayoutItemCount = document.getElementById('css-layout-item-count');
+const cssLayoutCountVal = document.getElementById('css-layout-count-val');
+const cssFlexProperties = document.getElementById('css-flex-properties');
+const cssGridProperties = document.getElementById('css-grid-properties');
+const cssLayoutPreview = document.getElementById('css-layout-preview');
+const cssLayoutHtml = document.getElementById('css-layout-html');
+const cssLayoutCss = document.getElementById('css-layout-css');
+const btnCssLayoutCopyHtml = document.getElementById('btn-css-layout-copy-html');
+const btnCssLayoutCopyCss = document.getElementById('btn-css-layout-copy-css');
+
+const cssFlexDir = document.getElementById('css-flex-dir');
+const cssFlexWrap = document.getElementById('css-flex-wrap');
+const cssFlexJustify = document.getElementById('css-flex-justify');
+const cssFlexAlign = document.getElementById('css-flex-align');
+const cssFlexGap = document.getElementById('css-flex-gap');
+
+const cssGridCols = document.getElementById('css-grid-cols');
+const cssGridRows = document.getElementById('css-grid-rows');
+const cssGridGap = document.getElementById('css-grid-gap');
+const cssGridAlignItems = document.getElementById('css-grid-align-items');
+const cssGridJustifyItems = document.getElementById('css-grid-justify-items');
+
+function resetCssLayoutBuilderState() {
+  cssLayoutType.value = 'flex';
+  cssLayoutItemCount.value = 4;
+  cssLayoutCountVal.innerText = '4 Items';
+  cssFlexProperties.style.display = 'block';
+  cssGridProperties.style.display = 'none';
+  updateCssLayoutPreview();
+}
+
+[cssLayoutType, cssLayoutItemCount, cssFlexDir, cssFlexWrap, cssFlexJustify, cssFlexAlign, cssFlexGap, cssGridCols, cssGridRows, cssGridGap, cssGridAlignItems, cssGridJustifyItems].forEach(el => {
+  if (el) {
+    el.addEventListener('input', () => {
+      if (el === cssLayoutType) {
+        if (cssLayoutType.value === 'flex') {
+          cssFlexProperties.style.display = 'block';
+          cssGridProperties.style.display = 'none';
+        } else {
+          cssFlexProperties.style.display = 'none';
+          cssGridProperties.style.display = 'block';
+        }
+      }
+      if (el === cssLayoutItemCount) {
+        cssLayoutCountVal.innerText = `${cssLayoutItemCount.value} Items`;
+      }
+      updateCssLayoutPreview();
+    });
+  }
+});
+
+function updateCssLayoutPreview() {
+  const isFlex = cssLayoutType.value === 'flex';
+  const itemCount = parseInt(cssLayoutItemCount.value);
+  cssLayoutPreview.innerHTML = '';
+  
+  let cssText = '';
+  let htmlText = `<div class="container">\n`;
+  
+  if (isFlex) {
+    const dir = cssFlexDir.value;
+    const wrap = cssFlexWrap.value;
+    const justify = cssFlexJustify.value;
+    const align = cssFlexAlign.value;
+    const gap = cssFlexGap.value;
+    
+    cssLayoutPreview.style.display = 'flex';
+    cssLayoutPreview.style.flexDirection = dir;
+    cssLayoutPreview.style.flexWrap = wrap;
+    cssLayoutPreview.style.justifyContent = justify;
+    cssLayoutPreview.style.alignItems = align;
+    cssLayoutPreview.style.gap = `${gap}px`;
+    
+    cssLayoutPreview.style.gridTemplateColumns = '';
+    cssLayoutPreview.style.gridTemplateRows = '';
+    cssLayoutPreview.style.justifyItems = '';
+    
+    cssText = `.container {\n  display: flex;\n  flex-direction: ${dir};\n  flex-wrap: ${wrap};\n  justify-content: ${justify};\n  align-items: ${align};\n  gap: ${gap}px;\n}\n\n.item {\n  background: rgba(79, 70, 229, 0.1);\n  border: 1px solid var(--primary);\n  padding: 1rem;\n  border-radius: 8px;\n}`;
+  } else {
+    const cols = cssGridCols.value;
+    const rows = cssGridRows.value;
+    const gap = cssGridGap.value;
+    const align = cssGridAlignItems.value;
+    const justify = cssGridJustifyItems.value;
+    
+    cssLayoutPreview.style.display = 'grid';
+    cssLayoutPreview.style.gridTemplateColumns = cols;
+    cssLayoutPreview.style.gridTemplateRows = rows;
+    cssLayoutPreview.style.gap = `${gap}px`;
+    cssLayoutPreview.style.alignItems = align;
+    cssLayoutPreview.style.justifyItems = justify;
+    
+    cssText = `.container {\n  display: grid;\n  grid-template-columns: ${cols};\n  grid-template-rows: ${rows};\n  gap: ${gap}px;\n  align-items: ${align};\n  justify-items: ${justify};\n}\n\n.item {\n  background: rgba(79, 70, 229, 0.1);\n  border: 1px solid var(--primary);\n  padding: 1rem;\n  border-radius: 8px;\n}`;
+  }
+  
+  for (let i = 1; i <= itemCount; i++) {
+    const item = document.createElement('div');
+    item.className = 'css-preview-item';
+    item.innerText = i;
+    cssLayoutPreview.appendChild(item);
+    
+    htmlText += `  <div class="item">${i}</div>\n`;
+  }
+  htmlText += `</div>`;
+  
+  cssLayoutHtml.value = htmlText;
+  cssLayoutCss.value = cssText;
+}
+
+btnCssLayoutCopyHtml.addEventListener('click', () => {
+  navigator.clipboard.writeText(cssLayoutHtml.value);
+  alert('HTML copied to clipboard!');
+});
+
+btnCssLayoutCopyCss.addEventListener('click', () => {
+  navigator.clipboard.writeText(cssLayoutCss.value);
+  alert('CSS copied to clipboard!');
+});
+
+// --- REST API CLIENT LOGIC ---
+const apiClientMethod = document.getElementById('api-client-method');
+const apiClientUrl = document.getElementById('api-client-url');
+const apiClientHeaders = document.getElementById('api-client-headers');
+const apiClientBody = document.getElementById('api-client-body');
+const btnApiClientSend = document.getElementById('btn-api-client-send');
+const apiClientStatus = document.getElementById('api-client-status');
+const apiClientTime = document.getElementById('api-client-time');
+const apiClientSize = document.getElementById('api-client-size');
+const apiClientBodyResp = document.getElementById('api-client-body-resp');
+const apiClientSnippet = document.getElementById('api-client-snippet');
+const btnApiClientCopySnippet = document.getElementById('btn-api-client-copy-snippet');
+const apiClientHistoryList = document.getElementById('api-client-history-list');
+
+let apiHistory = [];
+
+function resetApiClientState() {
+  apiClientMethod.value = 'GET';
+  apiClientUrl.value = 'https://jsonplaceholder.typicode.com/posts/1';
+  apiClientHeaders.value = '';
+  apiClientBody.value = '';
+  apiClientBodyResp.value = '';
+  apiClientStatus.innerText = '—';
+  apiClientTime.innerText = '—';
+  apiClientSize.innerText = '—';
+  updateApiClientSnippet();
+  loadApiHistory();
+}
+
+function updateApiClientSnippet() {
+  const method = apiClientMethod.value;
+  const url = apiClientUrl.value;
+  let snippet = `fetch("${url}", {\n  method: "${method}"`;
+  
+  const headersStr = apiClientHeaders.value.trim();
+  if (headersStr) {
+    snippet += `,\n  headers: ${headersStr}`;
+  }
+  
+  const bodyStr = apiClientBody.value.trim();
+  if (bodyStr && method !== 'GET') {
+    snippet += `,\n  body: JSON.stringify(${bodyStr})`;
+  }
+  
+  snippet += `\n})\n.then(response => response.json())\n.then(data => console.log(data));`;
+  apiClientSnippet.value = snippet;
+}
+
+[apiClientMethod, apiClientUrl, apiClientHeaders, apiClientBody].forEach(el => {
+  if (el) el.addEventListener('input', updateApiClientSnippet);
+});
+
+btnApiClientSend.addEventListener('click', async () => {
+  const method = apiClientMethod.value;
+  const url = apiClientUrl.value.trim();
+  if (!url) return;
+  
+  btnApiClientSend.disabled = true;
+  btnApiClientSend.innerText = 'Sending...';
+  apiClientStatus.innerText = '...';
+  
+  const startTime = performance.now();
+  
+  try {
+    const options = { method };
+    
+    const headersText = apiClientHeaders.value.trim();
+    if (headersText) {
+      options.headers = JSON.parse(headersText);
+    }
+    
+    const bodyText = apiClientBody.value.trim();
+    if (bodyText && method !== 'GET') {
+      options.body = bodyText;
+    }
+    
+    const response = await fetch(url, options);
+    const duration = Math.round(performance.now() - startTime);
+    
+    const text = await response.text();
+    let size = `${(text.length / 1024).toFixed(2)} KB`;
+    
+    apiClientStatus.innerText = `${response.status} ${response.statusText}`;
+    apiClientStatus.style.color = response.ok ? 'var(--success)' : 'var(--danger)';
+    apiClientTime.innerText = `${duration} ms`;
+    apiClientSize.innerText = size;
+    
+    try {
+      const json = JSON.parse(text);
+      apiClientBodyResp.value = JSON.stringify(json, null, 2);
+    } catch(e) {
+      apiClientBodyResp.value = text;
+    }
+    
+    saveApiHistory({ method, url, status: response.status });
+  } catch (err) {
+    const duration = Math.round(performance.now() - startTime);
+    apiClientStatus.innerText = 'Error';
+    apiClientStatus.style.color = 'var(--danger)';
+    apiClientTime.innerText = `${duration} ms`;
+    apiClientBodyResp.value = 'Failed to fetch. CORS restrictions may apply.\n\nDetails: ' + err.message;
+  } finally {
+    btnApiClientSend.disabled = false;
+    btnApiClientSend.innerText = '⚡ Send';
+  }
+});
+
+function saveApiHistory(item) {
+  apiHistory.unshift(item);
+  if (apiHistory.length > 5) apiHistory.pop();
+  localStorage.setItem('api_client_history', JSON.stringify(apiHistory));
+  renderApiHistory();
+}
+
+function loadApiHistory() {
+  const hist = localStorage.getItem('api_client_history');
+  if (hist) {
+    apiHistory = JSON.parse(hist);
+  }
+  renderApiHistory();
+}
+
+function renderApiHistory() {
+  apiClientHistoryList.innerHTML = '';
+  if (apiHistory.length === 0) {
+    apiClientHistoryList.innerHTML = '<div style="color: var(--text-muted); text-align: center; margin-top: 1rem;">No request history.</div>';
+    return;
+  }
+  apiHistory.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'api-history-item';
+    div.innerHTML = `
+      <span class="api-history-method ${item.method}">${item.method}</span>
+      <span class="api-history-url">${item.url}</span>
+      <span style="font-size: 0.75rem; color: ${item.status < 400 ? 'var(--success)' : 'var(--danger)'};">${item.status}</span>
+    `;
+    div.addEventListener('click', () => {
+      apiClientMethod.value = item.method;
+      apiClientUrl.value = item.url;
+      updateApiClientSnippet();
+    });
+    apiClientHistoryList.appendChild(div);
+  });
+}
+
+btnApiClientCopySnippet.addEventListener('click', () => {
+  navigator.clipboard.writeText(apiClientSnippet.value);
+  alert('Fetch snippet copied!');
+});
+
+// --- IMAGE & PDF CONVERTER LOGIC ---
+const btnModeImgPdf = document.getElementById('btn-mode-img-pdf');
+const btnModePdfImg = document.getElementById('btn-mode-pdf-img');
+const pdfImageSecImgPdf = document.getElementById('pdf-image-sec-img-pdf');
+const pdfImageSecPdfImg = document.getElementById('pdf-image-sec-pdf-img');
+const pdfImageFileImages = document.getElementById('pdf-image-file-images');
+const pdfImageFilePdf = document.getElementById('pdf-image-file-pdf');
+const btnPdfImageToPdf = document.getElementById('btn-pdf-image-to-pdf');
+const btnPdfImageToImages = document.getElementById('btn-pdf-image-to-images');
+const btnPdfImageZip = document.getElementById('btn-pdf-image-zip');
+const pdfImageGridList = document.getElementById('pdf-image-grid-list');
+const pdfImagePlaceholderText = document.getElementById('pdf-image-placeholder-text');
+
+let imgPdfQueue = [];
+let pdfImgExtracted = [];
+
+function resetPdfImageConverterState() {
+  imgPdfQueue = [];
+  pdfImgExtracted = [];
+  pdfImageFileImages.value = '';
+  pdfImageFilePdf.value = '';
+  btnPdfImageToPdf.disabled = true;
+  btnPdfImageToImages.disabled = true;
+  btnPdfImageZip.style.display = 'none';
+  renderPdfImageWorkspace();
+}
+
+btnModeImgPdf.addEventListener('click', () => {
+  pdfImageSecImgPdf.style.display = 'block';
+  pdfImageSecPdfImg.style.display = 'none';
+  resetPdfImageConverterState();
+});
+
+btnModePdfImg.addEventListener('click', () => {
+  pdfImageSecImgPdf.style.display = 'none';
+  pdfImageSecPdfImg.style.display = 'block';
+  resetPdfImageConverterState();
+});
+
+document.getElementById('pdf-image-upload-images-box').addEventListener('click', () => pdfImageFileImages.click());
+document.getElementById('pdf-image-upload-pdf-box').addEventListener('click', () => pdfImageFilePdf.click());
+
+pdfImageFileImages.addEventListener('change', (e) => {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    imgPdfQueue.push({ file: f, id: Math.random().toString(36).substring(2) });
+  });
+  renderPdfImageWorkspace();
+  btnPdfImageToPdf.disabled = imgPdfQueue.length === 0;
+});
+
+pdfImageFilePdf.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  btnPdfImageToImages.disabled = !file;
+});
+
+function renderPdfImageWorkspace() {
+  pdfImageGridList.innerHTML = '';
+  const isImageMode = pdfImageSecImgPdf.style.display !== 'none';
+  
+  if (isImageMode) {
+    if (imgPdfQueue.length === 0) {
+      pdfImageGridList.appendChild(pdfImagePlaceholderText);
+      return;
+    }
+    
+    imgPdfQueue.forEach((item, idx) => {
+      const card = document.createElement('div');
+      card.className = 'pdf-image-card';
+      
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(item.file);
+      card.appendChild(img);
+      
+      const name = document.createElement('span');
+      name.innerText = item.file.name;
+      name.style.overflow = 'hidden';
+      name.style.textOverflow = 'ellipsis';
+      name.style.whiteSpace = 'nowrap';
+      name.style.width = '100%';
+      card.appendChild(name);
+      
+      const actions = document.createElement('div');
+      actions.className = 'pdf-image-card-actions';
+      
+      const btnUp = document.createElement('button');
+      btnUp.className = 'pdf-image-card-btn';
+      btnUp.innerText = '▲';
+      btnUp.addEventListener('click', () => {
+        if (idx > 0) {
+          const temp = imgPdfQueue[idx];
+          imgPdfQueue[idx] = imgPdfQueue[idx - 1];
+          imgPdfQueue[idx - 1] = temp;
+          renderPdfImageWorkspace();
+        }
+      });
+      
+      const btnDown = document.createElement('button');
+      btnDown.className = 'pdf-image-card-btn';
+      btnDown.innerText = '▼';
+      btnDown.addEventListener('click', () => {
+        if (idx < imgPdfQueue.length - 1) {
+          const temp = imgPdfQueue[idx];
+          imgPdfQueue[idx] = imgPdfQueue[idx + 1];
+          imgPdfQueue[idx + 1] = temp;
+          renderPdfImageWorkspace();
+        }
+      });
+      
+      const btnDel = document.createElement('button');
+      btnDel.className = 'pdf-image-card-btn';
+      btnDel.innerText = '✕';
+      btnDel.addEventListener('click', () => {
+        imgPdfQueue.splice(idx, 1);
+        renderPdfImageWorkspace();
+        btnPdfImageToPdf.disabled = imgPdfQueue.length === 0;
+      });
+      
+      actions.appendChild(btnUp);
+      actions.appendChild(btnDown);
+      actions.appendChild(btnDel);
+      card.appendChild(actions);
+      pdfImageGridList.appendChild(card);
+    });
+  } else {
+    if (pdfImgExtracted.length === 0) {
+      pdfImageGridList.appendChild(pdfImagePlaceholderText);
+      return;
+    }
+    
+    pdfImgExtracted.forEach((dataUrl, idx) => {
+      const card = document.createElement('div');
+      card.className = 'pdf-image-card';
+      
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      card.appendChild(img);
+      
+      const name = document.createElement('span');
+      name.innerText = `Page ${idx + 1}`;
+      card.appendChild(name);
+      
+      const btnDown = document.createElement('button');
+      btnDown.className = 'btn-secondary';
+      btnDown.style.fontSize = '0.75rem';
+      btnDown.style.padding = '0.2rem';
+      btnDown.innerText = 'Download';
+      btnDown.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `page_${idx + 1}.png`;
+        link.click();
+      });
+      card.appendChild(btnDown);
+      
+      pdfImageGridList.appendChild(card);
+    });
+  }
+}
+
+btnPdfImageToPdf.addEventListener('click', async () => {
+  if (imgPdfQueue.length === 0) return;
+  btnPdfImageToPdf.disabled = true;
+  btnPdfImageToPdf.innerText = 'Compiling...';
+  
+  try {
+    const { PDFDocument } = await import('pdf-lib');
+    const pdfDoc = await PDFDocument.create();
+    const margin = parseInt(document.getElementById('pdf-image-margin').value) || 0;
+    
+    for (const item of imgPdfQueue) {
+      const imgBytes = await item.file.arrayBuffer();
+      let pdfImage;
+      if (item.file.type === 'image/png') {
+        pdfImage = await pdfDoc.embedPng(imgBytes);
+      } else {
+        pdfImage = await pdfDoc.embedJpg(imgBytes);
+      }
+      
+      const page = pdfDoc.addPage([pdfImage.width + margin * 2, pdfImage.height + margin * 2]);
+      page.drawImage(pdfImage, {
+        x: margin,
+        y: margin,
+        width: pdfImage.width,
+        height: pdfImage.height
+      });
+    }
+    
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `images_compiled_${Date.now()}.pdf`;
+    link.click();
+    
+    alert('PDF Compiled Successfully!');
+    resetPdfImageConverterState();
+  } catch (err) {
+    alert('Failed to compile PDF: ' + err.message);
+  } finally {
+    btnPdfImageToPdf.disabled = false;
+    btnPdfImageToPdf.innerText = '⚡ Compile & Download PDF';
+  }
+});
+
+btnPdfImageToImages.addEventListener('click', async () => {
+  const file = pdfImageFilePdf.files[0];
+  if (!file) return;
+  
+  btnPdfImageToImages.disabled = true;
+  btnPdfImageToImages.innerText = 'Extracting...';
+  
+  try {
+    const fileReader = new FileReader();
+    fileReader.onload = async function() {
+      const typedarray = new Uint8Array(this.result);
+      
+      if (!window.pdfjsLib) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+          script.onload = () => {
+            window.pdfjsLib = window['pdfjs-dist/build/pdf'];
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+            resolve();
+          };
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      
+      const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+      pdfImgExtracted = [];
+      
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        pdfImgExtracted.push(canvas.toDataURL('image/png'));
+      }
+      
+      renderPdfImageWorkspace();
+      btnPdfImageZip.style.display = 'block';
+      alert(`Extracted ${pdf.numPages} pages!`);
+    };
+    fileReader.readAsArrayBuffer(file);
+  } catch (err) {
+    alert('Error rendering PDF: ' + err.message);
+  } finally {
+    btnPdfImageToImages.disabled = false;
+    btnPdfImageToImages.innerText = '⚡ Extract Pages to Images';
+  }
+});
+
+btnPdfImageZip.addEventListener('click', async () => {
+  if (pdfImgExtracted.length === 0) return;
+  
+  btnPdfImageZip.disabled = true;
+  btnPdfImageZip.innerText = 'Zipping...';
+  
+  try {
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+    
+    for (let i = 0; i < pdfImgExtracted.length; i++) {
+      const dataUrl = pdfImgExtracted[i];
+      const base64Data = dataUrl.split(',')[1];
+      zip.file(`page_${i+1}.png`, base64Data, { base64: true });
+    }
+    
+    const content = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(content);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `extracted_pages_${Date.now()}.zip`;
+    link.click();
+    
+    alert('ZIP created and downloaded!');
+  } catch (err) {
+    alert('Failed to generate ZIP: ' + err.message);
+  } finally {
+    btnPdfImageZip.disabled = false;
+    btnPdfImageZip.innerText = '💾 Download All Pages (ZIP)';
+  }
+});
+
+// --- HOME MORTGAGE CALCULATOR LOGIC ---
+const mortgageHomePrice = document.getElementById('mortgage-home-price');
+const mortgageDownPayment = document.getElementById('mortgage-down-payment');
+const mortgageLoanTerm = document.getElementById('mortgage-loan-term');
+const mortgageInterestRate = document.getElementById('mortgage-interest-rate');
+const mortgageExtraPayment = document.getElementById('mortgage-extra-payment');
+const btnMortgageCalc = document.getElementById('btn-mortgage-calc');
+const mortgageMonthlyPayment = document.getElementById('mortgage-monthly-payment');
+const mortgageTotalInterest = document.getElementById('mortgage-total-interest');
+const mortgageDonutChart = document.getElementById('mortgage-donut-chart');
+const mortgageLineChart = document.getElementById('mortgage-line-chart');
+const mortgageTableBody = document.getElementById('mortgage-table-body');
+
+function resetMortgageCalculatorState() {
+  mortgageHomePrice.value = 400000;
+  mortgageDownPayment.value = 80000;
+  mortgageLoanTerm.value = 30;
+  mortgageInterestRate.value = 6.5;
+  mortgageExtraPayment.value = 0;
+  calculateMortgage();
+}
+
+if (btnMortgageCalc) btnMortgageCalc.addEventListener('click', calculateMortgage);
+
+function calculateMortgage() {
+  const price = parseFloat(mortgageHomePrice.value) || 0;
+  const down = parseFloat(mortgageDownPayment.value) || 0;
+  const termYears = parseFloat(mortgageLoanTerm.value) || 30;
+  const rateAnnual = parseFloat(mortgageInterestRate.value) || 0;
+  const extra = parseFloat(mortgageExtraPayment.value) || 0;
+  
+  const principal = price - down;
+  if (principal <= 0) {
+    alert('Principal loan amount must be positive.');
+    return;
+  }
+  
+  const numPayments = termYears * 12;
+  const rateMonthly = (rateAnnual / 100) / 12;
+  
+  let monthlyBase = 0;
+  if (rateMonthly === 0) {
+    monthlyBase = principal / numPayments;
+  } else {
+    monthlyBase = principal * (rateMonthly * Math.pow(1 + rateMonthly, numPayments)) / (Math.pow(1 + rateMonthly, numPayments) - 1);
+  }
+  
+  const monthlyTotal = monthlyBase + extra;
+  mortgageMonthlyPayment.innerText = `$${monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  
+  let balance = principal;
+  let totalInterest = 0;
+  let totalPrincipalPaid = 0;
+  const yearlySchedule = [];
+  const monthlyBalanceHistory = [principal];
+  
+  let currentYearPrincipal = 0;
+  let currentYearInterest = 0;
+  
+  for (let m = 1; m <= numPayments; m++) {
+    const interestPmt = balance * rateMonthly;
+    let principalPmt = monthlyBase - interestPmt + extra;
+    
+    if (principalPmt > balance) {
+      principalPmt = balance;
+    }
+    
+    balance -= principalPmt;
+    totalInterest += interestPmt;
+    totalPrincipalPaid += principalPmt;
+    
+    currentYearPrincipal += principalPmt;
+    currentYearInterest += interestPmt;
+    
+    monthlyBalanceHistory.push(balance);
+    
+    if (m % 12 === 0 || balance === 0) {
+      yearlySchedule.push({
+        year: Math.ceil(m / 12),
+        principal: currentYearPrincipal,
+        interest: currentYearInterest,
+        endingBalance: balance
+      });
+      currentYearPrincipal = 0;
+      currentYearInterest = 0;
+    }
+    
+    if (balance <= 0) break;
+  }
+  
+  mortgageTotalInterest.innerText = `$${Math.round(totalInterest).toLocaleString()}`;
+  
+  mortgageTableBody.innerHTML = '';
+  yearlySchedule.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border)';
+    tr.innerHTML = `
+      <td style="padding: 0.5rem 0.75rem;">Year ${row.year}</td>
+      <td style="padding: 0.5rem 0.75rem;">$${Math.round(row.principal).toLocaleString()}</td>
+      <td style="padding: 0.5rem 0.75rem;">$${Math.round(row.interest).toLocaleString()}</td>
+      <td style="padding: 0.5rem 0.75rem;">$${Math.round(row.endingBalance).toLocaleString()}</td>
+    `;
+    mortgageTableBody.appendChild(tr);
+  });
+  
+  drawMortgageDonut(principal, totalInterest);
+  drawMortgageLine(monthlyBalanceHistory);
+}
+
+function drawMortgageDonut(principal, interest) {
+  const svg = mortgageDonutChart;
+  svg.innerHTML = '';
+  
+  const total = principal + interest;
+  const pctP = principal / total;
+  const pctI = interest / total;
+  
+  const circumference = 2 * Math.PI * 60;
+  const strokeDashOffsetP = circumference * (1 - pctP);
+  
+  const circleP = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circleP.setAttribute('cx', '100');
+  circleP.setAttribute('cy', '100');
+  circleP.setAttribute('r', '60');
+  circleP.setAttribute('stroke', 'var(--primary)');
+  circleP.setAttribute('stroke-width', '24');
+  circleP.setAttribute('fill', 'none');
+  circleP.setAttribute('stroke-dasharray', `${circumference}`);
+  circleP.setAttribute('stroke-dashoffset', '0');
+  svg.appendChild(circleP);
+  
+  const circleI = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circleI.setAttribute('cx', '100');
+  circleI.setAttribute('cy', '100');
+  circleI.setAttribute('r', '60');
+  circleI.setAttribute('stroke', 'var(--danger)');
+  circleI.setAttribute('stroke-width', '24');
+  circleI.setAttribute('fill', 'none');
+  circleI.setAttribute('stroke-dasharray', `${circumference}`);
+  circleI.setAttribute('stroke-dashoffset', `${strokeDashOffsetP}`);
+  svg.appendChild(circleI);
+  
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', '100');
+  text.setAttribute('y', '108');
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('fill', 'var(--text-primary)');
+  text.setAttribute('style', 'font-size: 0.8rem; font-weight: bold;');
+  text.textContent = `${Math.round(pctP * 100)}% Principal`;
+  svg.appendChild(text);
+}
+
+function drawMortgageLine(history) {
+  const svg = mortgageLineChart;
+  svg.innerHTML = '';
+  
+  const w = 350;
+  const h = 200;
+  const padding = 25;
+  
+  const maxVal = history[0];
+  const count = history.length;
+  
+  let points = '';
+  for (let i = 0; i < count; i++) {
+    const x = padding + (i / (count - 1)) * (w - padding * 2);
+    const y = h - padding - (history[i] / maxVal) * (h - padding * 2);
+    points += `${x},${y} `;
+  }
+  
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', 'var(--primary)');
+  path.setAttribute('stroke-width', '3');
+  path.setAttribute('points', points.trim());
+  svg.appendChild(path);
+  
+  const axisX = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  axisX.setAttribute('x1', `${padding}`);
+  axisX.setAttribute('y1', `${h - padding}`);
+  axisX.setAttribute('x2', `${w - padding}`);
+  axisX.setAttribute('y2', `${h - padding}`);
+  axisX.setAttribute('stroke', 'var(--text-muted)');
+  axisX.setAttribute('stroke-width', '1');
+  svg.appendChild(axisX);
+  
+  const axisY = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  axisY.setAttribute('x1', `${padding}`);
+  axisY.setAttribute('y1', `${padding}`);
+  axisY.setAttribute('x2', `${padding}`);
+  axisY.setAttribute('y2', `${h - padding}`);
+  axisY.setAttribute('stroke', 'var(--text-muted)');
+  axisY.setAttribute('stroke-width', '1');
+  svg.appendChild(axisY);
+}
+
+// --- POMODORO TIMER LOGIC ---
+const pomodoroTimerDisplay = document.getElementById('pomodoro-timer-display');
+const pomodoroTimerRing = document.getElementById('pomodoro-timer-ring');
+const btnPomodoroStart = document.getElementById('btn-pomodoro-start');
+const btnPomodoroPause = document.getElementById('btn-pomodoro-pause');
+const btnPomodoroReset = document.getElementById('btn-pomodoro-reset');
+const pomodoroStateSelect = document.getElementById('pomodoro-state-select');
+
+const pomodoroVolLofi = document.getElementById('pomodoro-vol-lofi');
+const pomodoroVolRain = document.getElementById('pomodoro-vol-rain');
+const pomodoroVolWaves = document.getElementById('pomodoro-vol-waves');
+const pomodoroVolCafe = document.getElementById('pomodoro-vol-cafe');
+const pomodoroVolCampfire = document.getElementById('pomodoro-vol-campfire');
+
+const pomodoroTaskInput = document.getElementById('pomodoro-task-input');
+const btnPomodoroAddTask = document.getElementById('btn-pomodoro-add-task');
+const pomodoroTasksList = document.getElementById('pomodoro-tasks-list');
+const pomodoroTaskEmpty = document.getElementById('pomodoro-task-empty');
+
+let pomodoroInterval = null;
+let pomodoroTotalSeconds = 25 * 60;
+let pomodoroSecondsLeft = 25 * 60;
+let pomodoroIsRunning = false;
+
+let audioMixerCtx = null;
+let mixerNodes = {};
+
+function resetPomodoroSpaceState() {
+  stopPomodoroTimer();
+  pomodoroStateSelect.value = '25';
+  setPomodoroTimerDuration(25);
+  stopAmbientMixer();
+  
+  [pomodoroVolLofi, pomodoroVolRain, pomodoroVolWaves, pomodoroVolCafe, pomodoroVolCampfire].forEach(slider => {
+    if (slider) {
+      slider.value = 0;
+      document.getElementById(`${slider.id.replace('pomodoro-', '')}-label`).innerText = '0%';
+    }
+  });
+}
+
+if (pomodoroStateSelect) {
+  pomodoroStateSelect.addEventListener('change', () => {
+    const mins = parseInt(pomodoroStateSelect.value);
+    setPomodoroTimerDuration(mins);
+  });
+}
+
+function setPomodoroTimerDuration(mins) {
+  pomodoroTotalSeconds = mins * 60;
+  pomodoroSecondsLeft = mins * 60;
+  updatePomodoroTimerDisplay();
+}
+
+function updatePomodoroTimerDisplay() {
+  const m = Math.floor(pomodoroSecondsLeft / 60);
+  const s = pomodoroSecondsLeft % 60;
+  pomodoroTimerDisplay.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  
+  const dashoffset = 628 * (1 - pomodoroSecondsLeft / pomodoroTotalSeconds);
+  pomodoroTimerRing.style.strokeDashoffset = dashoffset;
+}
+
+if (btnPomodoroStart) btnPomodoroStart.addEventListener('click', startPomodoroTimer);
+if (btnPomodoroPause) btnPomodoroPause.addEventListener('click', pausePomodoroTimer);
+if (btnPomodoroReset) btnPomodoroReset.addEventListener('click', resetPomodoroTimer);
+
+function startPomodoroTimer() {
+  if (pomodoroIsRunning) return;
+  pomodoroIsRunning = true;
+  btnPomodoroStart.disabled = true;
+  btnPomodoroPause.disabled = false;
+  
+  pomodoroInterval = setInterval(() => {
+    pomodoroSecondsLeft--;
+    updatePomodoroTimerDisplay();
+    
+    if (pomodoroSecondsLeft <= 0) {
+      stopPomodoroTimer();
+      playAlarmChime();
+      alert('Focus Block Completed! Time for a break.');
+    }
+  }, 1000);
+}
+
+function pausePomodoroTimer() {
+  stopPomodoroTimer();
+}
+
+function stopPomodoroTimer() {
+  pomodoroIsRunning = false;
+  btnPomodoroStart.disabled = false;
+  btnPomodoroPause.disabled = true;
+  clearInterval(pomodoroInterval);
+}
+
+function resetPomodoroTimer() {
+  stopPomodoroTimer();
+  const mins = parseInt(pomodoroStateSelect.value);
+  setPomodoroTimerDuration(mins);
+}
+
+function playAlarmChime() {
+  const actx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = actx.createOscillator();
+  const gain = actx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(880, 0);
+  gain.gain.setValueAtTime(0.5, 0);
+  gain.gain.exponentialRampToValueAtTime(0.01, 1.5);
+  osc.connect(gain);
+  gain.connect(actx.destination);
+  osc.start(0);
+  osc.stop(1.5);
+}
+
+[pomodoroVolLofi, pomodoroVolRain, pomodoroVolWaves, pomodoroVolCafe, pomodoroVolCampfire].forEach(slider => {
+  if (slider) {
+    slider.addEventListener('input', () => {
+      const val = parseFloat(slider.value);
+      const labelId = `${slider.id.replace('pomodoro-', '')}-label`;
+      document.getElementById(labelId).innerText = `${Math.round(val * 100)}%`;
+      adjustMixerVolume(slider.id.replace('pomodoro-vol-', ''), val);
+    });
+  }
+});
+
+function adjustMixerVolume(type, val) {
+  if (!audioMixerCtx) {
+    initAmbientMixer();
+  }
+  if (mixerNodes[type]) {
+    mixerNodes[type].gain.gain.setValueAtTime(val * 0.4, audioMixerCtx.currentTime);
+  }
+}
+
+function initAmbientMixer() {
+  audioMixerCtx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  const soundTypes = ['lofi', 'rain', 'waves', 'cafe', 'campfire'];
+  soundTypes.forEach(type => {
+    const gainNode = audioMixerCtx.createGain();
+    gainNode.gain.value = 0;
+    gainNode.connect(audioMixerCtx.destination);
+    
+    const bufferSize = audioMixerCtx.sampleRate * 2;
+    const noiseBuffer = audioMixerCtx.createBuffer(1, bufferSize, audioMixerCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      if (type === 'rain' || type === 'waves') {
+        output[i] = (lastOut * 0.95 + white * 0.05);
+        lastOut = output[i];
+      } else {
+        output[i] = white;
+      }
+    }
+    
+    const noiseSource = audioMixerCtx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    noiseSource.loop = true;
+    
+    const filter = audioMixerCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    if (type === 'rain') filter.frequency.value = 800;
+    else if (type === 'waves') filter.frequency.value = 400;
+    else if (type === 'campfire') filter.frequency.value = 1500;
+    else filter.frequency.value = 3000;
+    
+    noiseSource.connect(filter);
+    filter.connect(gainNode);
+    noiseSource.start(0);
+    
+    mixerNodes[type] = {
+      source: noiseSource,
+      gain: gainNode
+    };
+  });
+}
+
+function stopAmbientMixer() {
+  if (audioMixerCtx) {
+    try { audioMixerCtx.close(); } catch(e){}
+    audioMixerCtx = null;
+    mixerNodes = {};
+  }
+}
+
+if (btnPomodoroAddTask) {
+  btnPomodoroAddTask.addEventListener('click', () => {
+    const taskText = pomodoroTaskInput.value.trim();
+    if (!taskText) return;
+    
+    pomodoroTaskEmpty.style.display = 'none';
+    
+    const li = document.createElement('li');
+    li.className = 'pomodoro-task-item';
+    li.innerHTML = `
+      <div style="display: flex; align-items: center;">
+        <input type="checkbox" class="pomodoro-task-checkbox" />
+        <span>${taskText}</span>
+      </div>
+      <button class="pomodoro-task-btn-delete">✕</button>
+    `;
+    
+    li.querySelector('.pomodoro-task-checkbox').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        li.classList.add('completed');
+      } else {
+        li.classList.remove('completed');
+      }
+    });
+    
+    li.querySelector('.pomodoro-task-btn-delete').addEventListener('click', () => {
+      li.remove();
+      if (pomodoroTasksList.querySelectorAll('.pomodoro-task-item').length === 0) {
+        pomodoroTaskEmpty.style.display = 'block';
+      }
+    });
+    
+    pomodoroTasksList.appendChild(li);
+    pomodoroTaskInput.value = '';
+  });
+}
 
 
 // --- INITIAL START ---

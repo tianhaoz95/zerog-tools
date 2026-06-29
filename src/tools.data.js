@@ -326,5 +326,95 @@ export const TOOLS = [
     category: 'Calculators',
     icon: '🔋',
     uiClass: 'ready'
+  },
+  {
+    id: 'ai-summarizer',
+    title: 'AI Text Summarizer',
+    description: 'Summarize articles or transcripts, extract key bullet points, and adjust summary length locally in your browser using local AI models.',
+    keywords: ['summarize', 'text summary', 'summarizer', 'extract points', 'local ai', 'article summary', 't5'],
+    category: 'Text',
+    icon: '📝',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-semantic-search',
+    title: 'AI Semantic Search & Explorer',
+    description: 'Paste text documents and search through them using natural language queries by semantic concept instead of raw keywords, 100% locally.',
+    keywords: ['semantic search', 'embeddings', 'text match', 'similarity search', 'concept search', 'local ai', 'vector search'],
+    category: 'Developer',
+    icon: '🔍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'audio-trimmer',
+    title: 'Audio Waveform Editor & Trimmer',
+    description: 'Upload audio files, visualize their waveforms in real-time, trim segments, apply volume fades, and export/download the audio locally.',
+    keywords: ['trim audio', 'crop audio', 'audio editor', 'waveform', 'mp3 trimmer', 'wav cutter', 'fade audio'],
+    category: 'Audio',
+    icon: '✂️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'pdf-signer',
+    title: 'PDF Signer & Form Annotator',
+    description: 'Upload any PDF document, draw or type your signature, annotate fields, position them dynamically on pages, and save the signed PDF.',
+    keywords: ['sign pdf', 'signature', 'annotate pdf', 'fill form', 'pdf-lib', 'write on pdf', 'pdf editor'],
+    category: 'Developer',
+    icon: '✍️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'exif-stripper',
+    title: 'EXIF Metadata Inspector & Stripper',
+    description: 'Inspect hidden metadata (camera settings, capture timestamps, GPS coordinates) in your photos and strip them for complete privacy.',
+    keywords: ['exif metadata', 'strip exif', 'remove metadata', 'gps metadata', 'photo location', 'image details', 'privacy photo'],
+    category: 'Security',
+    icon: '📷',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-layout-builder',
+    title: 'Interactive Flexbox & CSS Grid Builder',
+    description: 'Visually construct flexbox or grid layouts. Add grid items, set padding, gaps, alignments, and output ready-to-use HTML/CSS code.',
+    keywords: ['flexbox', 'css grid', 'layout generator', 'visual designer', 'css builder', 'frontend tool', 'responsive'],
+    category: 'Developer',
+    icon: '📐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'api-client',
+    title: 'REST API Client & Request Tester',
+    description: 'Test HTTP requests (GET, POST, etc.) with custom headers and body payloads, view formatted responses, and generate code snippets client-side.',
+    keywords: ['api tester', 'rest client', 'postman', 'fetch request', 'http request', 'api debugger', 'cors test'],
+    category: 'Developer',
+    icon: '⚡',
+    uiClass: 'ready'
+  },
+  {
+    id: 'pdf-image-converter',
+    title: 'Image-to-PDF & PDF-to-Image Converter',
+    description: 'Combine multiple images with drag-and-drop ordering into a single PDF, or render and extract PDF pages as high-resolution PNG images.',
+    keywords: ['image to pdf', 'pdf to image', 'convert images', 'extract pdf pages', 'png to pdf', 'pdf to png', 'pdf converter'],
+    category: 'Graphics',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'mortgage-calculator',
+    title: 'Home Mortgage & Amortization Dashboard',
+    description: 'Calculate monthly home loan payments, simulate extra repayment impacts, and view interactive amortization charts and schedule tables.',
+    keywords: ['mortgage calculator', 'amortization schedule', 'home loan', 'interest principal', 'financial chart', 'loan calculator'],
+    category: 'Calculators',
+    icon: '🏠',
+    uiClass: 'ready'
+  },
+  {
+    id: 'pomodoro-space',
+    title: 'Pomodoro Space & Ambient Soundscape',
+    description: 'A study/work productivity station combining Pomodoro time blocks with customizable ambient background audio mixing.',
+    keywords: ['pomodoro timer', 'ambient sound', 'lofi focus', 'productivity timer', 'study space', 'audio mixer', 'white noise'],
+    category: 'Calculators',
+    icon: '🍅',
+    uiClass: 'ready'
   }
 ];
