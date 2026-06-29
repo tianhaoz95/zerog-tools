@@ -3717,6 +3717,38 @@ function runToolsFilter() {
   renderToolsGrid(filtered);
 }
 
+// --- COLLAPSIBLE CHAT SIDEBAR LOGIC ---
+const btnToggleChat = document.getElementById('btn-toggle-chat');
+const btnCloseChat = document.getElementById('btn-close-chat');
+const appContainer = document.getElementById('app');
+
+function toggleChat(forceState) {
+  const isCollapsed = appContainer.classList.contains('chat-collapsed');
+  const shouldCollapse = forceState !== undefined ? forceState : !isCollapsed;
+
+  const toggleText = btnToggleChat.querySelector('.chat-toggle-text');
+  
+  if (shouldCollapse) {
+    appContainer.classList.add('chat-collapsed');
+    if (toggleText) toggleText.innerText = 'Show Chat';
+  } else {
+    appContainer.classList.remove('chat-collapsed');
+    if (toggleText) toggleText.innerText = 'Hide Chat';
+    // Scroll chat messages list to the bottom on expand
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  }
+}
+
+if (btnToggleChat) {
+  btnToggleChat.addEventListener('click', () => toggleChat());
+}
+if (btnCloseChat) {
+  btnCloseChat.addEventListener('click', () => toggleChat(true));
+}
+
 // --- INITIAL START ---
 window.addEventListener('DOMContentLoaded', () => {
   renderToolsGrid(TOOLS);

@@ -21,12 +21,19 @@
             <p class="header-text">Zero servers. Complete privacy. All tools run 100% locally in your browser using client-side AI models.</p>
           </div>
         </div>
-        <!-- Global AI Status Widget -->
-        <div class="ai-status-widget">
-          <div class="status-dot offline" id="global-ai-status-dot"></div>
-          <span id="global-ai-status-text">AI Offline</span>
-          <div class="status-progress-bar" id="global-ai-status-progress-bar">
-            <div class="status-progress-bar-fill" id="global-ai-status-progress-bar-fill"></div>
+        <!-- Header Actions (Toggle Chat & Status) -->
+        <div class="header-actions" style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-chat" class="btn-secondary" style="padding: 0.5rem 0.85rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; font-weight: 500;">
+            <span class="chat-toggle-icon">💬</span>
+            <span class="chat-toggle-text">Hide Chat</span>
+          </button>
+          
+          <div class="ai-status-widget">
+            <div class="status-dot offline" id="global-ai-status-dot"></div>
+            <span id="global-ai-status-text">AI Offline</span>
+            <div class="status-progress-bar" id="global-ai-status-progress-bar">
+              <div class="status-progress-bar-fill" id="global-ai-status-progress-bar-fill"></div>
+            </div>
           </div>
         </div>
       </header>
@@ -35,8 +42,13 @@
       <aside class="chat-sidebar">
         <div class="chat-panel">
           <div class="chat-panel-header">
-            <h3>🤖 AI Chat Assistant</h3>
-            <p>Ask for recommendations or help with your task</p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+              <div>
+                <h3>🤖 AI Chat Assistant</h3>
+                <p>Ask for recommendations or help with your task</p>
+              </div>
+              <button id="btn-close-chat" class="btn-close-chat-x" title="Collapse Chat">✕</button>
+            </div>
           </div>
           
           <!-- Chat history scroll viewport -->
