@@ -4,32 +4,36 @@
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
   
-  /* Color Palette */
-  --bg-dark: #09090b;
-  --bg-card: rgba(20, 20, 25, 0.65);
-  --bg-card-hover: rgba(30, 30, 38, 0.8);
+  /* Color Palette for Light Mode */
+  --bg-dark: #f4f5f7; /* Slate 50 */
+  --bg-card: rgba(255, 255, 255, 0.7); /* Frosted white card */
+  --bg-card-hover: rgba(255, 255, 255, 0.85);
+  --bg-input: #ffffff; /* Clean white inputs */
+  --bg-preview: #f1f5f9; /* Slate 100 preview background */
+  --bg-assistant: #f1f5f9; /* Assistant chat bubble background */
   
-  --primary: #6366f1; /* Electric Indigo */
-  --primary-glow: rgba(99, 102, 241, 0.15);
-  --secondary: #06b6d4; /* Cyan */
-  --secondary-glow: rgba(6, 182, 212, 0.15);
-  --accent: #10b981; /* Emerald */
-  --accent-glow: rgba(16, 185, 129, 0.15);
-  --danger: #ef4444;
+  --primary: #4f46e5; /* Indigo 600 */
+  --primary-glow: rgba(79, 70, 229, 0.1);
+  --secondary: #0891b2; /* Cyan 600 */
+  --secondary-glow: rgba(8, 145, 178, 0.1);
+  --accent: #059669; /* Emerald 600 */
+  --accent-glow: rgba(5, 150, 105, 0.1);
+  --danger: #dc2626; /* Red 600 */
+  --success: #16a34a; /* Green 600 */
   
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --text-muted: #52525b;
+  --text-primary: #0f172a; /* Slate 900 */
+  --text-secondary: #475569; /* Slate 600 */
+  --text-muted: #94a3b8; /* Slate 400 */
   
-  --border: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(99, 102, 241, 0.4);
+  --border: rgba(0, 0, 0, 0.08); /* Soft dark border */
+  --border-focus: rgba(79, 70, 229, 0.4);
   
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
   
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --glow-shadow: 0 0 40px -10px var(--primary);
+  --glow-shadow: 0 4px 20px -5px rgba(79, 70, 229, 0.2);
 }
 
 /* Base Styles */
@@ -60,19 +64,19 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 9999px;
   transition: var(--transition);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.4);
+  background: rgba(79, 70, 229, 0.4);
 }
 
 /* For non-webkit browsers */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
 /* Background Gradients */
@@ -84,7 +88,7 @@ body::before, body::after {
   border-radius: 50%;
   z-index: -1;
   filter: blur(150px);
-  opacity: 0.15;
+  opacity: 0.08;
   pointer-events: none;
 }
 
@@ -286,7 +290,7 @@ h1, h2, h3, h4 {
 
 .search-input {
   width: 100%;
-  background: #0d0d11;
+  background: var(--bg-input);
   border: none;
   outline: none;
   padding: 1.1rem 1.5rem 1.1rem 3.2rem;
@@ -586,7 +590,7 @@ h1, h2, h3, h4 {
 }
 
 .select-custom, .input-custom {
-  background: #0d0d11;
+  background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -732,11 +736,11 @@ h1, h2, h3, h4 {
 .canvas-wrapper {
   position: relative;
   max-width: 100%;
-  background: #121216;
+  background: var(--bg-preview);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   overflow: hidden;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -862,7 +866,7 @@ h1, h2, h3, h4 {
 }
 
 .preview-box {
-  background: #121216;
+  background: var(--bg-preview);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1rem;
@@ -1187,7 +1191,7 @@ h1, h2, h3, h4 {
 }
 
 .chat-message.assistant .message-text {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-assistant);
   border: 1px solid var(--border);
   color: var(--text-primary);
   border-top-left-radius: 0;
@@ -1277,7 +1281,7 @@ h1, h2, h3, h4 {
 
 .chat-input-area input {
   flex-grow: 1;
-  background: #0d0d11;
+  background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -1366,7 +1370,7 @@ h1, h2, h3, h4 {
   font-family: monospace;
   font-size: 0.85rem;
   line-height: 1.5;
-  background: #0d0d11;
+  background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1rem;
@@ -1412,7 +1416,7 @@ h1, h2, h3, h4 {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1rem;
-  background: #0d0d11;
+  background: var(--bg-input);
   font-family: monospace;
   font-size: 0.9rem;
   line-height: 1.6;
@@ -1465,7 +1469,7 @@ h1, h2, h3, h4 {
 
 /* Markdown preview formatting */
 .markdown-preview {
-  background: #0d0d11;
+  background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1.5rem;
@@ -1573,12 +1577,52 @@ h1, h2, h3, h4 {
 }
 .hash-val-display {
   font-family: monospace;
-  background: #0d0d11;
+  background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0.4rem 0.6rem;
   word-break: break-all;
   user-select: all;
 }
+
+/* Light-theme overrides for hardcoded inline dark styles */
+#audio-preview-element {
+  background: var(--bg-dark) !important;
+  color: var(--text-primary) !important;
+}
+
+.panel-workspace div[style*="background: #0d0d11"],
+.panel-workspace div[style*="background:#0d0d11"],
+.panel-workspace div[style*="background: #09090b"],
+.panel-workspace div[style*="background:#09090b"] {
+  background: var(--bg-preview) !important;
+  border-color: var(--border) !important;
+}
+
+#password-output {
+  color: var(--text-primary) !important;
+}
+
+div[style*="background: #0d0d11"],
+div[style*="background:#0d0d11"] {
+  background: var(--bg-dark) !important;
+  border-color: var(--border) !important;
+}
+
+div[style*="background: rgba(255,255,255,0.01)"],
+div[style*="background: rgba(255,255,255,0.02)"] {
+  background: var(--bg-preview) !important;
+  border-color: var(--border) !important;
+}
+
+div[style*="background: rgba(0,0,0,0.2)"] {
+  background: var(--bg-preview) !important;
+  border-color: var(--border) !important;
+}
+
+div[style*="color: var(--danger)"] {
+  border-color: var(--danger) !important;
+}
+
 
 
