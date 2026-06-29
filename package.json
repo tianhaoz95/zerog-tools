@@ -17,6 +17,7 @@
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
     "diff": "^9.0.0",
+    "firebase": "^12.15.0",
     "imagetracerjs": "^1.2.6",
     "jsqr": "^1.4.0",
     "marked": "^13.0.3",

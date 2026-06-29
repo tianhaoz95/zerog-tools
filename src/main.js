@@ -1,4 +1,5 @@
 import './style.css';
+import './firebase.js';
 import { marked } from 'marked';
 
 // --- TOOLS DATA DEFINITION (20 Tools) ---
