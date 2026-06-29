@@ -31,5 +31,15 @@ jobs:
         run: |
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/service-account.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/service-account.json"
-          npx firebase-tools deploy --only hosting --project zerog-toolbox --non-interactive
+          set +e
+          out=$(npx firebase-tools deploy --only hosting --project zerog-toolbox --non-interactive 2>&1)
+          code=$?
+          echo "$out"
           rm -f "$RUNNER_TEMP/service-account.json"
+          # A byte-identical build is already live; Firebase rejects re-releasing it.
+          # Treat that no-op case as success instead of failing the workflow.
+          if [ "$code" -ne 0 ] && echo "$out" | grep -q "is the current active version"; then
+            echo "Live channel already serves this exact version — nothing to deploy."
+            exit 0
+          fi
+          exit "$code"
