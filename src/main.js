@@ -1995,16 +1995,15 @@ btnRunOcr.addEventListener('click', async () => {
       workerPath: '/tesseract/tesseract-worker.min.js',
       langPath: 'https://cdn.jsdelivr.net/gh/naptha/tessdata@gh-pages/4.0.0_best',
       corePath: '/tesseract/tesseract-core.wasm.js',
-    });
-
-    overlayText.innerText = 'Analyzing layout & text...';
-    const result = await worker.recognize(ocrSelectedFile, {}, {
-      onProgress: (m) => {
+      logger: (m) => {
         if (m.status === 'recognizing text') {
           overlayProgress.innerText = `${Math.round(m.progress * 100)}%`;
         }
       }
     });
+
+    overlayText.innerText = 'Analyzing layout & text...';
+    const result = await worker.recognize(ocrSelectedFile);
 
     document.getElementById('ocr-output').value = result.data.text;
     document.getElementById('btn-copy-ocr').disabled = false;
