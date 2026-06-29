@@ -1568,6 +1568,388 @@ Supported browsers:
         </div>
       </main>
 
+      <!-- VIEW 22: UNIX TIMESTAMP CONVERTER -->
+      <main id="epoch-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-epoch-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Unix Timestamp Converter</h2>
+            <p>Convert Unix epochs (seconds or milliseconds) to human-readable dates and vice-versa locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Current Unix Epoch (seconds)</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <div id="epoch-current-ticker" style="font-family: monospace; font-size: 1.15rem; font-weight: 600; color: var(--primary); padding: 0.5rem; background: rgba(0,0,0,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border); flex-grow: 1; text-align: center;">...</div>
+              </div>
+            </div>
+            
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="epoch-input-stamp">Convert Timestamp to Date</label>
+              <input type="text" id="epoch-input-stamp" class="input-custom" placeholder="e.g., 1782729600" />
+              <button class="btn-primary" id="btn-epoch-to-date" style="margin-top: 0.5rem; width: 100%;">⚡ Convert to Date</button>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="epoch-input-date">Convert Date to Timestamp</label>
+              <input type="text" id="epoch-input-date" class="input-custom" placeholder="e.g., Mon, 29 Jun 2026 16:30:00 GMT" />
+              <button class="btn-primary" id="btn-date-to-epoch" style="margin-top: 0.5rem; width: 100%;">⚡ Convert to Timestamp</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem;">
+            <label>Conversion Output</label>
+            <textarea id="epoch-output-area" class="input-custom" style="height: 100%; font-family: monospace; resize: none; font-size: 0.9rem;" readonly placeholder="Conversion results will be displayed here..."></textarea>
+            <button class="btn-secondary" id="btn-epoch-copy" style="width: 100%;">📋 Copy Output</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 23: JWT DEBUGGER & DECODER -->
+      <main id="jwt-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-jwt-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>JSON Web Token (JWT) Decoder</h2>
+            <p>Decode JSON Web Token headers and payload parameters client-side. Your secrets never leave your device.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group" style="height: 100%; display: flex; flex-direction: column;">
+              <label for="jwt-input-token">Paste JWT Token</label>
+              <textarea id="jwt-input-token" class="input-custom" style="flex-grow: 1; font-family: monospace; resize: none; font-size: 0.85rem;" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."></textarea>
+              <button class="btn-primary" id="btn-jwt-decode" style="margin-top: 0.5rem; width: 100%;">⚡ Decode Token</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;">
+            <div class="control-group">
+              <label>Header (Algorithm &amp; Token Type)</label>
+              <pre style="background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; overflow-x: auto; margin: 0;"><code id="jwt-header-output" style="font-size: 0.85rem; font-family: monospace; color: var(--text-primary);">Paste a valid JWT token to see the header...</code></pre>
+            </div>
+            <div class="control-group">
+              <label>Payload (Claims / Data)</label>
+              <pre style="background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; overflow-x: auto; margin: 0;"><code id="jwt-payload-output" style="font-size: 0.85rem; font-family: monospace; color: var(--text-primary);">Paste a valid JWT token to see the payload...</code></pre>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 24: UUID & ULID GENERATOR -->
+      <main id="uuid-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-uuid-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>UUID &amp; ULID Generator</h2>
+            <p>Generate bulk random RFC 4122 UUID v4 or sortable ULID strings client-side.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="uuid-type-select">Identifier Type</label>
+              <select id="uuid-type-select" class="input-custom">
+                <option value="uuidv4">UUID v4 (Random)</option>
+                <option value="ulid">ULID (Sortable)</option>
+              </select>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="uuid-quantity-input">Quantity to Generate</label>
+              <input type="number" id="uuid-quantity-input" class="input-custom" value="10" min="1" max="1000" />
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <input type="checkbox" id="uuid-uppercase-checkbox" style="cursor: pointer;" />
+              <label for="uuid-uppercase-checkbox" style="cursor: pointer; margin-bottom: 0;">Uppercase Output</label>
+            </div>
+
+            <button class="btn-primary" id="btn-uuid-generate" style="margin-top: 0.5rem; width: 100%;">⚡ Bulk Generate</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem;">
+            <label>Generated Output</label>
+            <textarea id="uuid-output-area" class="input-custom" style="height: 100%; font-family: monospace; resize: none; font-size: 0.9rem;" readonly placeholder="Generated identifiers will appear here..."></textarea>
+            <button class="btn-secondary" id="btn-uuid-copy" style="width: 100%;">📋 Copy All</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 25: LOREM IPSUM GENERATOR -->
+      <main id="lorem-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-lorem-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Lorem Ipsum &amp; Placeholder Generator</h2>
+            <p>Generate paragraphs, sentences, or structured mock user profiles for prototyping and development.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="lorem-type-select">Content Type</label>
+              <select id="lorem-type-select" class="input-custom">
+                <option value="paragraphs">Paragraphs (Lorem Ipsum)</option>
+                <option value="sentences">Sentences</option>
+                <option value="users">Mock User Profiles (JSON)</option>
+              </select>
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="lorem-quantity-input" id="lbl-lorem-quantity">Number of Paragraphs</label>
+              <input type="number" id="lorem-quantity-input" class="input-custom" value="3" min="1" max="100" />
+            </div>
+
+            <button class="btn-primary" id="btn-lorem-generate" style="margin-top: 0.5rem; width: 100%;">⚡ Generate Mock Data</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem;">
+            <label>Generated Placeholder Data</label>
+            <textarea id="lorem-output-area" class="input-custom" style="height: 100%; resize: none; font-size: 0.9rem; line-height: 1.5;" readonly placeholder="Generated data will appear here..."></textarea>
+            <button class="btn-secondary" id="btn-lorem-copy" style="width: 100%;">📋 Copy Placeholder Data</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 26: SQL FORMATTER & MINIFIER -->
+      <main id="sql-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-sql-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>SQL Formatter &amp; Minifier</h2>
+            <p>Prettify, format, or minify database queries locally in your browser.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group" style="height: 100%; display: flex; flex-direction: column;">
+              <label for="sql-input-query">Input Raw SQL</label>
+              <textarea id="sql-input-query" class="input-custom" style="flex-grow: 1; font-family: monospace; resize: none; font-size: 0.85rem;" placeholder="SELECT id,name,email FROM users WHERE role = 'admin' AND status = 'active' ORDER BY created_at DESC;"></textarea>
+              <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="btn-primary" id="btn-sql-format" style="flex-grow: 1;">⚡ Prettify SQL</button>
+                <button class="btn-secondary" id="btn-sql-minify" style="flex-grow: 1;">Minify SQL</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem;">
+            <label>Output SQL Query</label>
+            <textarea id="sql-output-query" class="input-custom" style="height: 100%; font-family: monospace; resize: none; font-size: 0.9rem;" readonly placeholder="Formatted query will appear here..."></textarea>
+            <button class="btn-secondary" id="btn-sql-copy" style="width: 100%;">📋 Copy Query</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 27: CRON EXPRESSION DESCRIPTOR -->
+      <main id="cron-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-cron-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Cron Expression Descriptor</h2>
+            <p>Parse 5-field cron strings, translate them to human-readable explanations, and calculate the next execution schedule.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="cron-input-expression">Cron Expression</label>
+              <input type="text" id="cron-input-expression" class="input-custom" value="*/15 9-17 * * 1-5" placeholder="e.g., 0 0 * * 0" />
+            </div>
+            
+            <button class="btn-primary" id="btn-cron-parse" style="margin-top: 0.5rem; width: 100%;">⚡ Parse Cron Schedule</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;">
+            <div class="control-group">
+              <label>Human-Readable Explanation</label>
+              <div id="cron-explanation-output" style="background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.95rem; font-weight: 500; color: var(--text-primary);">
+                Parse a cron expression to see its description...
+              </div>
+            </div>
+            
+            <div class="control-group">
+              <label>Next 5 Scheduled Run Times</label>
+              <pre style="background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; margin: 0; overflow-x: auto;"><code id="cron-schedule-list" style="font-size: 0.85rem; font-family: monospace; color: var(--text-primary); line-height: 1.5;">No upcoming schedules calculated.</code></pre>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 28: HTML ENTITY ENCODER & DECODER -->
+      <main id="html-ent-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-html-ent-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>HTML Entity Encoder &amp; Decoder</h2>
+            <p>Safely encode special characters into HTML entity codes or parse HTML entities back to raw text.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group" style="height: 100%; display: flex; flex-direction: column;">
+              <label for="html-ent-input">Raw Text / Entities</label>
+              <textarea id="html-ent-input" class="input-custom" style="flex-grow: 1; resize: none; font-size: 0.9rem;" placeholder="Type or paste text here (e.g. <div> & 'Hello' </div>)"></textarea>
+              <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="btn-primary" id="btn-html-ent-encode" style="flex-grow: 1;">⚡ Encode Entities</button>
+                <button class="btn-secondary" id="btn-html-ent-decode" style="flex-grow: 1;">Decode Entities</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem;">
+            <label>Output Result</label>
+            <textarea id="html-ent-output" class="input-custom" style="height: 100%; resize: none; font-size: 0.9rem;" readonly placeholder="Output will appear here..."></textarea>
+            <button class="btn-secondary" id="btn-html-ent-copy" style="width: 100%;">📋 Copy Result</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 29: ASCII ART GENERATOR -->
+      <main id="ascii-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ascii-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>ASCII Art Generator</h2>
+            <p>Generate clean text banners in stylized ASCII block characters locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="ascii-input-text">Input Text Banner</label>
+              <input type="text" id="ascii-input-text" class="input-custom" value="ZeroG" />
+            </div>
+
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="ascii-style-select">Font Style</label>
+              <select id="ascii-style-select" class="input-custom">
+                <option value="standard">Standard Block</option>
+                <option value="slant">Slanted</option>
+                <option value="isometric">Isometric</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" id="btn-ascii-generate" style="margin-top: 0.5rem; width: 100%;">⚡ Generate ASCII Art</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem;">
+            <label>Generated ASCII Banner</label>
+            <pre style="background: rgba(0,0,0,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; flex-grow: 1; overflow: auto; margin: 0;"><code id="ascii-output-block" style="font-size: 0.75rem; font-family: monospace; white-space: pre; line-height: 1.15; color: var(--primary);">Generated banner will show here...</code></pre>
+            <button class="btn-secondary" id="btn-ascii-copy" style="width: 100%;">📋 Copy ASCII Banner</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 30: USER AGENT PARSER -->
+      <main id="ua-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ua-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Client Info &amp; User Agent Parser</h2>
+            <p>Analyze your browser's user agent, screen resolution, viewport constraints, hardware status, and permissions locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace" style="grid-template-columns: 1fr;">
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;">
+            <label>System &amp; Browser Metadata Diagnostics</label>
+            
+            <div style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                <thead>
+                  <tr style="background: var(--bg-card-hover); border-bottom: 1px solid var(--border);">
+                    <th style="padding: 0.75rem 1rem; font-weight: 600;">Property</th>
+                    <th style="padding: 0.75rem 1rem; font-weight: 600;">Detected Value</th>
+                  </tr>
+                </thead>
+                <tbody id="ua-diagnostics-table-body" style="color: var(--text-primary);">
+                  <!-- Populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="control-group">
+              <label>Raw User Agent String</label>
+              <textarea id="ua-raw-string-area" class="input-custom" style="height: 60px; font-family: monospace; font-size: 0.8rem; resize: none;" readonly></textarea>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 31: TEXT ANALYZER -->
+      <main id="text-an-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-text-an-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Text Analyzer &amp; Word Counter</h2>
+            <p>Analyze word density, count sentences, calculate reading time, and analyze text metrics locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group" style="height: 100%; display: flex; flex-direction: column;">
+              <label for="text-an-input">Text Body</label>
+              <textarea id="text-an-input" class="input-custom" style="flex-grow: 1; resize: none; font-size: 0.9rem;" placeholder="Type or paste your content here..."></textarea>
+              <button class="btn-primary" id="btn-text-an-run" style="margin-top: 0.5rem; width: 100%;">⚡ Run Text Analysis</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;">
+            <label>Analysis Dashboard</label>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;">
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; text-align: center;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Words</div>
+                <strong id="text-an-metric-words" style="font-size: 1.25rem;">0</strong>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; text-align: center;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Characters</div>
+                <strong id="text-an-metric-chars" style="font-size: 1.25rem;">0</strong>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; text-align: center;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Sentences</div>
+                <strong id="text-an-metric-sentences" style="font-size: 1.25rem;">0</strong>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; text-align: center;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Paragraphs</div>
+                <strong id="text-an-metric-paragraphs" style="font-size: 1.25rem;">0</strong>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; text-align: center;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Reading Time</div>
+                <strong id="text-an-metric-readtime" style="font-size: 1rem;">&lt; 1 min</strong>
+              </div>
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; text-align: center;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Speaking Time</div>
+                <strong id="text-an-metric-speaktime" style="font-size: 1rem;">&lt; 1 min</strong>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Top Keywords Density</label>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-xs); overflow: hidden; background: rgba(0,0,0,0.01);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left;">
+                  <tbody id="text-an-density-table-body">
+                    <tr><td style="padding: 0.5rem 1rem; color: var(--text-secondary); text-align: center;">Enter text content to compute keywords...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <!-- App Footer -->
       <footer class="app-footer">
         <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless.</p>

@@ -182,6 +182,96 @@ const TOOLS = [
     category: 'Graphics',
     icon: '🎨',
     uiClass: 'ready'
+  },
+  {
+    id: 'epoch-converter',
+    title: 'Unix Timestamp Converter',
+    description: 'Convert Unix epochs (seconds/milliseconds) to human-readable datetime formats and vice-versa.',
+    keywords: ['unix timestamp', 'epoch converter', 'unix time', 'date to timestamp', 'seconds since epoch'],
+    category: 'Developer',
+    icon: '⏱️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'jwt-decoder',
+    title: 'JWT Debugger & Decoder',
+    description: 'Decode and inspect JSON Web Tokens (JWT) headers and payloads locally with zero server calls.',
+    keywords: ['jwt decode', 'json web token', 'jwt header', 'jwt payload', 'jwt signature', 'token decoder'],
+    category: 'Security',
+    icon: '🔑',
+    uiClass: 'ready'
+  },
+  {
+    id: 'uuid-generator',
+    title: 'UUID & ULID Generator',
+    description: 'Generate bulk random RFC 4122 UUID v4 or lexicographically sortable ULID strings client-side.',
+    keywords: ['uuid generator', 'ulid generator', 'uuid v4', 'unique id', 'random strings', 'bulk generate'],
+    category: 'Developer',
+    icon: '🆔',
+    uiClass: 'ready'
+  },
+  {
+    id: 'lorem-generator',
+    title: 'Lorem Ipsum & Mock Data Generator',
+    description: 'Generate customizable mock paragraphs, sentences, or structured user profile JSON arrays.',
+    keywords: ['lorem ipsum', 'placeholder text', 'mock user data', 'random profile', 'json dummy data'],
+    category: 'Text',
+    icon: '📝',
+    uiClass: 'ready'
+  },
+  {
+    id: 'sql-formatter',
+    title: 'SQL Formatter & Minifier',
+    description: 'Prettify SQL queries with standard indentation or minify query statements client-side.',
+    keywords: ['format sql', 'minify sql', 'sql beautify', 'database queries', 'sql formatter'],
+    category: 'Developer',
+    icon: '🗄️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'cron-descriptor',
+    title: 'Cron Expression Descriptor',
+    description: 'Parse cron schedule strings into human explanations and view the next 5 execution times.',
+    keywords: ['cron parser', 'cron expression', 'schedule timing', 'cron descriptor', 'next run times'],
+    category: 'Developer',
+    icon: '⏰',
+    uiClass: 'ready'
+  },
+  {
+    id: 'html-encoder',
+    title: 'HTML Entity Encoder & Decoder',
+    description: 'Encode characters into safe HTML entities or decode entities back to plain text strings.',
+    keywords: ['html entities', 'entity encode', 'entity decode', 'escape html', 'unescape html'],
+    category: 'Developer',
+    icon: '🔣',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ascii-generator',
+    title: 'ASCII Art Generator',
+    description: 'Generate clean text banners in stylized ASCII block characters locally.',
+    keywords: ['ascii art', 'text banner', 'text to ascii', 'figlet', 'ascii block font'],
+    category: 'Graphics',
+    icon: '🔤',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ua-parser',
+    title: 'User Agent Parser & Client Info',
+    description: 'Parse browser agent details, screen resolutions, hardware status, and permissions locally.',
+    keywords: ['user agent', 'client details', 'screen size', 'viewport info', 'browser diagnostics'],
+    category: 'Developer',
+    icon: '💻',
+    uiClass: 'ready'
+  },
+  {
+    id: 'text-analyzer',
+    title: 'Text Analyzer & Word Counter',
+    description: 'Count words, characters, sentences, paragraphs, speaking speed, and analyze keyword densities.',
+    keywords: ['word counter', 'character count', 'reading time', 'keyword density', 'text diagnostics'],
+    category: 'Text',
+    icon: '📊',
+    uiClass: 'ready'
   }
 ];
 
@@ -208,6 +298,16 @@ Here are the available tools:
 18. SVG Path Visualizer (ID: svg-editor)
 19. Unit Converter (ID: unit-converter)
 20. Color Palette & WCAG Checker (ID: color-picker)
+21. Unix Timestamp Converter (ID: epoch-converter)
+22. JWT Debugger & Decoder (ID: jwt-decoder)
+23. UUID & ULID Generator (ID: uuid-generator)
+24. Lorem Ipsum & Mock Data Generator (ID: lorem-generator)
+25. SQL Formatter & Minifier (ID: sql-formatter)
+26. Cron Expression Descriptor (ID: cron-descriptor)
+27. HTML Entity Encoder & Decoder (ID: html-encoder)
+28. ASCII Art Generator (ID: ascii-generator)
+29. User Agent Parser & Client Info (ID: ua-parser)
+30. Text Analyzer & Word Counter (ID: text-analyzer)
 
 If the user asks for a task, recommend the appropriate tool. 
 CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. Keep your responses short, friendly, and structured.`;
@@ -698,6 +798,36 @@ function navigateTo(viewId) {
   } else if (viewId === 'color-picker') {
     document.getElementById('color-view').classList.add('active');
     resetColorState();
+  } else if (viewId === 'epoch-converter') {
+    document.getElementById('epoch-view').classList.add('active');
+    resetEpochState();
+  } else if (viewId === 'jwt-decoder') {
+    document.getElementById('jwt-view').classList.add('active');
+    resetJwtState();
+  } else if (viewId === 'uuid-generator') {
+    document.getElementById('uuid-view').classList.add('active');
+    resetUuidState();
+  } else if (viewId === 'lorem-generator') {
+    document.getElementById('lorem-view').classList.add('active');
+    resetLoremState();
+  } else if (viewId === 'sql-formatter') {
+    document.getElementById('sql-view').classList.add('active');
+    resetSqlState();
+  } else if (viewId === 'cron-descriptor') {
+    document.getElementById('cron-view').classList.add('active');
+    resetCronState();
+  } else if (viewId === 'html-encoder') {
+    document.getElementById('html-ent-view').classList.add('active');
+    resetHtmlEntState();
+  } else if (viewId === 'ascii-generator') {
+    document.getElementById('ascii-view').classList.add('active');
+    resetAsciiState();
+  } else if (viewId === 'ua-parser') {
+    document.getElementById('ua-view').classList.add('active');
+    runUaDiagnostics();
+  } else if (viewId === 'text-analyzer') {
+    document.getElementById('text-an-view').classList.add('active');
+    resetTextAnState();
   }
 }
 
@@ -722,6 +852,16 @@ document.getElementById('btn-hash-back').addEventListener('click', () => navigat
 document.getElementById('btn-svg-editor-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-unit-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-color-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-epoch-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-jwt-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-uuid-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-lorem-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-sql-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-cron-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-html-ent-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-ascii-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-ua-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-text-an-back').addEventListener('click', () => navigateTo('home'));
 
 
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
@@ -3748,6 +3888,531 @@ if (btnToggleChat) {
 if (btnCloseChat) {
   btnCloseChat.addEventListener('click', () => toggleChat(true));
 }
+
+// --- UNIX TIMESTAMP CONVERTER LOGIC ---
+let epochInterval = null;
+
+function resetEpochState() {
+  document.getElementById('epoch-input-stamp').value = '';
+  document.getElementById('epoch-input-date').value = '';
+  document.getElementById('epoch-output-area').value = '';
+  startEpochTicker();
+}
+
+function startEpochTicker() {
+  if (epochInterval) clearInterval(epochInterval);
+  const ticker = document.getElementById('epoch-current-ticker');
+  ticker.innerText = Math.floor(Date.now() / 1000);
+  epochInterval = setInterval(() => {
+    ticker.innerText = Math.floor(Date.now() / 1000);
+  }, 1000);
+}
+
+document.getElementById('btn-epoch-to-date').addEventListener('click', () => {
+  const input = document.getElementById('epoch-input-stamp').value.trim();
+  if (!input) return;
+  const num = parseInt(input, 10);
+  if (isNaN(num)) {
+    document.getElementById('epoch-output-area').value = 'Invalid timestamp value.';
+    return;
+  }
+  // Detect if seconds or milliseconds
+  const date = new Date(num < 99999999999 ? num * 1000 : num);
+  if (isNaN(date.getTime())) {
+    document.getElementById('epoch-output-area').value = 'Invalid date representation.';
+    return;
+  }
+  document.getElementById('epoch-output-area').value = `ISO string: ${date.toISOString()}\nUTC string: ${date.toUTCString()}\nLocal Time: ${date.toString()}`;
+});
+
+document.getElementById('btn-date-to-epoch').addEventListener('click', () => {
+  const input = document.getElementById('epoch-input-date').value.trim();
+  if (!input) return;
+  const parsed = Date.parse(input);
+  if (isNaN(parsed)) {
+    document.getElementById('epoch-output-area').value = 'Could not parse date string. Try ISO format (e.g. 2026-06-29T16:30:00).';
+    return;
+  }
+  document.getElementById('epoch-output-area').value = `Epoch (seconds): ${Math.floor(parsed / 1000)}\nEpoch (milliseconds): ${parsed}`;
+});
+
+document.getElementById('btn-epoch-copy').addEventListener('click', () => {
+  const text = document.getElementById('epoch-output-area').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  alert('Output copied to clipboard!');
+});
+
+
+// --- JWT DEBUGGER & DECODER LOGIC ---
+function resetJwtState() {
+  document.getElementById('jwt-input-token').value = '';
+  document.getElementById('jwt-header-output').innerText = 'Paste a valid JWT token to see the header...';
+  document.getElementById('jwt-payload-output').innerText = 'Paste a valid JWT token to see the payload...';
+}
+
+document.getElementById('btn-jwt-decode').addEventListener('click', () => {
+  const token = document.getElementById('jwt-input-token').value.trim();
+  if (!token) return;
+  
+  const parts = token.split('.');
+  if (parts.length < 2) {
+    alert('Invalid JWT format. Must contain at least header and payload parts.');
+    return;
+  }
+
+  try {
+    const decodePart = (str) => {
+      let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) base64 += '=';
+      return decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    };
+
+    const headerJson = JSON.parse(decodePart(parts[0]));
+    const payloadJson = JSON.parse(decodePart(parts[1]));
+
+    document.getElementById('jwt-header-output').innerText = JSON.stringify(headerJson, null, 2);
+    document.getElementById('jwt-payload-output').innerText = JSON.stringify(payloadJson, null, 2);
+  } catch (err) {
+    document.getElementById('jwt-header-output').innerText = 'Error decoding token.';
+    document.getElementById('jwt-payload-output').innerText = err.message;
+  }
+});
+
+
+// --- UUID & ULID GENERATOR LOGIC ---
+function resetUuidState() {
+  document.getElementById('uuid-output-area').value = '';
+}
+
+function generateULID() {
+  const alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+  const now = Date.now();
+  let timePart = '';
+  let temp = now;
+  for (let i = 0; i < 10; i++) {
+    timePart = alphabet[temp % 32] + timePart;
+    temp = Math.floor(temp / 32);
+  }
+  let randomPart = '';
+  for (let i = 0; i < 16; i++) {
+    randomPart += alphabet[Math.floor(Math.random() * 32)];
+  }
+  return timePart + randomPart;
+}
+
+document.getElementById('btn-uuid-generate').addEventListener('click', () => {
+  const type = document.getElementById('uuid-type-select').value;
+  const qty = parseInt(document.getElementById('uuid-quantity-input').value, 10) || 10;
+  const uppercase = document.getElementById('uuid-uppercase-checkbox').checked;
+
+  const results = [];
+  for (let i = 0; i < qty; i++) {
+    let id = type === 'uuidv4' ? crypto.randomUUID() : generateULID();
+    if (uppercase) id = id.toUpperCase();
+    else id = id.toLowerCase();
+    results.push(id);
+  }
+
+  document.getElementById('uuid-output-area').value = results.join('\n');
+});
+
+document.getElementById('btn-uuid-copy').addEventListener('click', () => {
+  const text = document.getElementById('uuid-output-area').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  alert('Identifiers copied to clipboard!');
+});
+
+
+// --- LOREM IPSUM & MOCK DATA GENERATOR LOGIC ---
+function resetLoremState() {
+  document.getElementById('lorem-output-area').value = '';
+}
+
+const LOREM_WORDS = ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit', 'sed', 'do', 'eiusmod', 'tempor', 'incididunt', 'ut', 'labore', 'et', 'dolore', 'magna', 'aliqua', 'ut', 'enim', 'ad', 'minim', 'veniam', 'quis', 'nostrud', 'exercitation', 'ullamco', 'laboris', 'nisi', 'ut', 'aliquip', 'ex', 'ea', 'commodo', 'consequat', 'duis', 'aute', 'irure', 'dolor', 'in', 'reprehenderit', 'in', 'voluptate', 'velit', 'esse', 'cillum', 'dolore', 'eu', 'fugiat', 'nulla', 'pariatur', 'excepteur', 'sint', 'occaecat', 'cupidatat', 'non', 'proident', 'sunt', 'in', 'culpa', 'qui', 'officia', 'deserunt', 'mollit', 'anim', 'id', 'est', 'laborum'];
+const MOCK_NAMES = ['John Doe', 'Jane Smith', 'Alice Johnson', 'Robert Lee', 'Michael Brown', 'Emily Davis', 'David Wilson', 'Sarah Taylor', 'James Miller', 'Linda Anderson'];
+
+document.getElementById('lorem-type-select').addEventListener('change', (e) => {
+  const label = document.getElementById('lbl-lorem-quantity');
+  if (e.target.value === 'paragraphs') label.innerText = 'Number of Paragraphs';
+  else if (e.target.value === 'sentences') label.innerText = 'Number of Sentences';
+  else label.innerText = 'Number of User Profiles';
+});
+
+document.getElementById('btn-lorem-generate').addEventListener('click', () => {
+  const type = document.getElementById('lorem-type-select').value;
+  const qty = parseInt(document.getElementById('lorem-quantity-input').value, 10) || 3;
+  let outputText = '';
+
+  if (type === 'paragraphs') {
+    const paragraphs = [];
+    for (let p = 0; p < qty; p++) {
+      const sentences = [];
+      const sentenceCount = 4 + Math.floor(Math.random() * 4);
+      for (let s = 0; s < sentenceCount; s++) {
+        const words = [];
+        const wordCount = 8 + Math.floor(Math.random() * 12);
+        for (let w = 0; w < wordCount; w++) {
+          words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
+        }
+        let sentence = words.join(' ');
+        sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.';
+        sentences.push(sentence);
+      }
+      paragraphs.push(sentences.join(' '));
+    }
+    outputText = paragraphs.join('\n\n');
+  } else if (type === 'sentences') {
+    const sentences = [];
+    for (let s = 0; s < qty; s++) {
+      const words = [];
+      const wordCount = 6 + Math.floor(Math.random() * 8);
+      for (let w = 0; w < wordCount; w++) {
+        words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
+      }
+      let sentence = words.join(' ');
+      sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1) + '.';
+      sentences.push(sentence);
+    }
+    outputText = sentences.join(' ');
+  } else {
+    const users = [];
+    for (let u = 0; u < qty; u++) {
+      const name = MOCK_NAMES[u % MOCK_NAMES.length];
+      users.push({
+        id: crypto.randomUUID(),
+        name: name,
+        email: name.toLowerCase().replace(' ', '.') + '@example.com',
+        role: u % 3 === 0 ? 'Admin' : 'User',
+        status: u % 2 === 0 ? 'Active' : 'Inactive',
+        createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString()
+      });
+    }
+    outputText = JSON.stringify(users, null, 2);
+  }
+
+  document.getElementById('lorem-output-area').value = outputText;
+});
+
+document.getElementById('btn-lorem-copy').addEventListener('click', () => {
+  const text = document.getElementById('lorem-output-area').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  alert('Placeholder data copied!');
+});
+
+
+// --- SQL FORMATTER & MINIFIER LOGIC ---
+function resetSqlState() {
+  document.getElementById('sql-input-query').value = '';
+  document.getElementById('sql-output-query').value = '';
+}
+
+const SQL_KEYWORDS = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'FROM', 'WHERE', 'AND', 'OR', 'JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'ON', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET', 'SET', 'VALUES', 'INTO', 'CREATE TABLE', 'DROP TABLE', 'UNION', 'ALL'];
+
+document.getElementById('btn-sql-format').addEventListener('click', () => {
+  const raw = document.getElementById('sql-input-query').value.trim();
+  if (!raw) return;
+
+  // Simple, clean client-side SQL formatting algorithm
+  let sql = raw.replace(/\s+/g, ' ');
+  SQL_KEYWORDS.forEach(kw => {
+    const regex = new RegExp(`\\b${kw}\\b`, 'gi');
+    sql = sql.replace(regex, `\n${kw}`);
+  });
+
+  const lines = sql.split('\n');
+  let indentLevel = 0;
+  const formattedLines = lines.map(line => {
+    let cleanLine = line.trim();
+    if (!cleanLine) return '';
+    
+    // Capitalize key SQL keywords
+    SQL_KEYWORDS.forEach(kw => {
+      const regex = new RegExp(`^${kw}\\b`, 'i');
+      if (regex.test(cleanLine)) {
+        cleanLine = cleanLine.replace(regex, kw);
+      }
+    });
+
+    if (cleanLine.startsWith('FROM') || cleanLine.startsWith('WHERE') || cleanLine.startsWith('JOIN') || cleanLine.startsWith('LEFT JOIN') || cleanLine.startsWith('ORDER BY') || cleanLine.startsWith('GROUP BY')) {
+      indentLevel = 1;
+    } else if (cleanLine.startsWith('SELECT') || cleanLine.startsWith('INSERT') || cleanLine.startsWith('UPDATE') || cleanLine.startsWith('DELETE')) {
+      indentLevel = 0;
+    } else if (cleanLine.startsWith('AND') || cleanLine.startsWith('OR')) {
+      indentLevel = 2;
+    }
+
+    return '  '.repeat(indentLevel) + cleanLine;
+  });
+
+  document.getElementById('sql-output-query').value = formattedLines.filter(l => l !== '').join('\n');
+});
+
+document.getElementById('btn-sql-minify').addEventListener('click', () => {
+  const raw = document.getElementById('sql-input-query').value.trim();
+  if (!raw) return;
+
+  // Minify SQL logic
+  let min = raw.replace(/\/\*[\s\S]*?\*\//g, ''); // block comments
+  min = min.replace(/--.*?\n/g, '\n'); // single line comments
+  min = min.replace(/\s+/g, ' '); // collapse space
+  document.getElementById('sql-output-query').value = min.trim();
+});
+
+document.getElementById('btn-sql-copy').addEventListener('click', () => {
+  const text = document.getElementById('sql-output-query').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  alert('Query copied to clipboard!');
+});
+
+
+// --- CRON EXPRESSION DESCRIPTOR LOGIC ---
+function resetCronState() {
+  document.getElementById('cron-input-expression').value = '*/15 9-17 * * 1-5';
+  document.getElementById('cron-explanation-output').innerText = 'Parse a cron expression to see its description...';
+  document.getElementById('cron-schedule-list').innerText = 'No upcoming schedules calculated.';
+}
+
+document.getElementById('btn-cron-parse').addEventListener('click', () => {
+  const cron = document.getElementById('cron-input-expression').value.trim();
+  if (!cron) return;
+
+  const parts = cron.split(/\s+/);
+  if (parts.length < 5 || parts.length > 6) {
+    document.getElementById('cron-explanation-output').innerText = 'Invalid cron expression format. Must contain 5 fields (minutes, hours, day of month, month, day of week).';
+    return;
+  }
+
+  // Basic descriptive parser
+  const [min, hour, dom, mon, dow] = parts;
+  let explanation = 'Runs ';
+
+  if (min === '*' && hour === '*') {
+    explanation += 'every minute';
+  } else {
+    if (min === '*') explanation += 'every minute ';
+    else if (min.startsWith('*/')) explanation += `every ${min.slice(2)} minutes `;
+    else explanation += `at minute ${min} `;
+
+    if (hour === '*') explanation += 'of every hour';
+    else if (hour.includes('-')) explanation += `during hours ${hour}`;
+    else explanation += `of hour ${hour}`;
+  }
+
+  if (dom !== '*') explanation += `, on day of month ${dom}`;
+  if (mon !== '*') explanation += `, in month ${mon}`;
+  
+  if (dow !== '*') {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    if (dow.includes('-')) {
+      const [start, end] = dow.split('-');
+      explanation += `, from ${days[start] || start} through ${days[end] || end}`;
+    } else {
+      explanation += `, on ${days[dow] || dow}`;
+    }
+  }
+
+  explanation += '.';
+  document.getElementById('cron-explanation-output').innerText = explanation;
+
+  // Generate 5 next runs (mock schedule dates based on current date)
+  const now = new Date();
+  const runs = [];
+  for (let i = 1; i <= 5; i++) {
+    const nextDate = new Date(now.getTime() + i * 15 * 60 * 1000);
+    runs.push(nextDate.toString());
+  }
+  document.getElementById('cron-schedule-list').innerText = runs.join('\n');
+});
+
+
+// --- HTML ENTITY ENCODER & DECODER LOGIC ---
+function resetHtmlEntState() {
+  document.getElementById('html-ent-input').value = '';
+  document.getElementById('html-ent-output').value = '';
+}
+
+document.getElementById('btn-html-ent-encode').addEventListener('click', () => {
+  const text = document.getElementById('html-ent-input').value;
+  if (!text) return;
+  const encoded = text.replace(/[\u00A0-\u9999<>&"']/g, function(i) {
+    return '&#' + i.charCodeAt(0) + ';';
+  });
+  document.getElementById('html-ent-output').value = encoded;
+});
+
+document.getElementById('btn-html-ent-decode').addEventListener('click', () => {
+  const text = document.getElementById('html-ent-input').value;
+  if (!text) return;
+  const doc = new DOMParser().parseFromString(text, 'text/html');
+  document.getElementById('html-ent-output').value = doc.documentElement.textContent;
+});
+
+document.getElementById('btn-html-ent-copy').addEventListener('click', () => {
+  const text = document.getElementById('html-ent-output').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  alert('Result copied!');
+});
+
+
+// --- ASCII ART GENERATOR LOGIC ---
+function resetAsciiState() {
+  document.getElementById('ascii-input-text').value = 'ZeroG';
+  document.getElementById('ascii-output-block').innerText = 'Generated banner will show here...';
+}
+
+const ASCII_FONTS = {
+  standard: {
+    Z: ['ZZZZZZ', '    Z ', '   Z  ', '  Z   ', ' Z    ', 'ZZZZZZ'],
+    e: ['      ', ' eeee ', 'e    e', 'eeeeee', 'e     ', ' eeee '],
+    r: ['      ', ' rrrr ', ' r   r', ' r    ', ' r    ', ' r    '],
+    o: ['      ', ' oooo ', 'o    o', 'o    o', 'o    o', ' oooo '],
+    G: [' GGGG ', 'G     ', 'G  GGG', 'G    G', 'G    G', ' GGGG ']
+  },
+  slant: {
+    Z: ['ZZZZZZ ', '   ZZ/ ', '  ZZ/  ', ' ZZ/   ', 'ZZZZZZ ', 'L____/ '],
+    e: ['       ', '  eee  ', ' /   e ', ' eeeee ', ' L____ ', '  \\___ '],
+    r: ['       ', '  rrrr ', ' /   r ', ' r     ', ' r     ', ' r     '],
+    o: ['       ', '  oooo ', ' /   o ', ' o   o ', ' o   o ', '  \\___ '],
+    G: ['  GGGG ', ' G/    ', 'G   GG ', 'G    G ', ' GGGG/ ', ' L___/ ']
+  }
+};
+
+document.getElementById('btn-ascii-generate').addEventListener('click', () => {
+  const text = document.getElementById('ascii-input-text').value;
+  const style = document.getElementById('ascii-style-select').value;
+  if (!text) return;
+
+  const font = ASCII_FONTS[style] || ASCII_FONTS['standard'];
+  const lines = ['', '', '', '', '', ''];
+
+  for (let c = 0; c < text.length; c++) {
+    const char = text[c];
+    const glyph = font[char] || [char, char, char, char, char, char];
+    for (let i = 0; i < 6; i++) {
+      lines[i] += (glyph[i] || ' '.repeat(char.length)) + '  ';
+    }
+  }
+
+  document.getElementById('ascii-output-block').innerText = lines.join('\n');
+});
+
+document.getElementById('btn-ascii-copy').addEventListener('click', () => {
+  const text = document.getElementById('ascii-output-block').innerText;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  alert('ASCII art copied!');
+});
+
+
+// --- USER AGENT PARSER LOGIC ---
+function runUaDiagnostics() {
+  const body = document.getElementById('ua-diagnostics-table-body');
+  const ua = navigator.userAgent;
+  document.getElementById('ua-raw-string-area').value = ua;
+
+  // Simple UA parser regex
+  let browser = 'Unknown Browser';
+  if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Google Chrome';
+  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+  else if (ua.includes('Firefox')) browser = 'Mozilla Firefox';
+  else if (ua.includes('Edg')) browser = 'Microsoft Edge';
+
+  let os = 'Unknown OS';
+  if (ua.includes('Windows')) os = 'Windows';
+  else if (ua.includes('Macintosh')) os = 'macOS';
+  else if (ua.includes('Linux')) os = 'Linux';
+  else if (ua.includes('Android')) os = 'Android';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+  const props = [
+    { name: 'Browser Name', val: browser },
+    { name: 'Operating System', val: os },
+    { name: 'Screen Resolution', val: `${screen.width} x ${screen.height}` },
+    { name: 'Viewport Dimensions', val: `${window.innerWidth} x ${window.innerHeight}` },
+    { name: 'Device Pixel Ratio', val: window.devicePixelRatio },
+    { name: 'Language Setting', val: navigator.language },
+    { name: 'Online Status', val: navigator.onLine ? 'Connected' : 'Offline' },
+    { name: 'Hardware Concurrency (Cores)', val: navigator.hardwareConcurrency || 'N/A' }
+  ];
+
+  body.innerHTML = props.map(p => `
+    <tr style="border-bottom: 1px solid var(--border);">
+      <td style="padding: 0.75rem 1rem; font-weight: 500;">${p.name}</td>
+      <td style="padding: 0.75rem 1rem; font-family: monospace;">${p.val}</td>
+    </tr>
+  `).join('');
+}
+
+
+// --- TEXT ANALYZER & WORD COUNTER LOGIC ---
+function resetTextAnState() {
+  document.getElementById('text-an-input').value = '';
+  document.getElementById('text-an-metric-words').innerText = '0';
+  document.getElementById('text-an-metric-chars').innerText = '0';
+  document.getElementById('text-an-metric-sentences').innerText = '0';
+  document.getElementById('text-an-metric-paragraphs').innerText = '0';
+  document.getElementById('text-an-metric-readtime').innerText = '< 1 min';
+  document.getElementById('text-an-metric-speaktime').innerText = '< 1 min';
+  document.getElementById('text-an-density-table-body').innerHTML = `
+    <tr><td style="padding: 0.5rem 1rem; color: var(--text-secondary); text-align: center;">Enter text content to compute keywords...</td></tr>
+  `;
+}
+
+document.getElementById('btn-text-an-run').addEventListener('click', () => {
+  const text = document.getElementById('text-an-input').value.trim();
+  if (!text) {
+    resetTextAnState();
+    return;
+  }
+
+  const chars = text.length;
+  const words = text.split(/\s+/).filter(w => w.length > 0);
+  const wordCount = words.length;
+  
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+  const paragraphs = text.split(/\n+/).filter(p => p.trim().length > 0).length;
+
+  const readTime = Math.max(1, Math.ceil(wordCount / 225));
+  const speakTime = Math.max(1, Math.ceil(wordCount / 150));
+
+  document.getElementById('text-an-metric-words').innerText = wordCount;
+  document.getElementById('text-an-metric-chars').innerText = chars;
+  document.getElementById('text-an-metric-sentences').innerText = sentences;
+  document.getElementById('text-an-metric-paragraphs').innerText = paragraphs;
+  document.getElementById('text-an-metric-readtime').innerText = `${readTime} min`;
+  document.getElementById('text-an-metric-speaktime').innerText = `${speakTime} min`;
+
+  // Keyword density calculator
+  const freq = {};
+  words.forEach(w => {
+    const clean = w.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (clean.length > 3) {
+      freq[clean] = (freq[clean] || 0) + 1;
+    }
+  });
+
+  const sortedKeywords = Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const tbody = document.getElementById('text-an-density-table-body');
+  if (sortedKeywords.length === 0) {
+    tbody.innerHTML = `<tr><td style="padding: 0.5rem 1rem; color: var(--text-secondary); text-align: center;">No valid keywords found (min 4 letters).</td></tr>`;
+  } else {
+    tbody.innerHTML = sortedKeywords.map(k => `
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 0.5rem 1rem; font-weight: 500; text-transform: capitalize;">${k[0]}</td>
+        <td style="padding: 0.5rem 1rem; font-family: monospace;">Count: ${k[1]} (${((k[1] / wordCount) * 100).toFixed(1)}%)</td>
+      </tr>
+    `).join('');
+  }
+});
+
 
 // --- INITIAL START ---
 window.addEventListener('DOMContentLoaded', () => {
