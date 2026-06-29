@@ -1952,8 +1952,42 @@ Supported browsers:
 
       <!-- App Footer -->
       <footer class="app-footer">
-        <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless.</p>
+        <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless. <a href="#" id="link-privacy" style="margin-left: 1rem; color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" id="link-terms" style="color: var(--primary); text-decoration: none;">User Agreement</a></p>
       </footer>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="modal-privacy" class="modal-overlay-custom" style="display: none;">
+      <div class="modal-content-custom">
+        <div class="modal-header-custom">
+          <h3>🔒 Privacy Policy</h3>
+          <button class="btn-close-modal" id="btn-close-privacy">✕</button>
+        </div>
+        <div class="modal-body-custom">
+          <p><strong>100% Client-Side Privacy Commitment</strong></p>
+          <p>ZeroG Toolbox operates entirely in your web browser. All AI models (Qwen2.5, Whisper, MODNet), image manipulations, optical character recognition (OCR), audio transcriptions, and file cryptographic decryptions are executed locally on your device via WebGPU and WebAssembly. No data, files, text inputs, or tokens are ever uploaded, transmitted, or stored on external servers.</p>
+          <p><strong>Local Analytics</strong></p>
+          <p>This application does not track your personal identity or use tracking cookies. Your browser's localStorage is used solely to persist user interface state (such as light/dark mode preference or temporary local workspace states) for convenience.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms of Service Modal -->
+    <div id="modal-terms" class="modal-overlay-custom" style="display: none;">
+      <div class="modal-content-custom">
+        <div class="modal-header-custom">
+          <h3>📜 Terms of Service / User Agreement</h3>
+          <button class="btn-close-modal" id="btn-close-terms">✕</button>
+        </div>
+        <div class="modal-body-custom">
+          <p><strong>1. Acceptance of Terms</strong></p>
+          <p>By using ZeroG Toolbox, you agree to these terms. If you do not agree, please do not use the application.</p>
+          <p><strong>2. Browser-Native Execution &amp; No Warranty</strong></p>
+          <p>The application is provided "as is" and "as available". Because all computations occur client-side, execution performance depends entirely on your device hardware capabilities (including WebGPU and RAM). We assume no responsibility or liability for data loss, hardware overheating, browser crashes, or execution failures.</p>
+          <p><strong>3. Permitted Use</strong></p>
+          <p>You may use this tool for personal or commercial workflows. All files processed remain your exclusive property and never leave your machine.</p>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="/src/main.js"></script>

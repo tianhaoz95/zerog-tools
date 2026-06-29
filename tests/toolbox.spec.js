@@ -13,16 +13,16 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 20 tool cards rendered
+    // Check that there are 30 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(20);
+    await expect(cards).toHaveCount(30);
     
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools (e.g. password gen, vault/encrypter, hash gen)
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(20);
+    expect(filteredCount).toBeLessThan(30);
     expect(filteredCount).toBeGreaterThan(0);
     
     // Clear search

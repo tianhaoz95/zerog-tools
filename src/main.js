@@ -4414,6 +4414,51 @@ document.getElementById('btn-text-an-run').addEventListener('click', () => {
 });
 
 
+// --- PRIVACY POLICY & USER AGREEMENT MODALS ---
+const linkPrivacy = document.getElementById('link-privacy');
+const linkTerms = document.getElementById('link-terms');
+const modalPrivacy = document.getElementById('modal-privacy');
+const modalTerms = document.getElementById('modal-terms');
+const btnClosePrivacy = document.getElementById('btn-close-privacy');
+const btnCloseTerms = document.getElementById('btn-close-terms');
+
+function showModal(modal) {
+  modal.style.display = 'flex';
+}
+
+function hideModal(modal) {
+  modal.style.display = 'none';
+}
+
+if (linkPrivacy) {
+  linkPrivacy.addEventListener('click', (e) => {
+    e.preventDefault();
+    showModal(modalPrivacy);
+  });
+}
+
+if (linkTerms) {
+  linkTerms.addEventListener('click', (e) => {
+    e.preventDefault();
+    showModal(modalTerms);
+  });
+}
+
+if (btnClosePrivacy) {
+  btnClosePrivacy.addEventListener('click', () => hideModal(modalPrivacy));
+}
+
+if (btnCloseTerms) {
+  btnCloseTerms.addEventListener('click', () => hideModal(modalTerms));
+}
+
+// Close modals when clicking outer overlay background
+window.addEventListener('click', (e) => {
+  if (e.target === modalPrivacy) hideModal(modalPrivacy);
+  if (e.target === modalTerms) hideModal(modalTerms);
+});
+
+
 // --- INITIAL START ---
 window.addEventListener('DOMContentLoaded', () => {
   renderToolsGrid(TOOLS);
