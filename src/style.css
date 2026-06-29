@@ -263,6 +263,7 @@ h1, h2, h3, h4 {
   grid-area: content;
   display: none;
   height: 100%;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 0.5rem;
   animation: fadeIn 0.4s ease-out forwards;
@@ -1045,6 +1046,7 @@ h1, h2, h3, h4 {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
   filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.05));
 }
 
@@ -1054,6 +1056,7 @@ h1, h2, h3, h4 {
   display: flex;
   flex-direction: column;
   height: 100% !important;
+  min-height: 0;
   overflow: hidden;
   position: relative;
   clip-path: inset(0 round var(--radius-md));
