@@ -14,6 +14,7 @@ self.onmessage = async (e) => {
 
       // Load Whisper Tiny English model
       transcriber = await pipeline('automatic-speech-recognition', 'onnx-community/whisper-tiny.en', {
+        dtype: 'fp32',
         progress_callback: (progressData) => {
           if (progressData.status === 'progress') {
             self.postMessage({
