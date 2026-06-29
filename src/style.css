@@ -1051,7 +1051,6 @@ h1, h2, h3, h4 {
 }
 
 .chat-panel {
-  background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   display: flex;
@@ -1059,8 +1058,18 @@ h1, h2, h3, h4 {
   height: 100% !important;
   overflow: hidden;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(12px);
   position: relative;
+}
+
+.chat-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
 }
 
 #home-view.active {
