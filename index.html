@@ -2269,6 +2269,134 @@ Supported browsers:
         </div>
       </main>
 
+      <!-- VIEW 36: EV vs GAS CAR COST CALCULATOR -->
+      <main id="ev-gas-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ev-gas-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>EV vs Gas Car Cost Calculator</h2>
+            <p>Compare the total cost of owning an electric car versus a gasoline car over time. Adjust the figures to match your situation and instantly see lifetime savings and the break-even year. All math runs locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Inputs -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="ev-gas-years">Comparison Period (years)</label>
+              <input type="number" id="ev-gas-years" class="input-custom" value="8" min="1" max="30" step="1" />
+            </div>
+            <div class="control-group">
+              <label for="ev-gas-miles">Miles Driven per Year</label>
+              <input type="number" id="ev-gas-miles" class="input-custom" value="12000" min="0" step="500" />
+            </div>
+
+            <div class="ev-gas-fieldset">
+              <h4 class="ev-gas-legend ev">🔋 Electric Car</h4>
+              <div class="control-group">
+                <label for="ev-price">Purchase Price ($)</label>
+                <input type="number" id="ev-price" class="input-custom" value="42000" min="0" step="500" />
+              </div>
+              <div class="ev-gas-input-row">
+                <div class="control-group">
+                  <label for="ev-efficiency">Efficiency (mi / kWh)</label>
+                  <input type="number" id="ev-efficiency" class="input-custom" value="3.5" min="0.1" step="0.1" />
+                </div>
+                <div class="control-group">
+                  <label for="ev-electric-price">Electricity ($ / kWh)</label>
+                  <input type="number" id="ev-electric-price" class="input-custom" value="0.16" min="0" step="0.01" />
+                </div>
+              </div>
+              <div class="control-group">
+                <label for="ev-maintenance">Maintenance ($ / year)</label>
+                <input type="number" id="ev-maintenance" class="input-custom" value="600" min="0" step="50" />
+              </div>
+            </div>
+
+            <div class="ev-gas-fieldset">
+              <h4 class="ev-gas-legend gas">⛽ Gas Car</h4>
+              <div class="control-group">
+                <label for="gas-price-car">Purchase Price ($)</label>
+                <input type="number" id="gas-price-car" class="input-custom" value="30000" min="0" step="500" />
+              </div>
+              <div class="ev-gas-input-row">
+                <div class="control-group">
+                  <label for="gas-mpg">Fuel Economy (MPG)</label>
+                  <input type="number" id="gas-mpg" class="input-custom" value="28" min="1" step="1" />
+                </div>
+                <div class="control-group">
+                  <label for="gas-fuel-price">Gas Price ($ / gal)</label>
+                  <input type="number" id="gas-fuel-price" class="input-custom" value="3.50" min="0" step="0.05" />
+                </div>
+              </div>
+              <div class="control-group">
+                <label for="gas-maintenance">Maintenance ($ / year)</label>
+                <input type="number" id="gas-maintenance" class="input-custom" value="1200" min="0" step="50" />
+              </div>
+            </div>
+
+            <button class="btn-primary" id="btn-run-ev-gas" style="width: 100%;">⚡ Calculate Costs</button>
+          </div>
+
+          <!-- Right Panel: Results -->
+          <div class="panel-workspace" style="align-items: stretch; justify-content: flex-start;">
+            <div id="ev-gas-results" style="width: 100%;">
+              <div id="ev-gas-verdict" class="ev-gas-verdict">Enter your numbers and click Calculate Costs to see the comparison.</div>
+
+              <div class="ev-gas-summary-grid">
+                <div class="ev-gas-summary-card ev">
+                  <span class="ev-gas-summary-label">🔋 Electric Total</span>
+                  <span class="ev-gas-summary-value" id="ev-total-cost">—</span>
+                </div>
+                <div class="ev-gas-summary-card gas">
+                  <span class="ev-gas-summary-label">⛽ Gas Total</span>
+                  <span class="ev-gas-summary-value" id="gas-total-cost">—</span>
+                </div>
+              </div>
+
+              <div class="ev-gas-bars" id="ev-gas-bars" style="display: none;">
+                <div class="ev-gas-bar-block">
+                  <div class="ev-gas-bar-head"><span>🔋 Electric</span><span id="ev-bar-amount"></span></div>
+                  <div class="ev-gas-bar-track">
+                    <div class="ev-gas-bar-seg purchase" id="ev-bar-purchase"></div>
+                    <div class="ev-gas-bar-seg fuel" id="ev-bar-fuel"></div>
+                    <div class="ev-gas-bar-seg maint" id="ev-bar-maint"></div>
+                  </div>
+                </div>
+                <div class="ev-gas-bar-block">
+                  <div class="ev-gas-bar-head"><span>⛽ Gas</span><span id="gas-bar-amount"></span></div>
+                  <div class="ev-gas-bar-track">
+                    <div class="ev-gas-bar-seg purchase" id="gas-bar-purchase"></div>
+                    <div class="ev-gas-bar-seg fuel" id="gas-bar-fuel"></div>
+                    <div class="ev-gas-bar-seg maint" id="gas-bar-maint"></div>
+                  </div>
+                </div>
+                <div class="ev-gas-bar-legend">
+                  <span><i class="purchase"></i> Purchase</span>
+                  <span><i class="fuel"></i> Fuel / Energy</span>
+                  <span><i class="maint"></i> Maintenance</span>
+                </div>
+              </div>
+
+              <div class="ev-gas-breakdown" id="ev-gas-breakdown" style="display: none;">
+                <div class="ev-gas-breakdown-row">
+                  <span>Lifetime fuel / energy</span>
+                  <span id="ev-gas-energy-detail"></span>
+                </div>
+                <div class="ev-gas-breakdown-row">
+                  <span>Break-even point</span>
+                  <span id="ev-gas-breakeven"></span>
+                </div>
+                <div class="ev-gas-breakdown-row">
+                  <span>Cost per mile</span>
+                  <span id="ev-gas-per-mile"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <!-- App Footer -->
       <footer class="app-footer">
         <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless. <a href="#" id="link-privacy" style="margin-left: 1rem; color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" id="link-terms" style="color: var(--primary); text-decoration: none;">User Agreement</a></p>

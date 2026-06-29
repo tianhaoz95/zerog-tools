@@ -15,7 +15,7 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     
     // Check that there are 35 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(35);
+    await expect(cards).toHaveCount(36);
 
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
@@ -27,7 +27,7 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(35);
+    await expect(cards).toHaveCount(36);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -328,6 +328,43 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await expect(page.locator('.video-bg-swatch')).toHaveCount(4);
     await page.locator('#btn-video-bg-back').click();
     await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool 36: EV vs Gas Car Cost Calculator functional test', async ({ page }) => {
+    const pageErrors = [];
+    page.on('pageerror', (err) => {
+      pageErrors.push(err);
+    });
+
+    await page.locator('.tool-card[data-id="ev-gas-calculator"]').click();
+    await expect(page.locator('#ev-gas-view')).toHaveClass(/active/);
+
+    // Defaults are computed on open: results should be populated, not placeholders
+    await expect(page.locator('#ev-total-cost')).not.toHaveText('—');
+    await expect(page.locator('#gas-total-cost')).not.toHaveText('—');
+    await expect(page.locator('#ev-gas-bars')).toBeVisible();
+    await expect(page.locator('#ev-gas-breakdown')).toBeVisible();
+
+    // With default numbers, electric beats gas: verdict should carry the 'ev' class
+    await expect(page.locator('#ev-gas-verdict')).toHaveClass(/ev/);
+    await expect(page.locator('#ev-gas-verdict')).toContainText('electric car saves');
+
+    // Drive gas prices through the roof -> EV should still win and savings grow
+    await page.locator('#gas-fuel-price').fill('12');
+    await page.locator('#btn-run-ev-gas').click();
+    await expect(page.locator('#ev-gas-verdict')).toContainText('electric car saves');
+
+    // Make the EV absurdly expensive and inefficient -> gas should win
+    await page.locator('#ev-price').fill('120000');
+    await page.locator('#gas-fuel-price').fill('3.50');
+    await page.locator('#btn-run-ev-gas').click();
+    await expect(page.locator('#ev-gas-verdict')).toHaveClass(/gas/);
+    await expect(page.locator('#ev-gas-verdict')).toContainText('gas car saves');
+
+    await page.locator('#btn-ev-gas-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+
+    expect(pageErrors).toHaveLength(0);
   });
 
 });

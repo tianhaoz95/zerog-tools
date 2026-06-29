@@ -318,6 +318,15 @@ const TOOLS = [
     category: 'Graphics',
     icon: '🎬',
     uiClass: 'ready'
+  },
+  {
+    id: 'ev-gas-calculator',
+    title: 'EV vs Gas Car Cost Calculator',
+    description: 'Compare the total cost of owning an electric car versus a gas car. Models purchase price, fuel/electricity, maintenance, and shows lifetime savings plus a break-even point, 100% locally.',
+    keywords: ['electric car', 'gas car', 'ev vs gas', 'total cost of ownership', 'tco', 'car cost', 'fuel savings', 'break even', 'mpg', 'kwh', 'ev calculator', 'gasoline', 'electricity cost'],
+    category: 'Calculators',
+    icon: '🔋',
+    uiClass: 'ready'
   }
 ];
 
@@ -359,6 +368,7 @@ Here are the available tools:
 33. AI Object Detector & Image Classifier (ID: ai-detector)
 34. AI Background Remover (ID: bg-remover)
 35. AI Video Background Swap (ID: video-bg-swap)
+36. EV vs Gas Car Cost Calculator (ID: ev-gas-calculator)
 
 If the user asks for a task, recommend the appropriate tool.
 CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. Keep your responses short, friendly, and structured.`;
@@ -1022,6 +1032,9 @@ function navigateTo(viewId) {
     document.getElementById('video-bg-view').classList.add('active');
     resetVideoBgState();
     initVideoBgWorker();
+  } else if (viewId === 'ev-gas-calculator') {
+    document.getElementById('ev-gas-view').classList.add('active');
+    resetEvGasState();
   }
 }
 
@@ -1061,6 +1074,7 @@ document.getElementById('btn-translator-back').addEventListener('click', () => n
 document.getElementById('btn-detector-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-bg-remover-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-video-bg-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-ev-gas-back').addEventListener('click', () => navigateTo('home'));
 
 
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
@@ -3704,6 +3718,135 @@ btnDownloadDrawnSvg.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+
+// --- EV vs GAS CAR COST CALCULATOR LOGIC ---
+const evGasYears = document.getElementById('ev-gas-years');
+const evGasMiles = document.getElementById('ev-gas-miles');
+const evPrice = document.getElementById('ev-price');
+const evEfficiency = document.getElementById('ev-efficiency');
+const evElectricPrice = document.getElementById('ev-electric-price');
+const evMaintenance = document.getElementById('ev-maintenance');
+const gasPriceCar = document.getElementById('gas-price-car');
+const gasMpg = document.getElementById('gas-mpg');
+const gasFuelPrice = document.getElementById('gas-fuel-price');
+const gasMaintenance = document.getElementById('gas-maintenance');
+const btnRunEvGas = document.getElementById('btn-run-ev-gas');
+
+const EV_GAS_DEFAULTS = {
+  years: 8, miles: 12000,
+  evPrice: 42000, evEff: 3.5, evKwh: 0.16, evMaint: 600,
+  gasPrice: 30000, gasMpg: 28, gasFuel: 3.50, gasMaint: 1200
+};
+
+const usdFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const formatUsd = (n) => usdFormatter.format(Math.round(n));
+
+btnRunEvGas.addEventListener('click', runEvGasComparison);
+[evGasYears, evGasMiles, evPrice, evEfficiency, evElectricPrice, evMaintenance,
+ gasPriceCar, gasMpg, gasFuelPrice, gasMaintenance].forEach(el => {
+  el.addEventListener('keydown', (e) => { if (e.key === 'Enter') runEvGasComparison(); });
+});
+
+function readPositiveNumber(el, fallback) {
+  const val = parseFloat(el.value);
+  return (isNaN(val) || val < 0) ? fallback : val;
+}
+
+function runEvGasComparison() {
+  const years = Math.max(1, readPositiveNumber(evGasYears, EV_GAS_DEFAULTS.years));
+  const miles = readPositiveNumber(evGasMiles, EV_GAS_DEFAULTS.miles);
+  const totalMiles = miles * years;
+
+  // Electric car costs
+  const evEff = Math.max(0.1, readPositiveNumber(evEfficiency, EV_GAS_DEFAULTS.evEff)); // mi/kWh
+  const evKwhPrice = readPositiveNumber(evElectricPrice, EV_GAS_DEFAULTS.evKwh);
+  const evUpfront = readPositiveNumber(evPrice, EV_GAS_DEFAULTS.evPrice);
+  const evMaintYearly = readPositiveNumber(evMaintenance, EV_GAS_DEFAULTS.evMaint);
+  const evEnergyTotal = (totalMiles / evEff) * evKwhPrice;
+  const evMaintTotal = evMaintYearly * years;
+  const evTotal = evUpfront + evEnergyTotal + evMaintTotal;
+
+  // Gas car costs
+  const carMpg = Math.max(1, readPositiveNumber(gasMpg, EV_GAS_DEFAULTS.gasMpg));
+  const fuelPrice = readPositiveNumber(gasFuelPrice, EV_GAS_DEFAULTS.gasFuel);
+  const gasUpfront = readPositiveNumber(gasPriceCar, EV_GAS_DEFAULTS.gasPrice);
+  const gasMaintYearly = readPositiveNumber(gasMaintenance, EV_GAS_DEFAULTS.gasMaint);
+  const gasFuelTotal = (totalMiles / carMpg) * fuelPrice;
+  const gasMaintTotal = gasMaintYearly * years;
+  const gasTotal = gasUpfront + gasFuelTotal + gasMaintTotal;
+
+  // Summary cards
+  document.getElementById('ev-total-cost').innerText = formatUsd(evTotal);
+  document.getElementById('gas-total-cost').innerText = formatUsd(gasTotal);
+
+  // Verdict
+  const verdict = document.getElementById('ev-gas-verdict');
+  const savings = Math.abs(gasTotal - evTotal);
+  if (Math.round(evTotal) === Math.round(gasTotal)) {
+    verdict.className = 'ev-gas-verdict tie';
+    verdict.innerText = `It's a wash — both cars cost about ${formatUsd(evTotal)} over ${years} years.`;
+  } else if (evTotal < gasTotal) {
+    verdict.className = 'ev-gas-verdict ev';
+    verdict.innerText = `🔋 The electric car saves you ${formatUsd(savings)} over ${years} years.`;
+  } else {
+    verdict.className = 'ev-gas-verdict gas';
+    verdict.innerText = `⛽ The gas car saves you ${formatUsd(savings)} over ${years} years.`;
+  }
+
+  // Stacked bars (scaled to the larger total)
+  const maxTotal = Math.max(evTotal, gasTotal, 1);
+  const setSegments = (prefix, upfront, fuel, maint, total) => {
+    document.getElementById(`${prefix}-bar-purchase`).style.width = `${(upfront / maxTotal) * 100}%`;
+    document.getElementById(`${prefix}-bar-fuel`).style.width = `${(fuel / maxTotal) * 100}%`;
+    document.getElementById(`${prefix}-bar-maint`).style.width = `${(maint / maxTotal) * 100}%`;
+    document.getElementById(`${prefix}-bar-amount`).innerText = formatUsd(total);
+  };
+  setSegments('ev', evUpfront, evEnergyTotal, evMaintTotal, evTotal);
+  setSegments('gas', gasUpfront, gasFuelTotal, gasMaintTotal, gasTotal);
+  document.getElementById('ev-gas-bars').style.display = 'flex';
+
+  // Break-even: year when cumulative EV cost dips below cumulative gas cost
+  const evYearlyRunning = evEnergyTotal / years + evMaintYearly;
+  const gasYearlyRunning = gasFuelTotal / years + gasMaintYearly;
+  let breakEvenText = 'Never within this period';
+  const yearlyGap = gasYearlyRunning - evYearlyRunning; // how much EV saves per year of running costs
+  const upfrontGap = evUpfront - gasUpfront; // extra EV pays upfront
+  if (upfrontGap <= 0) {
+    breakEvenText = evTotal <= gasTotal ? 'Immediately (lower upfront cost)' : breakEvenText;
+  } else if (yearlyGap > 0) {
+    const breakEvenYears = upfrontGap / yearlyGap;
+    if (breakEvenYears <= years) {
+      breakEvenText = `${breakEvenYears.toFixed(1)} years`;
+    } else {
+      breakEvenText = `${breakEvenYears.toFixed(1)} years (beyond this period)`;
+    }
+  }
+  document.getElementById('ev-gas-breakeven').innerText = breakEvenText;
+
+  // Energy detail + cost per mile
+  document.getElementById('ev-gas-energy-detail').innerText =
+    `EV ${formatUsd(evEnergyTotal)} · Gas ${formatUsd(gasFuelTotal)}`;
+  const evPerMile = totalMiles > 0 ? evTotal / totalMiles : 0;
+  const gasPerMile = totalMiles > 0 ? gasTotal / totalMiles : 0;
+  document.getElementById('ev-gas-per-mile').innerText =
+    `EV $${evPerMile.toFixed(2)}/mi · Gas $${gasPerMile.toFixed(2)}/mi`;
+
+  document.getElementById('ev-gas-breakdown').style.display = 'flex';
+}
+
+function resetEvGasState() {
+  evGasYears.value = EV_GAS_DEFAULTS.years;
+  evGasMiles.value = EV_GAS_DEFAULTS.miles;
+  evPrice.value = EV_GAS_DEFAULTS.evPrice;
+  evEfficiency.value = EV_GAS_DEFAULTS.evEff;
+  evElectricPrice.value = EV_GAS_DEFAULTS.evKwh;
+  evMaintenance.value = EV_GAS_DEFAULTS.evMaint;
+  gasPriceCar.value = EV_GAS_DEFAULTS.gasPrice;
+  gasMpg.value = EV_GAS_DEFAULTS.gasMpg;
+  gasFuelPrice.value = EV_GAS_DEFAULTS.gasFuel;
+  gasMaintenance.value = EV_GAS_DEFAULTS.gasMaint;
+  runEvGasComparison();
+}
 
 // --- UNIT CONVERTER LOGIC ---
 const unitCategory = document.getElementById('unit-category');
