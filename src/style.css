@@ -490,9 +490,6 @@ h1, h2, h3, h4 {
 }
 
 .tool-badge {
-  position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
   padding: 0.25rem 0.6rem;
   border-radius: 9999px;
   font-size: 0.7rem;
@@ -500,6 +497,7 @@ h1, h2, h3, h4 {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   z-index: 1;
+  display: inline-block;
 }
 
 .tool-badge.ready {
@@ -515,14 +513,14 @@ h1, h2, h3, h4 {
 }
 
 .tool-badge.ai {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(79, 70, 229, 0.1);
   color: var(--primary);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  margin-right: 0.5rem;
+  border: 1px solid rgba(79, 70, 229, 0.25);
 }
 
 .tool-badges-row {
   display: flex;
+  gap: 0.4rem;
   position: absolute;
   top: 1.25rem;
   right: 1.25rem;
