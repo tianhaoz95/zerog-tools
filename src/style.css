@@ -196,6 +196,17 @@ body::after {
   color: var(--primary);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+#btn-toggle-chat {
+  white-space: nowrap;
+}
+
 /* AI Status Widget */
 .ai-status-widget {
   display: flex;
@@ -206,6 +217,8 @@ body::after {
   border: 1px solid var(--border);
   border-radius: 9999px;
   font-size: 0.85rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .status-dot {
