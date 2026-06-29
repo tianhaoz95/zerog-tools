@@ -367,4 +367,24 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     expect(pageErrors).toHaveLength(0);
   });
 
+  test('Routing: deep link, URL sync, and back navigation', async ({ page }) => {
+    // Deep link straight to a tool URL opens that tool's view.
+    await page.goto(`${BASE_URL}/tools/json-formatter`);
+    await expect(page.locator('#json-view')).toHaveClass(/active/);
+
+    // Pre-rendered page serves tool-specific metadata for crawlers.
+    await expect(page).toHaveTitle(/JSON Formatter/);
+
+    // Clicking a card from home updates the URL to /tools/<id>.
+    await page.goto(BASE_URL);
+    await page.locator('.tool-card[data-id="qr-tool"]').click();
+    await expect(page.locator('#qr-view')).toHaveClass(/active/);
+    await expect(page).toHaveURL(/\/tools\/qr-tool$/);
+
+    // Browser Back returns to the home view at root.
+    await page.goBack();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+    await expect(page).toHaveURL(`${BASE_URL}/`);
+  });
+
 });

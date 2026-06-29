@@ -6,11 +6,12 @@
   "scripts": {
     "start": "./dev-server.sh",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/postbuild.js",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
+    "@resvg/resvg-js": "^2.6.2",
     "firebase-tools": "^15.22.3",
     "vite": "^8.1.0"
   },
