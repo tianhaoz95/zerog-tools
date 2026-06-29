@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 46 tool cards rendered
+    // Check that there are 66 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(46);
+    await expect(cards).toHaveCount(66);
 
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
-    // It should filter down to relevant tools (e.g. password gen, vault/encrypter, hash gen)
+    // It should filter down to relevant tools
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(45);
+    expect(filteredCount).toBeLessThan(65);
     expect(filteredCount).toBeGreaterThan(0);
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(46);
+    await expect(cards).toHaveCount(66);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -378,7 +378,27 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       { id: 'api-client', view: '#api-client-view', backBtn: '#btn-api-client-back' },
       { id: 'pdf-image-converter', view: '#pdf-image-converter-view', backBtn: '#btn-pdf-image-converter-back' },
       { id: 'mortgage-calculator', view: '#mortgage-calculator-view', backBtn: '#btn-mortgage-calculator-back' },
-      { id: 'pomodoro-space', view: '#pomodoro-space-view', backBtn: '#btn-pomodoro-space-back' }
+      { id: 'pomodoro-space', view: '#pomodoro-space-view', backBtn: '#btn-pomodoro-space-back' },
+      { id: 'morse-code', view: '#morse-code-view', backBtn: '#btn-morse-code-back' },
+      { id: 'text-to-speech', view: '#text-to-speech-view', backBtn: '#btn-text-to-speech-back' },
+      { id: 'media-recorder', view: '#media-recorder-view', backBtn: '#btn-media-recorder-back' },
+      { id: 'keyboard-tester', view: '#keyboard-tester-view', backBtn: '#btn-keyboard-tester-back' },
+      { id: 'svg-converter', view: '#svg-converter-view', backBtn: '#btn-svg-converter-back' },
+      { id: 'xml-formatter', view: '#xml-formatter-view', backBtn: '#btn-xml-formatter-back' },
+      { id: 'base-converter', view: '#base-converter-view', backBtn: '#btn-base-converter-back' },
+      { id: 'css-glassmorphism', view: '#css-glassmorphism-view', backBtn: '#btn-css-glassmorphism-back' },
+      { id: 'case-converter', view: '#case-converter-view', backBtn: '#btn-case-converter-back' },
+      { id: 'aspect-ratio-calc', view: '#aspect-ratio-calc-view', backBtn: '#btn-aspect-ratio-calc-back' },
+      { id: 'color-blindness', view: '#color-blindness-view', backBtn: '#btn-color-blindness-back' },
+      { id: 'tone-generator', view: '#tone-generator-view', backBtn: '#btn-tone-generator-back' },
+      { id: 'subnet-calculator', view: '#subnet-calculator-view', backBtn: '#btn-subnet-calculator-back' },
+      { id: 'pixel-tester', view: '#pixel-tester-view', backBtn: '#btn-pixel-tester-back' },
+      { id: 'sketchpad', view: '#sketchpad-view', backBtn: '#btn-sketchpad-back' },
+      { id: 'hex-viewer', view: '#hex-viewer-view', backBtn: '#btn-hex-viewer-back' },
+      { id: 'tip-calculator', view: '#tip-calculator-view', backBtn: '#btn-tip-calculator-back' },
+      { id: 'life-progress', view: '#life-progress-view', backBtn: '#btn-life-progress-back' },
+      { id: 'graphing-calc', view: '#graphing-calc-view', backBtn: '#btn-graphing-calc-back' },
+      { id: 'password-analyzer', view: '#password-analyzer-view', backBtn: '#btn-password-analyzer-back' }
     ];
 
     for (const tool of newTools) {

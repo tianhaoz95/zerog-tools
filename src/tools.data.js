@@ -416,5 +416,185 @@ export const TOOLS = [
     category: 'Calculators',
     icon: '🍅',
     uiClass: 'ready'
+  },
+  {
+    id: 'morse-code',
+    title: 'Morse Code Translator & Player',
+    description: 'Translate text to Morse code, play it as audio using Web Audio, or flash the screen, and decode Morse code back to text.',
+    keywords: ['morse code', 'translator', 'audio player', 'cw', 'telegraph', 'morse decoder', 'sound generator'],
+    category: 'Developer',
+    icon: '📻',
+    uiClass: 'ready'
+  },
+  {
+    id: 'text-to-speech',
+    title: 'AI Text-to-Speech (TTS) Reader',
+    description: 'Convert text to speech locally using browser Synthesis voices, with speed, pitch controls and text word highlighting.',
+    keywords: ['text to speech', 'tts', 'speech reader', 'speak text', 'read aloud', 'voice synthesizer'],
+    category: 'Audio',
+    icon: '🗣️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'media-recorder',
+    title: 'Screen & Camera Recorder',
+    description: 'Record your screen, webcam, or a browser tab with audio locally using the MediaRecorder API, with local preview and WebM download.',
+    keywords: ['screen recorder', 'webcam recorder', 'record video', 'video recorder', 'capture screen', 'media recorder'],
+    category: 'Graphics',
+    icon: '📹',
+    uiClass: 'ready'
+  },
+  {
+    id: 'keyboard-tester',
+    title: 'Key Event & Keyboard Tester',
+    description: 'Interactive keyboard interface to test keystrokes and inspect detailed JavaScript keyboard event properties in real-time.',
+    keywords: ['keyboard test', 'key events', 'keycode', 'key checker', 'keyboard diagnostic', 'event listener'],
+    category: 'Developer',
+    icon: '⌨️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'svg-converter',
+    title: 'SVG to CSS & DataURI Converter',
+    description: 'Convert raw SVG code into inline CSS backgrounds, raw HTML DataURIs, JSX components, and copy them instantly.',
+    keywords: ['svg to css', 'datauri', 'svg converter', 'base64 svg', 'urlencode svg', 'inline svg', 'jsx svg'],
+    category: 'Developer',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'xml-formatter',
+    title: 'XML Formatter & Validator',
+    description: 'Validate, prettify, format, or minify XML documents with syntax highlighting, indentation adjustment, and tree view.',
+    keywords: ['xml format', 'xml validator', 'prettify xml', 'xml tree', 'xml beautifier', 'format xml', 'minify xml'],
+    category: 'Developer',
+    icon: '📑',
+    uiClass: 'ready'
+  },
+  {
+    id: 'base-converter',
+    title: 'Number Base Converter',
+    description: 'Convert numbers between Binary, Octal, Decimal, Hexadecimal, and any custom base (2-36) with step-by-step math.',
+    keywords: ['base converter', 'binary to hex', 'dec to bin', 'number base', 'radix', 'hex converter'],
+    category: 'Developer',
+    icon: '🔢',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-glassmorphism',
+    title: 'CSS Glassmorphism & Shadow Builder',
+    description: 'Visually design glassmorphic components and layered shadows, customize blur, opacity, borders, and copy CSS snippets.',
+    keywords: ['glassmorphism', 'css shadow', 'box shadow generator', 'glassmorphic CSS', 'visual designer', 'neon shadow'],
+    category: 'Developer',
+    icon: '💎',
+    uiClass: 'ready'
+  },
+  {
+    id: 'case-converter',
+    title: 'Text Case & List Converter',
+    description: 'Convert text casing (camelCase, snake_case, PascalCase, kebab-case, title case) or format lists into JSON arrays, CSV, or bullet points.',
+    keywords: ['case converter', 'text case', 'camelcase', 'snake_case', 'list formatter', 'list converter', 'title case'],
+    category: 'Text',
+    icon: '🔤',
+    uiClass: 'ready'
+  },
+  {
+    id: 'aspect-ratio-calc',
+    title: 'Aspect Ratio & PPI Calculator',
+    description: 'Calculate aspect ratio scaling, downscaling/upscaling dimensions, and find screen Pixels Per Inch (PPI) density.',
+    keywords: ['aspect ratio', 'ppi calculator', 'dpi calculator', 'screen density', 'image scaling', 'resolution calculator'],
+    category: 'Calculators',
+    icon: '📏',
+    uiClass: 'ready'
+  },
+  {
+    id: 'color-blindness',
+    title: 'Color Blindness Simulator',
+    description: 'Upload images and simulate various color vision deficiencies like Deuteranopia, Protanopia, and Tritanopia locally on a canvas.',
+    keywords: ['color blindness', 'color blind simulation', 'daltonism', 'deuteranopia', 'protanopia', 'tritanopia', 'accessibility'],
+    category: 'Graphics',
+    icon: '👁️‍🗨️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'tone-generator',
+    title: 'Audio Tone & Noise Generator',
+    description: 'Generate pure audio tones (sine, square, sawtooth, triangle waves) or focus noise colors (white, pink, brownian) locally using Web Audio.',
+    keywords: ['tone generator', 'noise generator', 'white noise', 'frequency generator', 'audio test', 'sine wave'],
+    category: 'Audio',
+    icon: '🔊',
+    uiClass: 'ready'
+  },
+  {
+    id: 'subnet-calculator',
+    title: 'IP Subnet & CIDR Calculator',
+    description: 'Parse IP addresses and CIDR notations to calculate subnets, network ranges, broadcast addresses, and usable host counts.',
+    keywords: ['subnet calculator', 'cidr calculator', 'ip range', 'netmask', 'network range', 'ip address'],
+    category: 'Developer',
+    icon: '🌐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'pixel-tester',
+    title: 'Dead Pixel Tester & Fixer',
+    description: 'Diagnose dead screen pixels using high-contrast fullscreen colors, and run a fast-flashing repair cycle to unstick stuck pixels.',
+    keywords: ['dead pixel', 'pixel fixer', 'stuck pixel', 'screen test', 'monitor test', 'color flash'],
+    category: 'Graphics',
+    icon: '📺',
+    uiClass: 'ready'
+  },
+  {
+    id: 'sketchpad',
+    title: 'Paint Canvas & Sketchpad',
+    description: 'A canvas sketchpad to draw with brushes, colors, opacity, shapes, undo/redo logs, and export high-quality transparent PNGs.',
+    keywords: ['sketchpad', 'paint canvas', 'drawing tool', 'draw online', 'doodle', 'vector sketch'],
+    category: 'Graphics',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'hex-viewer',
+    title: 'Binary File Hex Dump Viewer',
+    description: 'Upload files of any size to inspect their byte-by-byte hexadecimal contents and ASCII character representation locally.',
+    keywords: ['hex dump', 'hex viewer', 'binary viewer', 'file bytes', 'hex inspector', 'file reader'],
+    category: 'Developer',
+    icon: '💾',
+    uiClass: 'ready'
+  },
+  {
+    id: 'tip-calculator',
+    title: 'Tip & Bill Split Calculator',
+    description: 'Calculate tip percentages, split bills among multiple people with custom tax rates, rounding options, and unequal individual split shares.',
+    keywords: ['tip calculator', 'split bill', 'bill splitter', 'restaurant tip', 'dinner split', 'finance utility'],
+    category: 'Calculators',
+    icon: '💵',
+    uiClass: 'ready'
+  },
+  {
+    id: 'life-progress',
+    title: 'Life Progress & Biorhythm Chart',
+    description: 'Visualize your age in detail, track life progress metrics (day, month, year, lifetime), and chart physical, emotional, and intellectual biorhythms.',
+    keywords: ['life progress', 'biorhythm', 'age calculator', 'life timer', 'biorhythm chart', 'productivity tracking'],
+    category: 'Calculators',
+    icon: '⏳',
+    uiClass: 'ready'
+  },
+  {
+    id: 'graphing-calc',
+    title: 'Scientific & Graphing Calculator',
+    description: 'Solve scientific math operations and plot 2D mathematical functions dynamically on a canvas coordinate system.',
+    keywords: ['scientific calculator', 'graphing calculator', 'plot math', 'math solver', 'function plotter', 'calculator'],
+    category: 'Calculators',
+    icon: '🧮',
+    uiClass: 'ready'
+  },
+  {
+    id: 'password-analyzer',
+    title: 'Password Strength & Entropy Analyzer',
+    description: 'Analyze passwords for character sets, length, dictionary entropy bits, and estimate cracking time under different computing speeds.',
+    keywords: ['password strength', 'entropy analyzer', 'password security', 'crack time', 'password safety', 'brute force estimate'],
+    category: 'Security',
+    icon: '🛡️',
+    uiClass: 'ready'
   }
 ];

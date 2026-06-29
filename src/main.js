@@ -783,6 +783,66 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'pomodoro-space') {
     document.getElementById('pomodoro-space-view').classList.add('active');
     resetPomodoroSpaceState();
+  } else if (viewId === 'morse-code') {
+    document.getElementById('morse-code-view').classList.add('active');
+    resetMorseCodeState();
+  } else if (viewId === 'text-to-speech') {
+    document.getElementById('text-to-speech-view').classList.add('active');
+    resetTextToSpeechState();
+  } else if (viewId === 'media-recorder') {
+    document.getElementById('media-recorder-view').classList.add('active');
+    resetMediaRecorderState();
+  } else if (viewId === 'keyboard-tester') {
+    document.getElementById('keyboard-tester-view').classList.add('active');
+    resetKeyboardTesterState();
+  } else if (viewId === 'svg-converter') {
+    document.getElementById('svg-converter-view').classList.add('active');
+    resetSvgConverterState();
+  } else if (viewId === 'xml-formatter') {
+    document.getElementById('xml-formatter-view').classList.add('active');
+    resetXmlFormatterState();
+  } else if (viewId === 'base-converter') {
+    document.getElementById('base-converter-view').classList.add('active');
+    resetBaseConverterState();
+  } else if (viewId === 'css-glassmorphism') {
+    document.getElementById('css-glassmorphism-view').classList.add('active');
+    resetCssGlassmorphicState();
+  } else if (viewId === 'case-converter') {
+    document.getElementById('case-converter-view').classList.add('active');
+    resetCaseConverterState();
+  } else if (viewId === 'aspect-ratio-calc') {
+    document.getElementById('aspect-ratio-calc-view').classList.add('active');
+    resetAspectRatioCalcState();
+  } else if (viewId === 'color-blindness') {
+    document.getElementById('color-blindness-view').classList.add('active');
+    resetColorBlindnessState();
+  } else if (viewId === 'tone-generator') {
+    document.getElementById('tone-generator-view').classList.add('active');
+    resetToneGeneratorState();
+  } else if (viewId === 'subnet-calculator') {
+    document.getElementById('subnet-calculator-view').classList.add('active');
+    resetSubnetCalculatorState();
+  } else if (viewId === 'pixel-tester') {
+    document.getElementById('pixel-tester-view').classList.add('active');
+    resetPixelTesterState();
+  } else if (viewId === 'sketchpad') {
+    document.getElementById('sketchpad-view').classList.add('active');
+    resetSketchpadState();
+  } else if (viewId === 'hex-viewer') {
+    document.getElementById('hex-viewer-view').classList.add('active');
+    resetHexViewerState();
+  } else if (viewId === 'tip-calculator') {
+    document.getElementById('tip-calculator-view').classList.add('active');
+    resetTipCalculatorState();
+  } else if (viewId === 'life-progress') {
+    document.getElementById('life-progress-view').classList.add('active');
+    resetLifeProgressState();
+  } else if (viewId === 'graphing-calc') {
+    document.getElementById('graphing-calc-view').classList.add('active');
+    resetGraphingCalcState();
+  } else if (viewId === 'password-analyzer') {
+    document.getElementById('password-analyzer-view').classList.add('active');
+    resetPasswordAnalyzerState();
   }
 
   // Keep the URL + document metadata in sync with the active view.
@@ -849,7 +909,20 @@ document.getElementById('btn-pdf-image-converter-back').addEventListener('click'
 document.getElementById('btn-mortgage-calculator-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-pomodoro-space-back').addEventListener('click', () => navigateTo('home'));
 
-
+// Wire back buttons for the 20 new tools
+const newToolsIds = [
+  'morse-code', 'text-to-speech', 'media-recorder', 'keyboard-tester',
+  'svg-converter', 'xml-formatter', 'base-converter', 'css-glassmorphism',
+  'case-converter', 'aspect-ratio-calc', 'color-blindness', 'tone-generator',
+  'subnet-calculator', 'pixel-tester', 'sketchpad', 'hex-viewer',
+  'tip-calculator', 'life-progress', 'graphing-calc', 'password-analyzer'
+];
+newToolsIds.forEach(id => {
+  const el = document.getElementById(`btn-${id}-back`);
+  if (el) {
+    el.addEventListener('click', () => navigateTo('home'));
+  }
+});
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
 let originalPassportImage = null;
 let processedPassportImage = null;
@@ -7291,7 +7364,1883 @@ if (btnPomodoroAddTask) {
 }
 
 
-// --- INITIAL START ---
+// ============================================================================
+// --- MORSE CODE TRANSLATOR LOGIC ---
+// ============================================================================
+const morseInputText = document.getElementById('morse-input-text');
+const morseOutputText = document.getElementById('morse-output-text');
+const morseFreq = document.getElementById('morse-freq');
+const morseWpm = document.getElementById('morse-wpm');
+const btnMorsePlay = document.getElementById('btn-morse-play');
+const btnMorseFlash = document.getElementById('btn-morse-flash');
+const btnMorseCopy = document.getElementById('btn-morse-copy');
+
+const MORSE_DICT = {
+  'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+  'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
+  'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+  'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
+  '6': '-....', '7': '--...', '8': '---..', '9': '----.', '0': '-----', ' ': '/'
+};
+const REVERSE_MORSE = Object.fromEntries(Object.entries(MORSE_DICT).map(([k, v]) => [v, k]));
+
+function resetMorseCodeState() {
+  morseInputText.value = 'Hello World';
+  translateMorse();
+}
+
+function translateMorse() {
+  const val = morseInputText.value.trim().toUpperCase();
+  if (val.includes('.') || val.includes('-') || val.includes('/')) {
+    // Treat as Morse input -> decode
+    const words = val.split('/');
+    const decoded = words.map(word => {
+      const chars = word.trim().split(' ');
+      return chars.map(char => REVERSE_MORSE[char] || '?').join('');
+    }).join(' ');
+    morseOutputText.value = decoded;
+  } else {
+    // Treat as plain text -> encode
+    const encoded = val.split('').map(char => MORSE_DICT[char] || '').filter(x => x).join(' ');
+    morseOutputText.value = encoded;
+  }
+}
+
+if (morseInputText) {
+  morseInputText.addEventListener('input', translateMorse);
+}
+
+if (btnMorseCopy) {
+  btnMorseCopy.addEventListener('click', () => {
+    navigator.clipboard.writeText(morseOutputText.value);
+    alert('Copied to clipboard!');
+  });
+}
+
+let morseAudioCtx = null;
+if (btnMorsePlay) {
+  btnMorsePlay.addEventListener('click', () => {
+    const code = morseOutputText.value;
+    if (!code || !code.includes('.') && !code.includes('-')) return;
+
+    if (!morseAudioCtx) {
+      morseAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    const freq = parseFloat(morseFreq.value) || 700;
+    const wpm = parseFloat(morseWpm.value) || 20;
+    const dotDuration = 1.2 / wpm; // standard Morse dot time in seconds
+
+    let time = morseAudioCtx.currentTime;
+
+    code.split('').forEach(symbol => {
+      if (symbol === '.') {
+        playToneAt(freq, dotDuration, time);
+        time += dotDuration + dotDuration;
+      } else if (symbol === '-') {
+        playToneAt(freq, dotDuration * 3, time);
+        time += (dotDuration * 3) + dotDuration;
+      } else if (symbol === ' ') {
+        time += dotDuration * 2;
+      } else if (symbol === '/') {
+        time += dotDuration * 4;
+      }
+    });
+
+    function playToneAt(frequency, duration, startTime) {
+      const osc = morseAudioCtx.createOscillator();
+      const gain = morseAudioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(frequency, startTime);
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.2, startTime + 0.005);
+      gain.gain.setValueAtTime(0.2, startTime + duration - 0.005);
+      gain.gain.linearRampToValueAtTime(0, startTime + duration);
+      osc.connect(gain);
+      gain.connect(morseAudioCtx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    }
+  });
+}
+
+if (btnMorseFlash) {
+  btnMorseFlash.addEventListener('click', () => {
+    const code = morseOutputText.value;
+    if (!code) return;
+
+    const wpm = parseFloat(morseWpm.value) || 20;
+    const dotDuration = 1200 / wpm; // ms
+    const morseView = document.getElementById('morse-code-view');
+
+    let currentDelay = 0;
+
+    code.split('').forEach(symbol => {
+      if (symbol === '.') {
+        scheduleFlash(dotDuration, currentDelay);
+        currentDelay += dotDuration * 2;
+      } else if (symbol === '-') {
+        scheduleFlash(dotDuration * 3, currentDelay);
+        currentDelay += (dotDuration * 3) + dotDuration;
+      } else if (symbol === ' ') {
+        currentDelay += dotDuration * 2;
+      } else if (symbol === '/') {
+        currentDelay += dotDuration * 4;
+      }
+    });
+
+    function scheduleFlash(duration, delay) {
+      setTimeout(() => {
+        morseView.style.background = '#4f46e5';
+        setTimeout(() => {
+          morseView.style.background = '';
+        }, duration);
+      }, delay);
+    }
+  });
+}
+
+// ============================================================================
+// --- TEXT TO SPEECH READER LOGIC ---
+// ============================================================================
+const ttsVoiceSelect = document.getElementById('tts-voice-select');
+const ttsRate = document.getElementById('tts-rate');
+const ttsPitch = document.getElementById('tts-pitch');
+const ttsRateVal = document.getElementById('tts-rate-val');
+const ttsPitchVal = document.getElementById('tts-pitch-val');
+const btnTtsSpeak = document.getElementById('btn-tts-speak');
+const btnTtsPause = document.getElementById('btn-tts-pause');
+const btnTtsStop = document.getElementById('btn-tts-stop');
+const ttsHighlightContainer = document.getElementById('tts-highlight-container');
+
+function resetTextToSpeechState() {
+  populateTtsVoices();
+}
+
+function populateTtsVoices() {
+  if (!ttsVoiceSelect) return;
+  const voices = speechSynthesis.getVoices();
+  ttsVoiceSelect.innerHTML = '';
+  voices.forEach((voice, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${voice.name} (${voice.lang})`;
+    ttsVoiceSelect.appendChild(opt);
+  });
+}
+
+if (typeof speechSynthesis !== 'undefined') {
+  speechSynthesis.onvoiceschanged = populateTtsVoices;
+}
+
+if (ttsRate) {
+  ttsRate.addEventListener('input', () => {
+    ttsRateVal.textContent = ttsRate.value;
+  });
+}
+
+if (ttsPitch) {
+  ttsPitch.addEventListener('input', () => {
+    ttsPitchVal.textContent = ttsPitch.value;
+  });
+}
+
+if (btnTtsSpeak) {
+  btnTtsSpeak.addEventListener('click', () => {
+    speechSynthesis.cancel();
+    const text = ttsHighlightContainer.innerText.trim();
+    if (!text) return;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0 && ttsVoiceSelect.value) {
+      utterance.voice = voices[parseInt(ttsVoiceSelect.value)];
+    }
+    utterance.rate = parseFloat(ttsRate.value) || 1.0;
+    utterance.pitch = parseFloat(ttsPitch.value) || 1.0;
+
+    utterance.onstart = () => {
+      btnTtsPause.disabled = false;
+    };
+
+    utterance.onend = () => {
+      btnTtsPause.disabled = true;
+    };
+
+    speechSynthesis.speak(utterance);
+  });
+}
+
+if (btnTtsPause) {
+  btnTtsPause.addEventListener('click', () => {
+    if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+      btnTtsPause.textContent = '⏸ Pause';
+    } else {
+      speechSynthesis.pause();
+      btnTtsPause.textContent = '▶ Resume';
+    }
+  });
+}
+
+if (btnTtsStop) {
+  btnTtsStop.addEventListener('click', () => {
+    speechSynthesis.cancel();
+    btnTtsPause.disabled = true;
+    btnTtsPause.textContent = '⏸ Pause';
+  });
+}
+
+// ============================================================================
+// --- SCREEN & CAMERA RECORDER LOGIC ---
+// ============================================================================
+const recorderSource = document.getElementById('recorder-source');
+const recorderAudio = document.getElementById('recorder-audio');
+const btnRecorderStart = document.getElementById('btn-recorder-start');
+const btnRecorderStop = document.getElementById('btn-recorder-stop');
+const recorderTimer = document.getElementById('recorder-timer');
+const recorderPreview = document.getElementById('recorder-preview');
+const recorderStatusBanner = document.getElementById('recorder-status-banner');
+const recorderOutputContainer = document.getElementById('recorder-output-container');
+const recorderResultVideo = document.getElementById('recorder-result-video');
+const btnRecorderDownload = document.getElementById('btn-recorder-download');
+
+let activeRecorderStream = null;
+let mediaRecorderInstance = null;
+let recordedChunks = [];
+let recordTimerInterval = null;
+let recordSeconds = 0;
+
+function resetMediaRecorderState() {
+  stopRecorderSession();
+  recorderOutputContainer.style.display = 'none';
+  recorderStatusBanner.textContent = 'No active session';
+}
+
+function stopRecorderSession() {
+  if (mediaRecorderInstance && mediaRecorderInstance.state !== 'inactive') {
+    mediaRecorderInstance.stop();
+  }
+  if (activeRecorderStream) {
+    activeRecorderStream.getTracks().forEach(track => track.stop());
+    activeRecorderStream = null;
+  }
+  clearInterval(recordTimerInterval);
+  recorderTimer.style.display = 'none';
+  btnRecorderStart.disabled = false;
+  btnRecorderStop.disabled = true;
+}
+
+if (btnRecorderStart) {
+  btnRecorderStart.addEventListener('click', async () => {
+    recordedChunks = [];
+    try {
+      const source = recorderSource.value;
+      const includeAudio = recorderAudio.checked;
+
+      let stream = null;
+      if (source === 'screen') {
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: includeAudio
+        });
+      } else {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: includeAudio
+        });
+      }
+
+      activeRecorderStream = stream;
+      recorderPreview.srcObject = stream;
+      recorderStatusBanner.textContent = '🔴 Recording Live';
+
+      mediaRecorderInstance = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      mediaRecorderInstance.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          recordedChunks.push(e.data);
+        }
+      };
+
+      mediaRecorderInstance.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const videoURL = URL.createObjectURL(blob);
+        recorderResultVideo.src = videoURL;
+        recorderOutputContainer.style.display = 'flex';
+        recorderStatusBanner.textContent = '✅ Session Complete';
+        btnRecorderDownload.onclick = () => {
+          const a = document.createElement('a');
+          a.href = videoURL;
+          a.download = `recording-${Date.now()}.webm`;
+          a.click();
+        };
+      };
+
+      mediaRecorderInstance.start();
+      btnRecorderStart.disabled = true;
+      btnRecorderStop.disabled = false;
+
+      // Start timer
+      recordSeconds = 0;
+      recorderTimer.textContent = '00:00';
+      recorderTimer.style.display = 'block';
+      recordTimerInterval = setInterval(() => {
+        recordSeconds++;
+        const mins = String(Math.floor(recordSeconds / 60)).padStart(2, '0');
+        const secs = String(recordSeconds % 60).padStart(2, '0');
+        recorderTimer.textContent = `${mins}:${secs}`;
+      }, 1000);
+
+    } catch (err) {
+      alert('Could not start recording: ' + err.message);
+      stopRecorderSession();
+    }
+  });
+}
+
+if (btnRecorderStop) {
+  btnRecorderStop.addEventListener('click', stopRecorderSession);
+}
+
+// ============================================================================
+// --- KEY EVENT & KEYBOARD TESTER LOGIC ---
+// ============================================================================
+const keyValKey = document.getElementById('key-val-key');
+const keyValCode = document.getElementById('key-val-code');
+const keyValCodeNum = document.getElementById('key-val-code-num');
+const keyValModifiers = document.getElementById('key-val-modifiers');
+const btnKeyboardClear = document.getElementById('btn-keyboard-clear');
+const keyboardVisualGrid = document.getElementById('keyboard-visual-grid');
+const keyboardLogList = document.getElementById('keyboard-log-list');
+
+const KEYBOARD_KEYS = [
+  { code: 'Escape', label: 'ESC' }, { code: 'F1', label: 'F1' }, { code: 'F2', label: 'F2' },
+  { code: 'F3', label: 'F3' }, { code: 'F4', label: 'F4' }, { code: 'F5', label: 'F5' },
+  { code: 'F6', label: 'F6' }, { code: 'F7', label: 'F7' }, { code: 'F8', label: 'F8' },
+  { code: 'F9', label: 'F9' }, { code: 'F10', label: 'F10' }, { code: 'F11', label: 'F11' },
+  { code: 'F12', label: 'F12' }, { code: 'Backspace', label: 'Back' }, { code: 'Tab', label: 'Tab' },
+  { code: 'KeyQ', label: 'Q' }, { code: 'KeyW', label: 'W' }, { code: 'KeyE', label: 'E' },
+  { code: 'KeyR', label: 'R' }, { code: 'KeyT', label: 'T' }, { code: 'KeyY', label: 'Y' },
+  { code: 'KeyU', label: 'U' }, { code: 'KeyI', label: 'I' }, { code: 'KeyO', label: 'O' },
+  { code: 'KeyP', label: 'P' }, { code: 'BracketLeft', label: '[' }, { code: 'BracketRight', label: ']' },
+  { code: 'Enter', label: 'Enter' }, { code: 'CapsLock', label: 'Caps' }, { code: 'KeyA', label: 'A' },
+  { code: 'KeyS', label: 'S' }, { code: 'KeyD', label: 'D' }, { code: 'KeyF', label: 'F' },
+  { code: 'KeyG', label: 'G' }, { code: 'KeyH', label: 'H' }, { code: 'KeyJ', label: 'J' },
+  { code: 'KeyK', label: 'K' }, { code: 'KeyL', label: 'L' }, { code: 'Semicolon', label: ';' },
+  { code: 'Quote', label: '\'' }, { code: 'Backslash', label: '\\' }, { code: 'ShiftLeft', label: 'Shift' },
+  { code: 'KeyZ', label: 'Z' }, { code: 'KeyX', label: 'X' }, { code: 'KeyC', label: 'C' },
+  { code: 'KeyV', label: 'V' }, { code: 'KeyB', label: 'B' }, { code: 'KeyN', label: 'N' },
+  { code: 'KeyM', label: 'M' }, { code: 'Comma', label: ',' }, { code: 'Period', label: '.' },
+  { code: 'Slash', label: '/' }, { code: 'ShiftRight', label: 'Shift' }, { code: 'ControlLeft', label: 'Ctrl' },
+  { code: 'AltLeft', label: 'Alt' }, { code: 'MetaLeft', label: 'Cmd' }, { code: 'Space', label: 'Space' },
+  { code: 'AltRight', label: 'Alt' }, { code: 'ControlRight', label: 'Ctrl' }, { code: 'ArrowLeft', label: '←' },
+  { code: 'ArrowUp', label: '↑' }, { code: 'ArrowDown', label: '↓' }, { code: 'ArrowRight', label: '→' }
+];
+
+function resetKeyboardTesterState() {
+  if (!keyboardVisualGrid) return;
+  keyboardVisualGrid.innerHTML = '';
+  KEYBOARD_KEYS.forEach(k => {
+    const div = document.createElement('div');
+    div.id = `key-btn-${k.code}`;
+    div.style.cssText = 'padding: 0.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); text-align: center; font-weight: bold; cursor: default;';
+    div.textContent = k.label;
+    keyboardVisualGrid.appendChild(div);
+  });
+  keyboardLogList.innerHTML = '<div class="text-muted">No keystrokes recorded yet.</div>';
+}
+
+window.addEventListener('keydown', (e) => {
+  if (!document.getElementById('keyboard-tester-view').classList.contains('active')) return;
+  
+  e.preventDefault(); // Prevent standard keys actions like scrolling
+  
+  keyValKey.textContent = e.key === ' ' ? 'Space' : e.key;
+  keyValCode.textContent = e.code;
+  keyValCodeNum.textContent = e.keyCode || e.which;
+  
+  const mods = [];
+  if (e.ctrlKey) mods.push('Ctrl');
+  if (e.altKey) mods.push('Alt');
+  if (e.shiftKey) mods.push('Shift');
+  if (e.metaKey) mods.push('Meta');
+  keyValModifiers.textContent = mods.length ? mods.join(' + ') : 'None';
+
+  const keyDiv = document.getElementById(`key-btn-${e.code}`);
+  if (keyDiv) {
+    keyDiv.style.background = 'var(--primary-glow)';
+    keyDiv.style.borderColor = 'var(--primary)';
+  }
+
+  // Append log
+  if (keyboardLogList.querySelector('.text-muted')) {
+    keyboardLogList.innerHTML = '';
+  }
+  const log = document.createElement('div');
+  log.style.borderBottom = '1px solid var(--border)';
+  log.style.padding = '0.2rem 0';
+  log.textContent = `[${new Date().toLocaleTimeString()}] Keydown: key=${e.key} | code=${e.code} | keyCode=${e.keyCode}`;
+  keyboardLogList.appendChild(log);
+  keyboardLogList.scrollTop = keyboardLogList.scrollHeight;
+});
+
+window.addEventListener('keyup', (e) => {
+  if (!document.getElementById('keyboard-tester-view').classList.contains('active')) return;
+  const keyDiv = document.getElementById(`key-btn-${e.code}`);
+  if (keyDiv) {
+    keyDiv.style.background = 'var(--bg-card)';
+    keyDiv.style.borderColor = 'var(--border)';
+  }
+});
+
+if (btnKeyboardClear) {
+  btnKeyboardClear.addEventListener('click', () => {
+    resetKeyboardTesterState();
+  });
+}
+
+// ============================================================================
+// --- SVG TO CSS & DATAURI CONVERTER LOGIC ---
+// ============================================================================
+const svgConvInput = document.getElementById('svg-conv-input');
+const btnSvgConvRun = document.getElementById('btn-svg-conv-run');
+const svgConvOutput = document.getElementById('svg-conv-output');
+const btnSvgConvCopy = document.getElementById('btn-svg-conv-copy');
+const svgConvPreviewCard = document.getElementById('svg-conv-preview-card');
+const btnTabSvgCss = document.getElementById('btn-tab-svg-css');
+const btnTabSvgUri = document.getElementById('btn-tab-svg-uri');
+const btnTabSvgJsx = document.getElementById('btn-tab-svg-jsx');
+
+let svgConvActiveTab = 'css';
+
+function resetSvgConverterState() {
+  svgConvInput.value = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="50" height="50">\n  <circle cx="50" cy="50" r="40" fill="#4f46e5"/>\n</svg>`;
+  convertSvg();
+}
+
+function convertSvg() {
+  const code = svgConvInput.value.trim();
+  if (!code) return;
+
+  svgConvPreviewCard.innerHTML = code;
+
+  if (svgConvActiveTab === 'css') {
+    const encoded = encodeURIComponent(code).replace(/'/g, "%27").replace(/"/g, "%22");
+    svgConvOutput.value = `background-image: url("data:image/svg+xml,${encoded}");`;
+  } else if (svgConvActiveTab === 'uri') {
+    const base64 = btoa(code);
+    svgConvOutput.value = `data:image/svg+xml;base64,${base64}`;
+  } else if (svgConvActiveTab === 'jsx') {
+    // Basic react style attribute transformations
+    let jsx = code.replace(/class=/g, 'className=')
+                  .replace(/stroke-width=/g, 'strokeWidth=')
+                  .replace(/fill-opacity=/g, 'fillOpacity=');
+    svgConvOutput.value = jsx;
+  }
+}
+
+if (btnSvgConvRun) btnSvgConvRun.addEventListener('click', convertSvg);
+
+if (btnTabSvgCss) {
+  btnTabSvgCss.addEventListener('click', () => {
+    svgConvActiveTab = 'css';
+    btnTabSvgCss.classList.add('active');
+    btnTabSvgUri.classList.remove('active');
+    btnTabSvgJsx.classList.remove('active');
+    convertSvg();
+  });
+}
+if (btnTabSvgUri) {
+  btnTabSvgUri.addEventListener('click', () => {
+    svgConvActiveTab = 'uri';
+    btnTabSvgCss.classList.remove('active');
+    btnTabSvgUri.classList.add('active');
+    btnTabSvgJsx.classList.remove('active');
+    convertSvg();
+  });
+}
+if (btnTabSvgJsx) {
+  btnTabSvgJsx.addEventListener('click', () => {
+    svgConvActiveTab = 'jsx';
+    btnTabSvgCss.classList.remove('active');
+    btnTabSvgUri.classList.remove('active');
+    btnTabSvgJsx.classList.add('active');
+    convertSvg();
+  });
+}
+
+if (btnSvgConvCopy) {
+  btnSvgConvCopy.addEventListener('click', () => {
+    navigator.clipboard.writeText(svgConvOutput.value);
+    alert('Copied converted block to clipboard!');
+  });
+}
+
+// ============================================================================
+// --- XML FORMATTER & VALIDATOR LOGIC ---
+// ============================================================================
+const xmlInput = document.getElementById('xml-input');
+const xmlIndent = document.getElementById('xml-indent');
+const btnXmlFormat = document.getElementById('btn-xml-format');
+const btnXmlMinify = document.getElementById('btn-xml-minify');
+const xmlStatusBanner = document.getElementById('xml-status-banner');
+const xmlOutput = document.getElementById('xml-output');
+const btnXmlCopy = document.getElementById('btn-xml-copy');
+
+function resetXmlFormatterState() {
+  xmlInput.value = `<note><to>Tove</to><from>Jani</from><heading>Reminder</heading><body>Don't forget me this weekend!</body></note>`;
+  xmlStatusBanner.style.display = 'none';
+  xmlOutput.value = '';
+}
+
+function processXml(prettify = true) {
+  const code = xmlInput.value.trim();
+  if (!code) return;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(code, 'application/xml');
+  const errorNode = doc.querySelector('parsererror');
+
+  if (errorNode) {
+    xmlStatusBanner.style.display = 'block';
+    xmlStatusBanner.style.background = 'var(--danger-glow)';
+    xmlStatusBanner.style.color = 'var(--danger)';
+    xmlStatusBanner.textContent = '❌ Invalid XML: ' + errorNode.textContent;
+    xmlOutput.value = '';
+    return;
+  }
+
+  xmlStatusBanner.style.display = 'block';
+  xmlStatusBanner.style.background = 'var(--accent-glow)';
+  xmlStatusBanner.style.color = 'var(--accent)';
+  xmlStatusBanner.textContent = '✅ Valid XML Document';
+
+  if (!prettify) {
+    const s = new XMLSerializer();
+    xmlOutput.value = s.serializeToString(doc).replace(/>\s+</g, '><');
+    return;
+  }
+
+  const s = new XMLSerializer();
+  const rawXml = s.serializeToString(doc);
+  
+  // Format XML with custom tab sizes
+  let formatted = '';
+  let indent = '';
+  const spaces = xmlIndent.value === 'tab' ? '\t' : ' '.repeat(parseInt(xmlIndent.value) || 4);
+
+  rawXml.split(/>\s*</).forEach(node => {
+    if (node.match(/^\/\w/)) indent = indent.substring(spaces.length);
+    formatted += indent + '<' + node + '>\r\n';
+    if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith('?')) indent += spaces;
+  });
+
+  xmlOutput.value = formatted.substring(1, formatted.length - 3);
+}
+
+if (btnXmlFormat) btnXmlFormat.addEventListener('click', () => processXml(true));
+if (btnXmlMinify) btnXmlMinify.addEventListener('click', () => processXml(false));
+
+if (btnXmlCopy) {
+  btnXmlCopy.addEventListener('click', () => {
+    navigator.clipboard.writeText(xmlOutput.value);
+    alert('XML code copied to clipboard!');
+  });
+}
+
+// ============================================================================
+// --- NUMBER BASE CONVERTER LOGIC ---
+// ============================================================================
+const baseInputVal = document.getElementById('base-input-val');
+const baseFromSelect = document.getElementById('base-from-select');
+const baseToSelect = document.getElementById('base-to-select');
+const btnBaseConvert = document.getElementById('btn-base-convert');
+const baseOutputVal = document.getElementById('base-output-val');
+const btnBaseCopy = document.getElementById('btn-base-copy');
+const baseConversionSteps = document.getElementById('base-conversion-steps');
+
+function resetBaseConverterState() {
+  baseInputVal.value = '255';
+  runBaseConversion();
+}
+
+function runBaseConversion() {
+  const val = baseInputVal.value.trim();
+  const fromBase = parseInt(baseFromSelect.value);
+  const toBase = parseInt(baseToSelect.value);
+
+  if (!val) return;
+
+  try {
+    const dec = parseInt(val, fromBase);
+    if (isNaN(dec)) {
+      baseOutputVal.value = 'NaN';
+      baseConversionSteps.textContent = 'Could not parse input. Check source base alignment.';
+      return;
+    }
+
+    const output = dec.toString(toBase).toUpperCase();
+    baseOutputVal.value = output;
+
+    // Build step description
+    baseConversionSteps.innerHTML = `
+1. Parse Input String: "${val}" in Base-${fromBase} equals ${dec} in Decimal.<br/>
+2. Convert Decimal: ${dec} modulo Base-${toBase} matches: "${output}" in Base-${toBase}.
+    `;
+  } catch (err) {
+    baseOutputVal.value = 'Error';
+    baseConversionSteps.textContent = err.message;
+  }
+}
+
+if (btnBaseConvert) btnBaseConvert.addEventListener('click', runBaseConversion);
+if (btnBaseCopy) {
+  btnBaseCopy.addEventListener('click', () => {
+    navigator.clipboard.writeText(baseOutputVal.value);
+    alert('Value copied!');
+  });
+}
+
+// ============================================================================
+// --- CSS GLASSMORPHISM BUILDER LOGIC ---
+// ============================================================================
+const glassBlur = document.getElementById('glass-blur');
+const glassOpacity = document.getElementById('glass-opacity');
+const glassBorder = document.getElementById('glass-border');
+const glassShadow = document.getElementById('glass-shadow');
+const glassBlurVal = document.getElementById('glass-blur-val');
+const glassOpacityVal = document.getElementById('glass-opacity-val');
+const glassBorderVal = document.getElementById('glass-border-val');
+const glassShadowVal = document.getElementById('glass-shadow-val');
+const glassPreviewCard = document.getElementById('glass-preview-card');
+const glassCssOutput = document.getElementById('glass-css-output');
+const btnGlassCopy = document.getElementById('btn-glass-copy');
+
+function resetCssGlassmorphicState() {
+  glassBlur.value = 12;
+  glassOpacity.value = 0.2;
+  glassBorder.value = 0.1;
+  glassShadow.value = 30;
+  updateGlassPreview();
+}
+
+function updateGlassPreview() {
+  const blurVal = glassBlur.value;
+  const opacityVal = glassOpacity.value;
+  const borderVal = glassBorder.value;
+  const shadowVal = glassShadow.value;
+
+  glassBlurVal.textContent = blurVal;
+  glassOpacityVal.textContent = opacityVal;
+  glassBorderVal.textContent = borderVal;
+  glassShadowVal.textContent = shadowVal;
+
+  const bg = `rgba(255, 255, 255, ${opacityVal})`;
+  const border = `1px solid rgba(255, 255, 255, ${borderVal})`;
+  const filter = `blur(${blurVal}px)`;
+  const shadow = `0 8px 32px 0 rgba(31, 38, 135, ${shadowVal / 100})`;
+
+  if (glassPreviewCard) {
+    glassPreviewCard.style.background = bg;
+    glassPreviewCard.style.border = border;
+    glassPreviewCard.style.backdropFilter = filter;
+    glassPreviewCard.style.webkitBackdropFilter = filter;
+    glassPreviewCard.style.boxShadow = shadow;
+  }
+
+  glassCssOutput.value = `background: ${bg};\nbackdrop-filter: ${filter};\n-webkit-backdrop-filter: ${filter};\nborder: ${border};\nbox-shadow: ${shadow};`;
+}
+
+if (glassBlur) {
+  [glassBlur, glassOpacity, glassBorder, glassShadow].forEach(el => {
+    el.addEventListener('input', updateGlassPreview);
+  });
+}
+
+if (btnGlassCopy) {
+  btnGlassCopy.addEventListener('click', () => {
+    navigator.clipboard.writeText(glassCssOutput.value);
+    alert('Glassmorphic CSS copied to clipboard!');
+  });
+}
+
+// ============================================================================
+// --- TEXT CASE & LIST CONVERTER LOGIC ---
+// ============================================================================
+const caseInput = document.getElementById('case-input');
+const caseOutput = document.getElementById('case-output');
+const btnCaseCopy = document.getElementById('btn-case-copy');
+
+function resetCaseConverterState() {
+  caseInput.value = 'Item One\nitem_two\nITEM THREE';
+  caseOutput.value = '';
+}
+
+function handleCaseConversion(type) {
+  const val = caseInput.value;
+  if (!val) return;
+
+  const lines = val.split('\n');
+
+  if (type === 'upper') {
+    caseOutput.value = val.toUpperCase();
+  } else if (type === 'lower') {
+    caseOutput.value = val.toLowerCase();
+  } else if (type === 'title') {
+    caseOutput.value = lines.map(l => l.replace(/\b\w/g, c => c.toUpperCase())).join('\n');
+  } else if (type === 'camel') {
+    caseOutput.value = lines.map(l => {
+      const parts = l.toLowerCase().replace(/[^a-zA-Z0-9\s-_]/g, '').split(/[\s-_]+/);
+      return parts[0] + parts.slice(1).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+    }).join('\n');
+  } else if (type === 'snake') {
+    caseOutput.value = lines.map(l => {
+      return l.toLowerCase().replace(/[^a-zA-Z0-9\s-_]/g, '').split(/[\s-_]+/).join('_');
+    }).join('\n');
+  } else if (type === 'kebab') {
+    caseOutput.value = lines.map(l => {
+      return l.toLowerCase().replace(/[^a-zA-Z0-9\s-_]/g, '').split(/[\s-_]+/).join('-');
+    }).join('\n');
+  } else if (type === 'json') {
+    caseOutput.value = JSON.stringify(lines.map(l => l.trim()).filter(x => x), null, 2);
+  } else if (type === 'csv') {
+    caseOutput.value = lines.map(l => `"${l.replace(/"/g, '""')}"`).join(', ');
+  } else if (type === 'markdown') {
+    caseOutput.value = lines.map(l => `- ${l}`).join('\n');
+  } else if (type === 'reverse') {
+    caseOutput.value = [...lines].reverse().join('\n');
+  }
+}
+
+const caseButtonsMap = {
+  'btn-case-upper': 'upper', 'btn-case-lower': 'lower', 'btn-case-title': 'title',
+  'btn-case-camel': 'camel', 'btn-case-snake': 'snake', 'btn-case-kebab': 'kebab',
+  'btn-list-json': 'json', 'btn-list-csv': 'csv', 'btn-list-markdown': 'markdown',
+  'btn-list-reverse': 'reverse'
+};
+
+Object.entries(caseButtonsMap).forEach(([id, type]) => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => handleCaseConversion(type));
+});
+
+if (btnCaseCopy) {
+  btnCaseCopy.addEventListener('click', () => {
+    navigator.clipboard.writeText(caseOutput.value);
+    alert('Case result copied!');
+  });
+}
+
+// ============================================================================
+// --- ASPECT RATIO & PPI CALCULATOR LOGIC ---
+// ============================================================================
+const aspectW1 = document.getElementById('aspect-w1');
+const aspectH1 = document.getElementById('aspect-h1');
+const aspectW2 = document.getElementById('aspect-w2');
+const aspectH2 = document.getElementById('aspect-h2');
+const ppiW = document.getElementById('ppi-w');
+const ppiH = document.getElementById('ppi-h');
+const ppiDiag = document.getElementById('ppi-diag');
+const btnAspectCalcRun = document.getElementById('btn-aspect-calc-run');
+const aspectCalcResultTitle = document.getElementById('aspect-calc-result-title');
+const aspectCalcResultValue = document.getElementById('aspect-calc-result-value');
+const aspectCalcResultSub = document.getElementById('aspect-calc-result-sub');
+const btnTabAspectCalc = document.getElementById('btn-tab-aspect-calc');
+const btnTabPpiCalc = document.getElementById('btn-tab-ppi-calc');
+
+let aspectActiveTab = 'aspect';
+
+function resetAspectRatioCalcState() {
+  aspectW1.value = 1920;
+  aspectH1.value = 1080;
+  aspectW2.value = 1280;
+  aspectH2.value = '';
+  calculateAspect();
+}
+
+function calculateAspect() {
+  if (aspectActiveTab === 'aspect') {
+    const w1 = parseFloat(aspectW1.value) || 0;
+    const h1 = parseFloat(aspectH1.value) || 0;
+    const w2 = parseFloat(aspectW2.value);
+    const h2 = parseFloat(aspectH2.value);
+
+    if (w1 <= 0 || h1 <= 0) return;
+
+    // Calculate Aspect Ratio GCD
+    const divisor = gcd(w1, h1);
+    const ratioW = w1 / divisor;
+    const ratioH = h1 / divisor;
+
+    aspectCalcResultTitle.textContent = 'Calculated Aspect Ratio';
+    aspectCalcResultValue.textContent = `${ratioW}:${ratioH}`;
+
+    let computedW2 = w2;
+    let computedH2 = h2;
+
+    if (!isNaN(w2) && isNaN(h2)) {
+      computedH2 = (w2 * h1) / w1;
+      aspectCalcResultSub.textContent = `Scaled Target Size: ${Math.round(w2)} x ${Math.round(computedH2)}`;
+    } else if (isNaN(w2) && !isNaN(h2)) {
+      computedW2 = (h2 * w1) / h1;
+      aspectCalcResultSub.textContent = `Scaled Target Size: ${Math.round(computedW2)} x ${Math.round(h2)}`;
+    } else {
+      aspectCalcResultSub.textContent = `W1/H1 Ratio: ${(w1/h1).toFixed(4)}`;
+    }
+  } else {
+    const w = parseFloat(ppiW.value) || 0;
+    const h = parseFloat(ppiH.value) || 0;
+    const diag = parseFloat(ppiDiag.value) || 0;
+
+    if (w <= 0 || h <= 0 || diag <= 0) return;
+
+    const hyp = Math.sqrt(w * w + h * h);
+    const ppi = hyp / diag;
+
+    aspectCalcResultTitle.textContent = 'Screen Density (PPI)';
+    aspectCalcResultValue.textContent = `${ppi.toFixed(2)} PPI`;
+    aspectCalcResultSub.textContent = `Diagonal Resolution Hypotenuse: ${Math.round(hyp)} px`;
+  }
+
+  function gcd(a, b) {
+    return b ? gcd(b, a % b) : a;
+  }
+}
+
+if (btnAspectCalcRun) btnAspectCalcRun.addEventListener('click', calculateAspect);
+
+if (btnTabAspectCalc) {
+  btnTabAspectCalc.addEventListener('click', () => {
+    aspectActiveTab = 'aspect';
+    btnTabAspectCalc.classList.add('active');
+    btnTabPpiCalc.classList.remove('active');
+    document.getElementById('aspect-calc-tab').style.display = 'block';
+    document.getElementById('ppi-calc-tab').style.display = 'none';
+  });
+}
+
+if (btnTabPpiCalc) {
+  btnTabPpiCalc.addEventListener('click', () => {
+    aspectActiveTab = 'ppi';
+    btnTabAspectCalc.classList.remove('active');
+    btnTabPpiCalc.classList.add('active');
+    document.getElementById('aspect-calc-tab').style.display = 'none';
+    document.getElementById('ppi-calc-tab').style.display = 'block';
+  });
+}
+
+// ============================================================================
+// --- COLOR BLINDNESS SIMULATOR LOGIC ---
+// ============================================================================
+const colorBlindnessFile = document.getElementById('color-blindness-file');
+const colorBlindnessUploadBox = document.getElementById('color-blindness-upload-box');
+const colorBlindnessType = document.getElementById('color-blindness-type');
+const btnRunColorBlindness = document.getElementById('btn-run-color-blindness');
+const colorBlindnessCanvas = document.getElementById('color-blindness-canvas');
+const colorBlindnessEmptyHint = document.getElementById('color-blindness-empty-hint');
+
+let colorBlindnessImg = null;
+
+function resetColorBlindnessState() {
+  colorBlindnessFile.value = '';
+  colorBlindnessImg = null;
+  const ctx = colorBlindnessCanvas.getContext('2d');
+  ctx.clearRect(0, 0, colorBlindnessCanvas.width, colorBlindnessCanvas.height);
+  colorBlindnessEmptyHint.style.display = 'block';
+  btnRunColorBlindness.disabled = true;
+}
+
+if (colorBlindnessUploadBox) {
+  colorBlindnessUploadBox.addEventListener('click', () => colorBlindnessFile.click());
+  colorBlindnessFile.addEventListener('change', () => {
+    const file = colorBlindnessFile.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      colorBlindnessImg = new Image();
+      colorBlindnessImg.onload = () => {
+        colorBlindnessEmptyHint.style.display = 'none';
+        btnRunColorBlindness.disabled = false;
+        simulateColorBlindness();
+      };
+      colorBlindnessImg.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function simulateColorBlindness() {
+  if (!colorBlindnessImg) return;
+
+  const canvas = colorBlindnessCanvas;
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = colorBlindnessImg.naturalWidth;
+  canvas.height = colorBlindnessImg.naturalHeight;
+  ctx.drawImage(colorBlindnessImg, 0, 0);
+
+  const type = colorBlindnessType.value;
+  if (type === 'normal') return;
+
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imgData.data;
+
+  // Simulation Matrices
+  const matrices = {
+    deuteranopia: [
+      0.625, 0.375, 0,
+      0.7, 0.3, 0,
+      0, 0.3, 0.7
+    ],
+    protanopia: [
+      0.567, 0.433, 0,
+      0.558, 0.442, 0,
+      0, 0.242, 0.758
+    ],
+    tritanopia: [
+      0.95, 0.05, 0,
+      0, 0.433, 0.567,
+      0, 0.475, 0.525
+    ],
+    achromatopsia: [
+      0.299, 0.587, 0.114,
+      0.299, 0.587, 0.114,
+      0.299, 0.587, 0.114
+    ]
+  };
+
+  const m = matrices[type];
+  if (!m) return;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i+1];
+    const b = data[i+2];
+
+    data[i] = r * m[0] + g * m[1] + b * m[2];
+    data[i+1] = r * m[3] + g * m[4] + b * m[5];
+    data[i+2] = r * m[6] + g * m[7] + b * m[8];
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+if (btnRunColorBlindness) btnRunColorBlindness.addEventListener('click', simulateColorBlindness);
+if (colorBlindnessType) colorBlindnessType.addEventListener('change', simulateColorBlindness);
+
+// ============================================================================
+// --- AUDIO TONE & NOISE GENERATOR LOGIC ---
+// ============================================================================
+const toneGenMode = document.getElementById('tone-gen-mode');
+const toneFreqInput = document.getElementById('tone-freq-input');
+const toneFreqLabel = document.getElementById('tone-freq-label');
+const toneWaveType = document.getElementById('tone-wave-type');
+const toneVolume = document.getElementById('tone-volume');
+const toneVolLabel = document.getElementById('tone-vol-label');
+const btnToneStart = document.getElementById('btn-tone-start');
+const btnToneStop = document.getElementById('btn-tone-stop');
+const toneVisualizerCanvas = document.getElementById('tone-visualizer-canvas');
+const tonePlaybackStatus = document.getElementById('tone-playback-status');
+
+let toneAudioCtx = null;
+let toneOscillator = null;
+let toneGainNode = null;
+let toneAnalyser = null;
+let toneVisualizerId = null;
+
+function resetToneGeneratorState() {
+  stopTonePlayback();
+  tonePlaybackStatus.textContent = 'Oscillator Idle';
+  drawToneWaveSilence();
+}
+
+function initToneAudio() {
+  if (toneAudioCtx) return;
+  toneAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  toneGainNode = toneAudioCtx.createGain();
+  toneAnalyser = toneAudioCtx.createAnalyser();
+  toneGainNode.connect(toneAnalyser);
+  toneAnalyser.connect(toneAudioCtx.destination);
+}
+
+function startTonePlayback() {
+  initToneAudio();
+  stopTonePlayback();
+
+  const mode = toneGenMode.value;
+  const vol = parseFloat(toneVolume.value) || 0.3;
+  toneGainNode.gain.value = vol;
+
+  if (mode === 'tone') {
+    toneOscillator = toneAudioCtx.createOscillator();
+    toneOscillator.type = toneWaveType.value;
+    toneOscillator.frequency.value = parseFloat(toneFreqInput.value) || 440;
+    toneOscillator.connect(toneGainNode);
+    toneOscillator.start(0);
+    tonePlaybackStatus.textContent = `Tone Active: ${toneWaveType.value.toUpperCase()} at ${toneFreqInput.value}Hz`;
+  } else {
+    // Generate custom audio buffers for white/pink/brown noise
+    const bufferSize = 2 * toneAudioCtx.sampleRate;
+    const noiseBuffer = toneAudioCtx.createBuffer(1, bufferSize, toneAudioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    
+    let lastOut = 0.0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      if (mode === 'white') {
+        output[i] = white;
+      } else if (mode === 'pink') {
+        // Simple filter approximation for pink noise
+        output[i] = (lastOut * 0.95 + white * 0.05);
+        lastOut = output[i];
+      } else if (mode === 'brown') {
+        // Brown noise integration
+        output[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = output[i];
+      }
+    }
+
+    toneOscillator = toneAudioCtx.createBufferSource();
+    toneOscillator.buffer = noiseBuffer;
+    toneOscillator.loop = true;
+    toneOscillator.connect(toneGainNode);
+    toneOscillator.start(0);
+    tonePlaybackStatus.textContent = `${mode.toUpperCase()} Noise Active`;
+  }
+
+  btnToneStart.disabled = true;
+  btnToneStop.disabled = false;
+  drawToneWaveform();
+}
+
+function stopTonePlayback() {
+  if (toneOscillator) {
+    try { toneOscillator.stop(0); } catch(e){}
+    toneOscillator = null;
+  }
+  btnToneStart.disabled = false;
+  btnToneStop.disabled = true;
+  cancelAnimationFrame(toneVisualizerId);
+  tonePlaybackStatus.textContent = 'Oscillator Idle';
+  drawToneWaveSilence();
+}
+
+if (btnToneStart) btnToneStart.addEventListener('click', startTonePlayback);
+if (btnToneStop) btnToneStop.addEventListener('click', stopTonePlayback);
+
+if (toneFreqInput) {
+  toneFreqInput.addEventListener('input', () => {
+    toneFreqLabel.textContent = toneFreqInput.value;
+    if (toneOscillator && toneGenMode.value === 'tone') {
+      toneOscillator.frequency.value = parseFloat(toneFreqInput.value);
+      tonePlaybackStatus.textContent = `Tone Active: ${toneWaveType.value.toUpperCase()} at ${toneFreqInput.value}Hz`;
+    }
+  });
+}
+
+if (toneVolume) {
+  toneVolume.addEventListener('input', () => {
+    toneVolLabel.textContent = Math.round(toneVolume.value * 100);
+    if (toneGainNode) {
+      toneGainNode.gain.value = parseFloat(toneVolume.value);
+    }
+  });
+}
+
+// Preset frequencies buttons
+const setFreq = (val) => {
+  if (toneFreqInput) {
+    toneFreqInput.value = val;
+    toneFreqInput.dispatchEvent(new Event('input'));
+  }
+};
+const btnC4 = document.getElementById('btn-freq-c4');
+if (btnC4) btnC4.addEventListener('click', () => setFreq(261.63));
+const btnA4 = document.getElementById('btn-freq-a4');
+if (btnA4) btnA4.addEventListener('click', () => setFreq(440.00));
+const btnC5 = document.getElementById('btn-freq-c5');
+if (btnC5) btnC5.addEventListener('click', () => setFreq(523.25));
+
+function drawToneWaveSilence() {
+  const canvas = toneVisualizerCanvas;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = '#4f46e5';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height / 2);
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+}
+
+function drawToneWaveform() {
+  if (!toneAnalyser) return;
+  toneVisualizerId = requestAnimationFrame(drawToneWaveform);
+
+  const canvas = toneVisualizerCanvas;
+  const ctx = canvas.getContext('2d');
+  const bufferLength = toneAnalyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  toneAnalyser.getByteTimeDomainData(dataArray);
+  
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'var(--primary)';
+  ctx.beginPath();
+  
+  const sliceWidth = canvas.width * 1.0 / bufferLength;
+  let x = 0;
+  
+  for (let i = 0; i < bufferLength; i++) {
+    const v = dataArray[i] / 128.0;
+    const y = v * canvas.height / 2;
+    
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+    x += sliceWidth;
+  }
+  
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+}
+
+// ============================================================================
+// --- IP SUBNET & CIDR CALCULATOR LOGIC ---
+// ============================================================================
+const subnetIp = document.getElementById('subnet-ip');
+const subnetMask = document.getElementById('subnet-mask');
+const btnRunSubnet = document.getElementById('btn-run-subnet');
+const subnetCidr = document.getElementById('subnet-cidr');
+const subnetValMask = document.getElementById('subnet-val-mask');
+const subnetFirstIp = document.getElementById('subnet-first-ip');
+const subnetLastIp = document.getElementById('subnet-last-ip');
+const subnetBroadcast = document.getElementById('subnet-broadcast');
+const subnetHostCount = document.getElementById('subnet-host-count');
+
+function resetSubnetCalculatorState() {
+  subnetIp.value = '192.168.1.1';
+  subnetMask.value = '24';
+  runSubnetCalc();
+}
+
+function runSubnetCalc() {
+  const ipStr = subnetIp.value.trim();
+  const bits = parseInt(subnetMask.value) || 24;
+
+  const ipOctets = ipStr.split('.').map(Number);
+  if (ipOctets.length !== 4 || ipOctets.some(o => isNaN(o) || o < 0 || o > 255)) {
+    alert('Please enter a valid IPv4 address.');
+    return;
+  }
+
+  // Calculate Netmask Binary
+  const maskBinary = (0xffffffff << (32 - bits)) >>> 0;
+  const maskOctets = [
+    (maskBinary >>> 24) & 0xff,
+    (maskBinary >>> 16) & 0xff,
+    (maskBinary >>> 8) & 0xff,
+    maskBinary & 0xff
+  ];
+
+  // IP Binary
+  const ipBinary = ((ipOctets[0] << 24) | (ipOctets[1] << 16) | (ipOctets[2] << 8) | ipOctets[3]) >>> 0;
+  
+  // Network Binary
+  const netBinary = (ipBinary & maskBinary) >>> 0;
+  const netOctets = [
+    (netBinary >>> 24) & 0xff,
+    (netBinary >>> 16) & 0xff,
+    (netBinary >>> 8) & 0xff,
+    netBinary & 0xff
+  ];
+
+  // Broadcast Binary
+  const broadBinary = (netBinary | ~maskBinary) >>> 0;
+  const broadOctets = [
+    (broadBinary >>> 24) & 0xff,
+    (broadBinary >>> 16) & 0xff,
+    (broadBinary >>> 8) & 0xff,
+    broadBinary & 0xff
+  ];
+
+  // Hosts Count
+  const capacity = bits >= 31 ? 0 : (Math.pow(2, 32 - bits) - 2);
+
+  // Range
+  const firstOctets = [...netOctets];
+  if (bits < 31) firstOctets[3]++;
+  
+  const lastOctets = [...broadOctets];
+  if (bits < 31) lastOctets[3]--;
+
+  subnetCidr.textContent = `${netOctets.join('.')}/${bits}`;
+  subnetValMask.textContent = maskOctets.join('.');
+  subnetFirstIp.textContent = firstOctets.join('.');
+  subnetLastIp.textContent = lastOctets.join('.');
+  subnetBroadcast.textContent = broadOctets.join('.');
+  subnetHostCount.textContent = capacity.toLocaleString();
+}
+
+if (btnRunSubnet) btnRunSubnet.addEventListener('click', runSubnetCalc);
+
+// ============================================================================
+// --- DEAD PIXEL TESTER & FIXER LOGIC ---
+// ============================================================================
+const pixelTesterDemoBox = document.getElementById('pixel-tester-demo-box');
+let pixelFixInterval = null;
+
+function resetPixelTesterState() {
+  clearInterval(pixelFixInterval);
+}
+
+function launchPixelTestColor(color) {
+  const el = document.createElement('div');
+  el.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: ${color}; z-index: 99999; cursor: pointer;`;
+  document.body.appendChild(el);
+
+  // Click to close
+  el.addEventListener('click', () => {
+    el.remove();
+  });
+}
+
+function launchPixelFixer() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; cursor: pointer;';
+  document.body.appendChild(el);
+
+  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffffff'];
+  let idx = 0;
+
+  pixelFixInterval = setInterval(() => {
+    el.style.background = colors[idx];
+    idx = (idx + 1) % colors.length;
+  }, 30); // 30ms cycle
+
+  el.addEventListener('click', () => {
+    clearInterval(pixelFixInterval);
+    el.remove();
+  });
+}
+
+const pixelButtonsMap = {
+  'btn-pixel-run-red': '#ff0000',
+  'btn-pixel-run-green': '#00ff00',
+  'btn-pixel-run-blue': '#0000ff',
+  'btn-pixel-run-white': '#ffffff',
+  'btn-pixel-run-black': '#000000'
+};
+Object.entries(pixelButtonsMap).forEach(([id, col]) => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => launchPixelTestColor(col));
+});
+const btnPixelFix = document.getElementById('btn-pixel-flash-fix');
+if (btnPixelFix) btnPixelFix.addEventListener('click', launchPixelFixer);
+
+// ============================================================================
+// --- PAINT CANVAS & SKETCHPAD LOGIC ---
+// ============================================================================
+const sketchpadSize = document.getElementById('sketchpad-size');
+const sketchpadOpacity = document.getElementById('sketchpad-opacity');
+const sketchpadColor = document.getElementById('sketchpad-color');
+const sketchpadToolMode = document.getElementById('sketchpad-tool-mode');
+const btnSketchpadClear = document.getElementById('btn-sketchpad-clear');
+const btnSketchpadDownload = document.getElementById('btn-sketchpad-download');
+const sketchpadCanvas = document.getElementById('sketchpad-canvas');
+
+let sketchDrawing = false;
+let sketchLastX = 0;
+let sketchLastY = 0;
+let sketchBackupImage = null;
+
+function resetSketchpadState() {
+  if (!sketchpadCanvas) return;
+  const canvas = sketchpadCanvas;
+  const ctx = canvas.getContext('2d');
+  
+  // Set dimensions relative to parent container on first entry
+  const rect = canvas.parentNode.getBoundingClientRect();
+  canvas.width = rect.width || 600;
+  canvas.height = rect.height || 400;
+  
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+if (sketchpadCanvas) {
+  const canvas = sketchpadCanvas;
+  const ctx = canvas.getContext('2d');
+
+  const getCoordinates = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches[0]) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    }
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  };
+
+  const draw = (e) => {
+    if (!sketchDrawing) return;
+    const { x, y } = getCoordinates(e);
+    const mode = sketchpadToolMode.value;
+
+    ctx.lineWidth = parseFloat(sketchpadSize.value) || 5;
+    ctx.globalAlpha = parseFloat(sketchpadOpacity.value) || 1.0;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (mode === 'brush') {
+      ctx.strokeStyle = sketchpadColor.value;
+      ctx.beginPath();
+      ctx.moveTo(sketchLastX, sketchLastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      sketchLastX = x;
+      sketchLastY = y;
+    } else if (mode === 'eraser') {
+      ctx.strokeStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(sketchLastX, sketchLastY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      sketchLastX = x;
+      sketchLastY = y;
+    } else {
+      // Shape modes: redraw backup first
+      ctx.putImageData(sketchBackupImage, 0, 0);
+      ctx.strokeStyle = sketchpadColor.value;
+      ctx.fillStyle = sketchpadColor.value;
+      
+      if (mode === 'line') {
+        ctx.beginPath();
+        ctx.moveTo(sketchLastX, sketchLastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      } else if (mode === 'rect') {
+        ctx.beginPath();
+        ctx.rect(sketchLastX, sketchLastY, x - sketchLastX, y - sketchLastY);
+        ctx.stroke();
+      } else if (mode === 'circle') {
+        ctx.beginPath();
+        const r = Math.sqrt(Math.pow(x - sketchLastX, 2) + Math.pow(y - sketchLastY, 2));
+        ctx.arc(sketchLastX, sketchLastY, r, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    }
+  };
+
+  canvas.addEventListener('mousedown', (e) => {
+    sketchDrawing = true;
+    const coords = getCoordinates(e);
+    sketchLastX = coords.x;
+    sketchLastY = coords.y;
+    sketchBackupImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  });
+
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', () => sketchDrawing = false);
+  canvas.addEventListener('mouseleave', () => sketchDrawing = false);
+
+  // Touch support
+  canvas.addEventListener('touchstart', (e) => {
+    sketchDrawing = true;
+    const coords = getCoordinates(e);
+    sketchLastX = coords.x;
+    sketchLastY = coords.y;
+    sketchBackupImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  });
+  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchend', () => sketchDrawing = false);
+}
+
+// Preset color brushes
+const btnSketchBlack = document.getElementById('btn-sketchpad-col-black');
+if (btnSketchBlack) btnSketchBlack.addEventListener('click', () => { sketchpadColor.value = '#000000'; });
+const btnSketchRed = document.getElementById('btn-sketchpad-col-red');
+if (btnSketchRed) btnSketchRed.addEventListener('click', () => { sketchpadColor.value = '#ef4444'; });
+const btnSketchGreen = document.getElementById('btn-sketchpad-col-green');
+if (btnSketchGreen) btnSketchGreen.addEventListener('click', () => { sketchpadColor.value = '#10b981'; });
+
+if (btnSketchpadClear) {
+  btnSketchpadClear.addEventListener('click', () => {
+    const canvas = sketchpadCanvas;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  });
+}
+
+if (btnSketchpadDownload) {
+  btnSketchpadDownload.addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = sketchpadCanvas.toDataURL();
+    a.download = `sketchpad-${Date.now()}.png`;
+    a.click();
+  });
+}
+
+// ============================================================================
+// --- BINARY FILE HEX DUMP VIEWER LOGIC ---
+// ============================================================================
+const hexViewerFile = document.getElementById('hex-viewer-file');
+const hexViewerUploadBox = document.getElementById('hex-viewer-upload-box');
+const hexViewerFileName = document.getElementById('hex-viewer-file-name');
+const hexViewerPage = document.getElementById('hex-viewer-page');
+const btnHexPrev = document.getElementById('btn-hex-prev');
+const btnHexNext = document.getElementById('btn-hex-next');
+const hexViewerDumpOutput = document.getElementById('hex-viewer-dump-output');
+
+let hexFileArrayBuffer = null;
+
+function resetHexViewerState() {
+  hexViewerFile.value = '';
+  hexFileArrayBuffer = null;
+  hexViewerFileName.textContent = 'No file loaded';
+  hexViewerPage.value = 0;
+  btnHexPrev.disabled = true;
+  btnHexNext.disabled = true;
+  hexViewerDumpOutput.textContent = 'Upload a file to inspect its raw byte array structures.';
+}
+
+if (hexViewerUploadBox) {
+  hexViewerUploadBox.addEventListener('click', () => hexViewerFile.click());
+  hexViewerFile.addEventListener('change', () => {
+    const file = hexViewerFile.files[0];
+    if (!file) return;
+
+    hexViewerFileName.textContent = `${file.name} (${file.size.toLocaleString()} bytes)`;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      hexFileArrayBuffer = e.target.result;
+      hexViewerPage.value = 0;
+      renderHexPage();
+    };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function renderHexPage() {
+  if (!hexFileArrayBuffer) return;
+
+  const page = parseInt(hexViewerPage.value) || 0;
+  const bytesPerPage = 256;
+  const offset = page * bytesPerPage;
+
+  btnHexPrev.disabled = page <= 0;
+  btnHexNext.disabled = offset + bytesPerPage >= hexFileArrayBuffer.byteLength;
+
+  const slice = new Uint8Array(hexFileArrayBuffer.slice(offset, offset + bytesPerPage));
+  let output = '';
+
+  for (let i = 0; i < slice.length; i += 16) {
+    // Address Offset hex
+    const addr = String(offset + i).toString(16).padStart(8, '0');
+    
+    // Hex Bytes
+    const row = slice.slice(i, i + 16);
+    const hexParts = [];
+    const asciiParts = [];
+
+    for (let j = 0; j < 16; j++) {
+      if (j < row.length) {
+        const b = row[j];
+        hexParts.push(b.toString(16).padStart(2, '0'));
+        asciiParts.push(b >= 32 && b <= 126 ? String.fromCharCode(b) : '.');
+      } else {
+        hexParts.push('  ');
+        asciiParts.push(' ');
+      }
+    }
+
+    output += `${addr}  ${hexParts.slice(0,8).join(' ')}  ${hexParts.slice(8).join(' ')}  |${asciiParts.join('')}|\n`;
+  }
+
+  hexViewerDumpOutput.textContent = output;
+}
+
+if (hexViewerPage) {
+  hexViewerPage.addEventListener('input', () => {
+    renderHexPage();
+  });
+}
+if (btnHexPrev) btnHexPrev.addEventListener('click', () => {
+  hexViewerPage.value = Math.max(0, parseInt(hexViewerPage.value) - 1);
+  renderHexPage();
+});
+if (btnHexNext) btnHexNext.addEventListener('click', () => {
+  hexViewerPage.value = parseInt(hexViewerPage.value) + 1;
+  renderHexPage();
+});
+
+// ============================================================================
+// --- TIP & BILL SPLIT CALCULATOR LOGIC ---
+// ============================================================================
+const tipBillAmount = document.getElementById('tip-bill-amount');
+const tipPct = document.getElementById('tip-pct');
+const tipPctLabel = document.getElementById('tip-pct-label');
+const tipTaxPct = document.getElementById('tip-tax-pct');
+const tipPeople = document.getElementById('tip-people');
+const btnRunTip = document.getElementById('btn-run-tip');
+const tipAmountRes = document.getElementById('tip-amount-res');
+const tipTaxRes = document.getElementById('tip-tax-res');
+const tipTotalRes = document.getElementById('tip-total-res');
+const tipPerPersonRes = document.getElementById('tip-per-person-res');
+
+function resetTipCalculatorState() {
+  tipBillAmount.value = 100.00;
+  tipPct.value = 15;
+  tipPctLabel.textContent = 15;
+  tipTaxPct.value = 8.25;
+  tipPeople.value = 4;
+  calculateTip();
+}
+
+function calculateTip() {
+  const bill = parseFloat(tipBillAmount.value) || 0;
+  const pct = parseFloat(tipPct.value) || 0;
+  const taxRate = parseFloat(tipTaxPct.value) || 0;
+  const people = parseInt(tipPeople.value) || 1;
+
+  const tip = bill * (pct / 100);
+  const tax = bill * (taxRate / 100);
+  const total = bill + tip + tax;
+  const perPerson = total / people;
+
+  tipAmountRes.textContent = `$${tip.toFixed(2)}`;
+  tipTaxRes.textContent = `$${tax.toFixed(2)}`;
+  tipTotalRes.textContent = `$${total.toFixed(2)}`;
+  tipPerPersonRes.textContent = `$${perPerson.toFixed(2)}`;
+}
+
+if (tipPct) {
+  tipPct.addEventListener('input', () => {
+    tipPctLabel.textContent = tipPct.value;
+  });
+}
+if (btnRunTip) btnRunTip.addEventListener('click', calculateTip);
+
+// ============================================================================
+// --- LIFE PROGRESS & BIORHYTHM LOGIC ---
+// ============================================================================
+const lifeBirthdate = document.getElementById('life-birthdate');
+const lifeExpectancy = document.getElementById('life-expectancy');
+const btnRunLife = document.getElementById('btn-run-life');
+const progressYearLbl = document.getElementById('progress-year-lbl');
+const progressYearBar = document.getElementById('progress-year-bar');
+const progressLifetimeLbl = document.getElementById('progress-lifetime-lbl');
+const progressLifetimeBar = document.getElementById('progress-lifetime-bar');
+const lifeDaysLived = document.getElementById('life-days-lived');
+const lifeHoursLived = document.getElementById('life-hours-lived');
+const lifeBioPhysLbl = document.getElementById('life-bio-phys-lbl');
+const lifeBioPhysBar = document.getElementById('life-bio-phys-bar');
+const lifeBioEmotLbl = document.getElementById('life-bio-emot-lbl');
+const lifeBioEmotBar = document.getElementById('life-bio-emot-bar');
+const lifeBioIntelLbl = document.getElementById('life-bio-intel-lbl');
+const lifeBioIntelBar = document.getElementById('life-bio-intel-bar');
+
+function resetLifeProgressState() {
+  lifeBirthdate.value = '1995-01-01';
+  lifeExpectancy.value = 80;
+  calculateLifeProgress();
+}
+
+function calculateLifeProgress() {
+  const birthStr = lifeBirthdate.value;
+  const expectedYears = parseFloat(lifeExpectancy.value) || 80;
+  if (!birthStr) return;
+
+  const birthDate = new Date(birthStr);
+  const now = new Date();
+
+  const diffMs = now - birthDate;
+  if (diffMs < 0) {
+    alert('Birth date cannot be in the future.');
+    return;
+  }
+
+  const daysLived = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hoursLived = Math.floor(diffMs / (1000 * 60 * 60));
+
+  lifeDaysLived.textContent = `Days Lived: ${daysLived.toLocaleString()}`;
+  lifeHoursLived.textContent = `Hours Lived: ${hoursLived.toLocaleString()}`;
+
+  // Current Year progress
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+  const yearProgress = ((now - startOfYear) / (endOfYear - startOfYear)) * 100;
+  progressYearLbl.textContent = `${yearProgress.toFixed(1)}%`;
+  progressYearBar.style.width = `${yearProgress}%`;
+
+  // Lifetime progress
+  const expectancyMs = expectedYears * 365.25 * 24 * 60 * 60 * 1000;
+  const lifePercent = Math.min(100, (diffMs / expectancyMs) * 100);
+  progressLifetimeLbl.textContent = `${lifePercent.toFixed(2)}%`;
+  progressLifetimeBar.style.width = `${lifePercent}%`;
+
+  // Biorhythms
+  // Sinusoidal waves based on birth: Phys (23d), Emot (28d), Intel (33d)
+  const physVal = Math.sin((2 * Math.PI * daysLived) / 23);
+  const emotVal = Math.sin((2 * Math.PI * daysLived) / 28);
+  const intelVal = Math.sin((2 * Math.PI * daysLived) / 33);
+
+  // Convert to percent values (0% to 100%)
+  const toPct = val => Math.round((val + 1) * 50);
+
+  lifeBioPhysLbl.textContent = `${toPct(physVal)}%`;
+  lifeBioPhysBar.style.width = `${toPct(physVal)}%`;
+
+  lifeBioEmotLbl.textContent = `${toPct(emotVal)}%`;
+  lifeBioEmotBar.style.width = `${toPct(emotVal)}%`;
+
+  lifeBioIntelLbl.textContent = `${toPct(intelVal)}%`;
+  lifeBioIntelBar.style.width = `${toPct(intelVal)}%`;
+}
+
+if (btnRunLife) btnRunLife.addEventListener('click', calculateLifeProgress);
+
+// ============================================================================
+// --- SCIENTIFIC & GRAPHING CALCULATOR LOGIC ---
+// ============================================================================
+const calcEquation = document.getElementById('calc-equation');
+const calcExpressionInput = document.getElementById('calc-expression-input');
+const calcButtonsGrid = document.getElementById('calc-buttons-grid');
+const btnCalcRunPlot = document.getElementById('btn-calc-run-plot');
+const calcGraphCanvas = document.getElementById('calc-graph-canvas');
+
+function resetGraphingCalcState() {
+  calcEquation.value = 'sin(x)';
+  calcExpressionInput.value = '0';
+  plotGraph();
+}
+
+const CALC_KEYS = [
+  'C', '(', ')', '/',
+  '7', '8', '9', '*',
+  '4', '5', '6', '-',
+  '1', '2', '3', '+',
+  '0', '.', 'sin', '=',
+  'cos', 'tan', 'pi', 'e'
+];
+
+if (calcButtonsGrid) {
+  calcButtonsGrid.innerHTML = '';
+  CALC_KEYS.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-secondary';
+    btn.style.padding = '0.5rem';
+    btn.style.fontFamily = 'monospace';
+    btn.style.fontSize = '0.9rem';
+    btn.textContent = key;
+
+    btn.addEventListener('click', () => {
+      let cur = calcExpressionInput.value;
+      if (cur === '0') cur = '';
+
+      if (key === 'C') {
+        calcExpressionInput.value = '0';
+      } else if (key === '=') {
+        try {
+          // Safe eval parsing math properties
+          const sanitized = cur.replace(/pi/g, 'Math.PI')
+                               .replace(/e/g, 'Math.E')
+                               .replace(/sin/g, 'Math.sin')
+                               .replace(/cos/g, 'Math.cos')
+                               .replace(/tan/g, 'Math.tan');
+          calcExpressionInput.value = Function(`"use strict"; return (${sanitized})`)();
+        } catch (e) {
+          calcExpressionInput.value = 'Error';
+        }
+      } else {
+        calcExpressionInput.value = cur + (key === 'sin' || key === 'cos' || key === 'tan' ? key + '(' : key);
+      }
+    });
+    calcButtonsGrid.appendChild(btn);
+  });
+}
+
+function plotGraph() {
+  const canvas = calcGraphCanvas;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  // Set dimensions
+  const rect = canvas.parentNode.getBoundingClientRect();
+  canvas.width = rect.width || 400;
+  canvas.height = rect.height || 250;
+
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw Grid axes
+  ctx.strokeStyle = '#27272a';
+  ctx.lineWidth = 1;
+  
+  // Draw axes
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+
+  ctx.beginPath();
+  ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY);
+  ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height);
+  ctx.stroke();
+
+  // Plot equation y = f(x)
+  const equation = calcEquation.value.trim();
+  if (!equation) return;
+
+  ctx.strokeStyle = 'var(--primary)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  const scaleX = 40; // Pixels per unit X
+  const scaleY = 40; // Pixels per unit Y
+
+  let first = true;
+
+  for (let screenX = 0; screenX < canvas.width; screenX++) {
+    const x = (screenX - centerX) / scaleX;
+    
+    // Safely evaluate math expression
+    try {
+      const sanitized = equation.replace(/x/g, `(${x})`)
+                                .replace(/sin/g, 'Math.sin')
+                                .replace(/cos/g, 'Math.cos')
+                                .replace(/tan/g, 'Math.tan')
+                                .replace(/pi/g, 'Math.PI');
+      const y = Function(`"use strict"; return (${sanitized})`)();
+      
+      const screenY = centerY - (y * scaleY);
+      
+      if (isNaN(screenY) || !isFinite(screenY)) continue;
+
+      if (first) {
+        ctx.moveTo(screenX, screenY);
+        first = false;
+      } else {
+        ctx.lineTo(screenX, screenY);
+      }
+    } catch(e) {}
+  }
+  ctx.stroke();
+}
+
+if (btnCalcRunPlot) btnCalcRunPlot.addEventListener('click', plotGraph);
+
+// ============================================================================
+// --- PASSWORD STRENGTH & ENTROPY ANALYZER LOGIC ---
+// ============================================================================
+const pwdAnalyzerInput = document.getElementById('pwd-analyzer-input');
+const btnPwdAnalyzerToggle = document.getElementById('btn-pwd-analyzer-toggle');
+const pwdAnalyzerGrade = document.getElementById('pwd-analyzer-grade');
+const pwdAnalyzerBits = document.getElementById('pwd-analyzer-bits');
+const pwdAnalyzerPool = document.getElementById('pwd-analyzer-pool');
+const pwdCrackPc = document.getElementById('pwd-crack-pc');
+const pwdCrackGpu = document.getElementById('pwd-crack-gpu');
+const pwdCrackSuper = document.getElementById('pwd-crack-super');
+
+function resetPasswordAnalyzerState() {
+  pwdAnalyzerInput.value = '';
+  analyzePassword();
+}
+
+function analyzePassword() {
+  const pwd = pwdAnalyzerInput.value;
+  if (!pwd) {
+    pwdAnalyzerGrade.textContent = 'Very Weak';
+    pwdAnalyzerGrade.style.background = 'var(--danger-glow)';
+    pwdAnalyzerGrade.style.color = 'var(--danger)';
+    pwdAnalyzerBits.textContent = '0 bits';
+    pwdAnalyzerPool.textContent = '0 characters';
+    pwdCrackPc.textContent = 'Instant';
+    pwdCrackGpu.textContent = 'Instant';
+    pwdCrackSuper.textContent = 'Instant';
+    return;
+  }
+
+  // Calculate Character Pools
+  let pool = 0;
+  if (/[a-z]/.test(pwd)) pool += 26;
+  if (/[A-Z]/.test(pwd)) pool += 26;
+  if (/[0-9]/.test(pwd)) pool += 10;
+  if (/[^a-zA-Z0-9]/.test(pwd)) pool += 33; // common symbols
+
+  // Entropy Formula: log2(pool^length) = length * log2(pool)
+  const entropy = pwd.length * Math.log2(pool);
+  pwdAnalyzerBits.textContent = `${Math.round(entropy)} bits`;
+  pwdAnalyzerPool.textContent = `${pool} characters`;
+
+  // Grade Strength
+  let grade = 'Very Weak';
+  let color = 'var(--danger)';
+  let glow = 'var(--danger-glow)';
+
+  if (entropy >= 80) {
+    grade = 'Strong / Safe';
+    color = 'var(--accent)';
+    glow = 'var(--accent-glow)';
+  } else if (entropy >= 55) {
+    grade = 'Medium Strength';
+    color = 'var(--primary)';
+    glow = 'var(--primary-glow)';
+  } else if (entropy >= 35) {
+    grade = 'Weak Password';
+    color = '#fbbf24';
+    glow = 'rgba(251, 191, 36, 0.15)';
+  }
+
+  pwdAnalyzerGrade.textContent = grade;
+  pwdAnalyzerGrade.style.color = color;
+  pwdAnalyzerGrade.style.background = glow;
+
+  // Crack Times estimates
+  const totalAttempts = Math.pow(2, entropy);
+
+  pwdCrackPc.textContent = formatCrackTime(totalAttempts / 100000);
+  pwdCrackGpu.textContent = formatCrackTime(totalAttempts / 10000000000);
+  pwdCrackSuper.textContent = formatCrackTime(totalAttempts / 1000000000000);
+
+  function formatCrackTime(seconds) {
+    if (seconds < 1) return 'Instant';
+    if (seconds < 60) return `${Math.round(seconds)} seconds`;
+    if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
+    if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
+    if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+    const yrs = seconds / 31536000;
+    if (yrs > 1e9) return 'Centuries (Unlimited)';
+    return `${Math.round(yrs).toLocaleString()} years`;
+  }
+}
+
+if (pwdAnalyzerInput) pwdAnalyzerInput.addEventListener('input', analyzePassword);
+
+if (btnPwdAnalyzerToggle) {
+  btnPwdAnalyzerToggle.addEventListener('click', () => {
+    if (pwdAnalyzerInput.type === 'password') {
+      pwdAnalyzerInput.type = 'text';
+      btnPwdAnalyzerToggle.textContent = '🔒';
+    } else {
+      pwdAnalyzerInput.type = 'password';
+      btnPwdAnalyzerToggle.textContent = '👁️';
+    }
+  });
+}
+
+
 window.addEventListener('DOMContentLoaded', () => {
   renderToolsGrid(TOOLS);
   initWorkers();
