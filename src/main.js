@@ -272,6 +272,33 @@ const TOOLS = [
     category: 'Text',
     icon: '📊',
     uiClass: 'ready'
+  },
+  {
+    id: 'ai-sentiment',
+    title: 'AI Sentiment & Emotion Analyzer',
+    description: 'Analyze text emotional sentiments and tones entirely in your browser using local AI classification models.',
+    keywords: ['sentiment analysis', 'emotion classifier', 'text tone', 'positive negative', 'mood analysis', 'ai tone'],
+    category: 'Text',
+    icon: '🎭',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-translator',
+    title: 'AI Language Translator',
+    description: 'Translate paragraphs between English, French, and German 100% locally in your browser.',
+    keywords: ['translate text', 'language translator', 'local translation', 'english french', 'english german', 't5 translator'],
+    category: 'Text',
+    icon: '🗣️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-detector',
+    title: 'AI Object Detector & Image Classifier',
+    description: 'Upload images to detect objects, draw bounding boxes, and label classifications 100% locally.',
+    keywords: ['object detection', 'image classifier', 'draw bounding box', 'yolo object detector', 'image labeler', 'ai vision'],
+    category: 'Graphics',
+    icon: '👁️',
+    uiClass: 'ready'
   }
 ];
 
@@ -308,6 +335,9 @@ Here are the available tools:
 28. ASCII Art Generator (ID: ascii-generator)
 29. User Agent Parser & Client Info (ID: ua-parser)
 30. Text Analyzer & Word Counter (ID: text-analyzer)
+31. AI Sentiment & Emotion Analyzer (ID: ai-sentiment)
+32. AI Language Translator (ID: ai-translator)
+33. AI Object Detector & Image Classifier (ID: ai-detector)
 
 If the user asks for a task, recommend the appropriate tool. 
 CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. Keep your responses short, friendly, and structured.`;
@@ -700,7 +730,7 @@ function renderToolsGrid(toolsList) {
     const badges = document.createElement('div');
     badges.className = 'tool-badges-row';
     
-    if (tool.id === 'passport-photo' || tool.id === 'audio-transcriber' || tool.id === 'ocr-scanner') {
+    if (tool.id === 'passport-photo' || tool.id === 'audio-transcriber' || tool.id === 'ocr-scanner' || tool.id === 'ai-sentiment' || tool.id === 'ai-translator' || tool.id === 'ai-detector') {
       badges.innerHTML += `<span class="tool-badge ai">AI Powered</span>`;
     }
     
@@ -828,6 +858,18 @@ function navigateTo(viewId) {
   } else if (viewId === 'text-analyzer') {
     document.getElementById('text-an-view').classList.add('active');
     resetTextAnState();
+  } else if (viewId === 'ai-sentiment') {
+    document.getElementById('sentiment-view').classList.add('active');
+    resetSentimentState();
+    initAiToolsWorker('sentiment');
+  } else if (viewId === 'ai-translator') {
+    document.getElementById('translator-view').classList.add('active');
+    resetTranslatorState();
+    initAiToolsWorker('translation');
+  } else if (viewId === 'ai-detector') {
+    document.getElementById('detector-view').classList.add('active');
+    resetDetectorState();
+    initAiToolsWorker('detection');
   }
 }
 
@@ -862,6 +904,9 @@ document.getElementById('btn-html-ent-back').addEventListener('click', () => nav
 document.getElementById('btn-ascii-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-ua-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-text-an-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-sentiment-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-translator-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-detector-back').addEventListener('click', () => navigateTo('home'));
 
 
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
@@ -4411,6 +4456,316 @@ document.getElementById('btn-text-an-run').addEventListener('click', () => {
     `).join('');
   }
 });
+
+
+// --- AI MULTI-TOOL WORKER ORCHESTRATION ---
+let aiToolsWorker = null;
+
+function initAiToolsWorker(task) {
+  if (!aiToolsWorker) {
+    try {
+      aiToolsWorker = new Worker(
+        new URL('./ai-tools.worker.js', import.meta.url),
+        { type: 'module' }
+      );
+      
+      aiToolsWorker.onmessage = (e) => {
+        const { type, task: msgTask, data, progress, file, error } = e.data;
+        
+        if (type === 'status') {
+          handleAiToolsStatus(msgTask, data, progress);
+        } else if (type === 'result') {
+          handleAiToolsResult(msgTask, data);
+        } else if (type === 'error') {
+          handleAiToolsError(msgTask, error);
+        }
+      };
+    } catch (err) {
+      console.error('Could not initialize AI tools worker:', err);
+      alert('Failed to start local AI worker.');
+    }
+  }
+  
+  // Initialize the specific model task if worker exists
+  aiToolsWorker.postMessage({ type: 'init', task });
+}
+
+function handleAiToolsStatus(task, status, progress) {
+  // Map worker task names to HTML element ID prefixes
+  const prefixMap = { sentiment: 'sentiment', translation: 'translator', detection: 'detector' };
+  const prefix = prefixMap[task] || task;
+  const overlayId = `${prefix}-loading-overlay`;
+  const textId = `${prefix}-loading-text`;
+  const progressId = `${prefix}-loading-progress`;
+  
+  const overlay = document.getElementById(overlayId);
+  const text = document.getElementById(textId);
+  const progressEl = document.getElementById(progressId);
+  
+  if (!overlay) return;
+  
+  if (status === 'loading') {
+    overlay.style.display = 'flex';
+    text.innerText = `Downloading local model files...`;
+    progressEl.innerText = `${Math.round((progress || 0) * 100)}%`;
+  } else if (status === 'ready') {
+    overlay.style.display = 'none';
+  } else if (status === 'error') {
+    text.innerText = `Error loading model.`;
+    progressEl.innerText = `Check console.`;
+  }
+}
+
+function handleAiToolsResult(task, data) {
+  if (task === 'sentiment') {
+    const overlay = document.getElementById('sentiment-loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    // Xenova/distilbert-base-uncased-finetuned-sst-2-english outputs Array of label objects
+    // e.g. [{ label: 'POSITIVE', score: 0.99 }]
+    if (Array.isArray(data) && data[0]) {
+      const { label, score } = data[0];
+      const verdict = document.getElementById('sentiment-verdict-display');
+      const badge = document.getElementById('sentiment-score-badge');
+      const scorePct = (score * 100).toFixed(1);
+      
+      verdict.innerText = label;
+      verdict.style.color = label === 'POSITIVE' ? 'var(--success)' : 'var(--danger)';
+      
+      badge.innerText = `Confidence: ${scorePct}%`;
+      badge.style.display = 'inline-block';
+      
+      const posVal = label === 'POSITIVE' ? scorePct : (100 - scorePct).toFixed(1);
+      const negVal = label === 'NEGATIVE' ? scorePct : (100 - scorePct).toFixed(1);
+      
+      document.getElementById('sentiment-score-pos').innerText = `${posVal}%`;
+      document.getElementById('sentiment-bar-pos').style.width = `${posVal}%`;
+      document.getElementById('sentiment-score-neg').innerText = `${negVal}%`;
+      document.getElementById('sentiment-bar-neg').style.width = `${negVal}%`;
+    }
+  } 
+  
+  else if (task === 'translation') {
+    const overlay = document.getElementById('translator-loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    if (Array.isArray(data) && data[0] && data[0].translation_text) {
+      document.getElementById('translator-output-text').value = data[0].translation_text;
+      document.getElementById('btn-copy-translator').disabled = false;
+    }
+  }
+  
+  else if (task === 'detection') {
+    const overlay = document.getElementById('detector-loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    // draw results on canvas
+    drawDetectorResults(data);
+  }
+}
+
+function handleAiToolsError(task, error) {
+  const prefixMap = { sentiment: 'sentiment', translation: 'translator', detection: 'detector' };
+  const prefix = prefixMap[task] || task;
+  const overlay = document.getElementById(`${prefix}-loading-overlay`);
+  if (overlay) overlay.style.display = 'none';
+  alert(`AI execution failed: ${error}`);
+}
+
+// --- SENTIMENT ANALYZER LOGIC ---
+function resetSentimentState() {
+  document.getElementById('sentiment-input-text').value = '';
+  document.getElementById('sentiment-verdict-display').innerText = 'No Analysis';
+  document.getElementById('sentiment-verdict-display').style.color = 'var(--text-muted)';
+  document.getElementById('sentiment-score-badge').style.display = 'none';
+  document.getElementById('sentiment-score-pos').innerText = '0%';
+  document.getElementById('sentiment-bar-pos').style.width = '0%';
+  document.getElementById('sentiment-score-neg').innerText = '0%';
+  document.getElementById('sentiment-bar-neg').style.width = '0%';
+}
+
+document.getElementById('btn-sentiment-run').addEventListener('click', () => {
+  const text = document.getElementById('sentiment-input-text').value.trim();
+  if (!text) return;
+  
+  const overlay = document.getElementById('sentiment-loading-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    document.getElementById('sentiment-loading-text').innerText = 'Analyzing sentiment...';
+    document.getElementById('sentiment-loading-progress').innerText = '';
+  }
+  
+  aiToolsWorker.postMessage({
+    type: 'run',
+    task: 'sentiment',
+    data: { text }
+  });
+});
+
+
+// --- TRANSLATOR LOGIC ---
+function resetTranslatorState() {
+  document.getElementById('translator-input-text').value = '';
+  document.getElementById('translator-output-text').value = '';
+  document.getElementById('btn-copy-translator').disabled = true;
+}
+
+document.getElementById('btn-translator-run').addEventListener('click', () => {
+  const text = document.getElementById('translator-input-text').value.trim();
+  if (!text) return;
+  
+  const source = document.getElementById('translator-source-lang').value;
+  const target = document.getElementById('translator-target-lang').value;
+  
+  if (source === target) {
+    alert('Source and Target languages must be different.');
+    return;
+  }
+  
+  const overlay = document.getElementById('translator-loading-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    document.getElementById('translator-loading-text').innerText = 'Translating text...';
+    document.getElementById('translator-loading-progress').innerText = '';
+  }
+  
+  aiToolsWorker.postMessage({
+    type: 'run',
+    task: 'translation',
+    data: { text, source, target }
+  });
+});
+
+document.getElementById('btn-copy-translator').addEventListener('click', () => {
+  const text = document.getElementById('translator-output-text').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  alert('Translation copied!');
+});
+
+
+// --- OBJECT DETECTOR LOGIC ---
+let detectorSelectedFile = null;
+let detectorImageElement = null;
+
+function resetDetectorState() {
+  detectorSelectedFile = null;
+  detectorImageElement = null;
+  document.getElementById('detector-upload-container').style.display = 'flex';
+  document.getElementById('detector-file-name').style.display = 'none';
+  document.getElementById('btn-run-detector').disabled = true;
+  
+  const canvas = document.getElementById('detector-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.width = 0;
+  canvas.height = 0;
+  
+  document.getElementById('detector-results-table-body').innerHTML = `
+    <tr><td colspan="2" style="padding: 0.5rem 1rem; color: var(--text-secondary); text-align: center;">Upload an image and run detection to see results...</td></tr>
+  `;
+}
+
+const detectorUploadContainer = document.getElementById('detector-upload-container');
+const detectorFileInput = document.getElementById('detector-file-input');
+const btnRunDetector = document.getElementById('btn-run-detector');
+
+detectorUploadContainer.addEventListener('click', () => detectorFileInput.click());
+detectorFileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) { loadDetectorFile(e.target.files[0]); }
+});
+
+function loadDetectorFile(file) {
+  detectorSelectedFile = file;
+  const nameDiv = document.getElementById('detector-file-name');
+  nameDiv.innerText = `File: ${file.name}`;
+  nameDiv.style.display = 'block';
+  detectorUploadContainer.style.display = 'none';
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    detectorImageElement = new Image();
+    detectorImageElement.onload = () => {
+      const canvas = document.getElementById('detector-canvas');
+      canvas.width = detectorImageElement.width;
+      canvas.height = detectorImageElement.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(detectorImageElement, 0, 0);
+      btnRunDetector.disabled = false;
+    };
+    detectorImageElement.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+btnRunDetector.addEventListener('click', () => {
+  if (!detectorSelectedFile || !detectorImageElement) return;
+  
+  const overlay = document.getElementById('detector-loading-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    document.getElementById('detector-loading-text').innerText = 'Detecting objects...';
+    document.getElementById('detector-loading-progress').innerText = '';
+  }
+  
+  const canvas = document.getElementById('detector-canvas');
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  
+  aiToolsWorker.postMessage({
+    type: 'run',
+    task: 'detection',
+    data: {
+      width: canvas.width,
+      height: canvas.height,
+      rgbaData: imgData.data
+    }
+  });
+});
+
+function drawDetectorResults(results) {
+  const canvas = document.getElementById('detector-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  // Clear and redraw image
+  ctx.drawImage(detectorImageElement, 0, 0);
+  
+  const tbody = document.getElementById('detector-results-table-body');
+  if (!results || results.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" style="padding: 0.5rem 1rem; text-align: center; color: var(--text-secondary);">No objects detected.</td></tr>`;
+    return;
+  }
+  
+  // Populate table and draw bounding boxes
+  tbody.innerHTML = results.map(obj => `
+    <tr style="border-bottom: 1px solid var(--border);">
+      <td style="padding: 0.5rem 1rem; font-weight: 500; text-transform: capitalize;">${obj.label}</td>
+      <td style="padding: 0.5rem 1rem; font-family: monospace;">${(obj.score * 100).toFixed(1)}%</td>
+    </tr>
+  `).join('');
+  
+  results.forEach(obj => {
+    const { xmax, xmin, ymax, ymin } = obj.box;
+    const width = xmax - xmin;
+    const height = ymax - ymin;
+    
+    // Draw bounding box rect
+    ctx.strokeStyle = '#4f46e5';
+    ctx.lineWidth = Math.max(2, Math.floor(canvas.width / 200));
+    ctx.strokeRect(xmin, ymin, width, height);
+    
+    // Draw text background & label text
+    ctx.fillStyle = '#4f46e5';
+    const fontSize = Math.max(12, Math.floor(canvas.width / 40));
+    ctx.font = `600 ${fontSize}px sans-serif`;
+    const labelText = `${obj.label} (${(obj.score * 100).toFixed(0)}%)`;
+    const textWidth = ctx.measureText(labelText).width;
+    
+    ctx.fillRect(xmin, ymin - fontSize - 6, textWidth + 10, fontSize + 8);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(labelText, xmin + 5, ymin - 6);
+  });
+}
 
 
 // --- PRIVACY POLICY & USER AGREEMENT MODALS ---

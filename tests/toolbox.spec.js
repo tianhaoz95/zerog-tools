@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 30 tool cards rendered
+    // Check that there are 33 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(30);
+    await expect(cards).toHaveCount(33);
     
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools (e.g. password gen, vault/encrypter, hash gen)
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(30);
+    expect(filteredCount).toBeLessThan(33);
     expect(filteredCount).toBeGreaterThan(0);
     
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(30);
+    await expect(cards).toHaveCount(33);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -283,6 +283,27 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await page.locator('#tab-color-contrast').click();
     await page.locator('#btn-run-contrast-check').click();
     await expect(page.locator('#contrast-ratio-display')).not.toContainText('0:1');
+  });
+
+  test('Tool 31: AI Sentiment & Emotion Analyzer view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-sentiment"]').click();
+    await expect(page.locator('#sentiment-view')).toHaveClass(/active/);
+    await page.locator('#btn-sentiment-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool 32: AI Language Translator view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-translator"]').click();
+    await expect(page.locator('#translator-view')).toHaveClass(/active/);
+    await page.locator('#btn-translator-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool 33: AI Object Detector view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-detector"]').click();
+    await expect(page.locator('#detector-view')).toHaveClass(/active/);
+    await page.locator('#btn-detector-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
   });
 
 });
