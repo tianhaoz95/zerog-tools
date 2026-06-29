@@ -27,7 +27,7 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(20);
+    await expect(cards).toHaveCount(30);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
