@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 33 tool cards rendered
+    // Check that there are 34 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(33);
+    await expect(cards).toHaveCount(34);
     
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools (e.g. password gen, vault/encrypter, hash gen)
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(33);
+    expect(filteredCount).toBeLessThan(34);
     expect(filteredCount).toBeGreaterThan(0);
-    
+
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(33);
+    await expect(cards).toHaveCount(34);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -303,6 +303,16 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await page.locator('.tool-card[data-id="ai-detector"]').click();
     await expect(page.locator('#detector-view')).toHaveClass(/active/);
     await page.locator('#btn-detector-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool 34: AI Background Remover view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="bg-remover"]').click();
+    await expect(page.locator('#bg-remover-view')).toHaveClass(/active/);
+    // Upload control and run button should be present
+    await expect(page.locator('#bg-remover-upload-container')).toBeVisible();
+    await expect(page.locator('#btn-run-bg-remover')).toBeVisible();
+    await page.locator('#btn-bg-remover-back').click();
     await expect(page.locator('#home-view')).toHaveClass(/active/);
   });
 

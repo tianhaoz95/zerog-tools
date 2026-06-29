@@ -299,6 +299,15 @@ const TOOLS = [
     category: 'Graphics',
     icon: '👁️',
     uiClass: 'ready'
+  },
+  {
+    id: 'bg-remover',
+    title: 'AI Background Remover',
+    description: 'Upload any image and erase its background instantly with the RMBG-1.4 AI model. Export a transparent PNG or recolor the backdrop, 100% locally.',
+    keywords: ['remove background', 'background remover', 'rmbg', 'transparent png', 'cutout', 'remove bg', 'erase background', 'image matting', 'isnet'],
+    category: 'Graphics',
+    icon: '✂️',
+    uiClass: 'ready'
   }
 ];
 
@@ -338,6 +347,7 @@ Here are the available tools:
 31. AI Sentiment & Emotion Analyzer (ID: ai-sentiment)
 32. AI Language Translator (ID: ai-translator)
 33. AI Object Detector & Image Classifier (ID: ai-detector)
+34. AI Background Remover (ID: bg-remover)
 
 If the user asks for a task, recommend the appropriate tool. 
 CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. Keep your responses short, friendly, and structured.`;
@@ -345,10 +355,12 @@ CRITICAL: When suggesting a tool, you MUST format its ID inside double square br
 // --- WORKER VARIABLES ---
 let chatWorker = null;
 let bgWorker = null;
+let rmbgWorker = null;
 let transcribeWorker = null;
 
 let isChatModelLoaded = false;
 let isBgModelLoaded = false;
+let isRmbgModelLoaded = false;
 let isTranscribeModelLoaded = false;
 
 // Global AI Status Widget variables
@@ -481,6 +493,62 @@ function initBgWorker() {
     };
   } catch (err) {
     console.error('Could not start bg worker:', err);
+  }
+}
+
+// Lazy load RMBG-1.4 Background Remover Worker when tool is opened
+function initRmbgWorker() {
+  if (rmbgWorker) return; // already running
+
+  try {
+    rmbgWorker = new Worker(
+      new URL('./rmbg.worker.js', import.meta.url),
+      { type: 'module' }
+    );
+    rmbgWorker.postMessage({ type: 'init' });
+
+    rmbgWorker.onmessage = (e) => {
+      const { type, data, progress, error } = e.data;
+
+      if (type === 'status') {
+        const btnRun = document.getElementById('btn-run-bg-remover');
+        const overlay = document.getElementById('bg-remover-loading-overlay');
+        const overlayText = document.getElementById('bg-remover-loading-text');
+        const overlayProgress = document.getElementById('bg-remover-loading-progress');
+
+        if (data === 'loading') {
+          overlay.style.display = 'flex';
+          overlayText.innerText = 'Loading RMBG-1.4 model...';
+          overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          btnRun.disabled = true;
+          btnRun.innerText = 'Loading Model...';
+        } else if (data === 'ready') {
+          overlay.style.display = 'none';
+          isRmbgModelLoaded = true;
+          btnRun.disabled = !bgRemoverImageElement;
+          btnRun.innerText = '✂️ Remove Background';
+        } else if (data === 'error') {
+          overlay.style.display = 'none';
+          btnRun.innerText = 'AI Model Error';
+          btnRun.disabled = true;
+        }
+      }
+
+      else if (type === 'remove_bg_result') {
+        handleRmbgResult(data);
+      }
+
+      else if (type === 'error') {
+        console.error('RMBG Worker Error:', error);
+        alert('Background removal error: ' + error);
+        document.getElementById('bg-remover-loading-overlay').style.display = 'none';
+        const btnRun = document.getElementById('btn-run-bg-remover');
+        btnRun.disabled = false;
+        btnRun.innerText = '✂️ Remove Background';
+      }
+    };
+  } catch (err) {
+    console.error('Could not start RMBG worker:', err);
   }
 }
 
@@ -730,7 +798,7 @@ function renderToolsGrid(toolsList) {
     const badges = document.createElement('div');
     badges.className = 'tool-badges-row';
     
-    if (tool.id === 'passport-photo' || tool.id === 'audio-transcriber' || tool.id === 'ocr-scanner' || tool.id === 'ai-sentiment' || tool.id === 'ai-translator' || tool.id === 'ai-detector') {
+    if (tool.id === 'passport-photo' || tool.id === 'audio-transcriber' || tool.id === 'ocr-scanner' || tool.id === 'ai-sentiment' || tool.id === 'ai-translator' || tool.id === 'ai-detector' || tool.id === 'bg-remover') {
       badges.innerHTML += `<span class="tool-badge ai">AI Powered</span>`;
     }
     
@@ -870,6 +938,10 @@ function navigateTo(viewId) {
     document.getElementById('detector-view').classList.add('active');
     resetDetectorState();
     initAiToolsWorker('detection');
+  } else if (viewId === 'bg-remover') {
+    document.getElementById('bg-remover-view').classList.add('active');
+    resetBgRemoverState();
+    initRmbgWorker();
   }
 }
 
@@ -907,6 +979,7 @@ document.getElementById('btn-text-an-back').addEventListener('click', () => navi
 document.getElementById('btn-sentiment-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-translator-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-detector-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-bg-remover-back').addEventListener('click', () => navigateTo('home'));
 
 
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
@@ -4766,6 +4839,237 @@ function drawDetectorResults(results) {
     ctx.fillText(labelText, xmin + 5, ymin - 6);
   });
 }
+
+
+// --- AI BACKGROUND REMOVER (RMBG-1.4) LOGIC ---
+let bgRemoverImageElement = null;
+// Cutout image (original RGB with AI alpha mask applied) rendered once per run
+let bgRemoverCutoutCanvas = null;
+let bgRemoverBgColor = 'transparent';
+
+function resetBgRemoverState() {
+  bgRemoverImageElement = null;
+  bgRemoverCutoutCanvas = null;
+  bgRemoverBgColor = 'transparent';
+
+  document.getElementById('bg-remover-upload-container').style.display = 'flex';
+  document.getElementById('bg-remover-file-name').style.display = 'none';
+  document.getElementById('bg-remover-result-group').style.display = 'none';
+  document.getElementById('btn-download-bg-remover').disabled = true;
+
+  const btnRun = document.getElementById('btn-run-bg-remover');
+  btnRun.disabled = !isRmbgModelLoaded;
+  btnRun.innerText = isRmbgModelLoaded ? '✂️ Remove Background' : 'Loading Model...';
+
+  const canvas = document.getElementById('bg-remover-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.width = 0;
+  canvas.height = 0;
+
+  // Reset background swatch selection back to transparent
+  document.querySelectorAll('.bg-remover-swatch').forEach(s => s.classList.remove('active'));
+  const transparentSwatch = document.querySelector('.bg-remover-swatch[data-bg="transparent"]');
+  if (transparentSwatch) transparentSwatch.classList.add('active');
+}
+
+const bgRemoverUploadContainer = document.getElementById('bg-remover-upload-container');
+const bgRemoverFileInput = document.getElementById('bg-remover-file-input');
+
+bgRemoverUploadContainer.addEventListener('click', () => bgRemoverFileInput.click());
+
+bgRemoverUploadContainer.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  bgRemoverUploadContainer.classList.add('dragover');
+});
+bgRemoverUploadContainer.addEventListener('dragleave', () => {
+  bgRemoverUploadContainer.classList.remove('dragover');
+});
+bgRemoverUploadContainer.addEventListener('drop', (e) => {
+  e.preventDefault();
+  bgRemoverUploadContainer.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) loadBgRemoverFile(e.dataTransfer.files[0]);
+});
+
+bgRemoverFileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) loadBgRemoverFile(e.target.files[0]);
+});
+
+function loadBgRemoverFile(file) {
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+
+  const nameDiv = document.getElementById('bg-remover-file-name');
+  nameDiv.innerText = `File: ${file.name}`;
+  nameDiv.style.display = 'block';
+  bgRemoverUploadContainer.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    bgRemoverImageElement = new Image();
+    bgRemoverImageElement.onload = () => {
+      bgRemoverCutoutCanvas = null;
+      document.getElementById('bg-remover-result-group').style.display = 'flex';
+      document.getElementById('btn-download-bg-remover').disabled = true;
+
+      // Show the original image in the preview until processed
+      const canvas = document.getElementById('bg-remover-canvas');
+      canvas.width = bgRemoverImageElement.width;
+      canvas.height = bgRemoverImageElement.height;
+      canvas.getContext('2d').drawImage(bgRemoverImageElement, 0, 0);
+
+      const btnRun = document.getElementById('btn-run-bg-remover');
+      btnRun.disabled = !isRmbgModelLoaded;
+    };
+    bgRemoverImageElement.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('btn-run-bg-remover').addEventListener('click', () => {
+  if (!bgRemoverImageElement || !rmbgWorker) return;
+
+  const overlay = document.getElementById('bg-remover-loading-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('bg-remover-loading-text').innerText = 'Removing background...';
+  document.getElementById('bg-remover-loading-progress').innerText = '';
+
+  const btnRun = document.getElementById('btn-run-bg-remover');
+  btnRun.disabled = true;
+
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = bgRemoverImageElement.width;
+  tempCanvas.height = bgRemoverImageElement.height;
+  const tempCtx = tempCanvas.getContext('2d');
+  tempCtx.drawImage(bgRemoverImageElement, 0, 0);
+  const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+
+  rmbgWorker.postMessage({
+    type: 'remove_bg',
+    data: { width: tempCanvas.width, height: tempCanvas.height, rgbaData: imageData.data }
+  });
+});
+
+function handleRmbgResult(maskResult) {
+  const { width, height, channels, pixelData } = maskResult;
+  const imgW = bgRemoverImageElement.width;
+  const imgH = bgRemoverImageElement.height;
+
+  // Draw the original image to read its RGB pixels
+  const srcCanvas = document.createElement('canvas');
+  srcCanvas.width = imgW;
+  srcCanvas.height = imgH;
+  const srcCtx = srcCanvas.getContext('2d');
+  srcCtx.drawImage(bgRemoverImageElement, 0, 0);
+  const srcData = srcCtx.getImageData(0, 0, imgW, imgH);
+
+  // Build the single-channel alpha mask, resizing to source dims if needed
+  let alpha;
+  if (width === imgW && height === imgH && channels === 1) {
+    alpha = pixelData;
+  } else {
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = width;
+    maskCanvas.height = height;
+    const maskCtx = maskCanvas.getContext('2d');
+    const maskImgData = maskCtx.createImageData(width, height);
+    for (let i = 0; i < width * height; i++) {
+      const v = pixelData[i * channels];
+      maskImgData.data[i * 4] = v;
+      maskImgData.data[i * 4 + 1] = v;
+      maskImgData.data[i * 4 + 2] = v;
+      maskImgData.data[i * 4 + 3] = 255;
+    }
+    maskCtx.putImageData(maskImgData, 0, 0);
+
+    const resizeCanvas = document.createElement('canvas');
+    resizeCanvas.width = imgW;
+    resizeCanvas.height = imgH;
+    const resizeCtx = resizeCanvas.getContext('2d');
+    resizeCtx.drawImage(maskCanvas, 0, 0, imgW, imgH);
+    const resized = resizeCtx.getImageData(0, 0, imgW, imgH).data;
+    alpha = new Uint8ClampedArray(imgW * imgH);
+    for (let i = 0; i < imgW * imgH; i++) alpha[i] = resized[i * 4];
+  }
+
+  // Composite original RGB with AI alpha -> transparent cutout
+  const cutout = document.createElement('canvas');
+  cutout.width = imgW;
+  cutout.height = imgH;
+  const cutoutCtx = cutout.getContext('2d');
+  const cutoutData = cutoutCtx.createImageData(imgW, imgH);
+  for (let i = 0; i < imgW * imgH; i++) {
+    cutoutData.data[i * 4] = srcData.data[i * 4];
+    cutoutData.data[i * 4 + 1] = srcData.data[i * 4 + 1];
+    cutoutData.data[i * 4 + 2] = srcData.data[i * 4 + 2];
+    cutoutData.data[i * 4 + 3] = alpha[i];
+  }
+  cutoutCtx.putImageData(cutoutData, 0, 0);
+  bgRemoverCutoutCanvas = cutout;
+
+  renderBgRemoverPreview();
+
+  document.getElementById('bg-remover-loading-overlay').style.display = 'none';
+  document.getElementById('btn-download-bg-remover').disabled = false;
+  const btnRun = document.getElementById('btn-run-bg-remover');
+  btnRun.disabled = false;
+  btnRun.innerText = '✂️ Remove Background';
+}
+
+// Composite the cutout over the currently selected background color
+function renderBgRemoverPreview() {
+  if (!bgRemoverCutoutCanvas) return;
+  const canvas = document.getElementById('bg-remover-canvas');
+  canvas.width = bgRemoverCutoutCanvas.width;
+  canvas.height = bgRemoverCutoutCanvas.height;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (bgRemoverBgColor !== 'transparent') {
+    ctx.fillStyle = bgRemoverBgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  ctx.drawImage(bgRemoverCutoutCanvas, 0, 0);
+}
+
+// Background color swatch selection
+document.querySelectorAll('.bg-remover-swatch').forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    document.querySelectorAll('.bg-remover-swatch').forEach(s => s.classList.remove('active'));
+    swatch.classList.add('active');
+    bgRemoverBgColor = swatch.getAttribute('data-bg');
+    renderBgRemoverPreview();
+  });
+});
+
+const bgRemoverCustomColor = document.getElementById('bg-remover-custom-color');
+bgRemoverCustomColor.addEventListener('input', () => {
+  document.querySelectorAll('.bg-remover-swatch').forEach(s => s.classList.remove('active'));
+  bgRemoverBgColor = bgRemoverCustomColor.value;
+  renderBgRemoverPreview();
+});
+
+document.getElementById('btn-download-bg-remover').addEventListener('click', () => {
+  if (!bgRemoverCutoutCanvas) return;
+
+  // Export exactly what is shown (transparent PNG, or recolored background)
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = bgRemoverCutoutCanvas.width;
+  exportCanvas.height = bgRemoverCutoutCanvas.height;
+  const ctx = exportCanvas.getContext('2d');
+  if (bgRemoverBgColor !== 'transparent') {
+    ctx.fillStyle = bgRemoverBgColor;
+    ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+  }
+  ctx.drawImage(bgRemoverCutoutCanvas, 0, 0);
+
+  const link = document.createElement('a');
+  link.download = 'background-removed.png';
+  link.href = exportCanvas.toDataURL('image/png');
+  link.click();
+});
 
 
 // --- PRIVACY POLICY & USER AGREEMENT MODALS ---
