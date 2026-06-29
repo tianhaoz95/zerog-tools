@@ -1674,5 +1674,41 @@ div[style*="color: var(--danger)"] {
   border-color: var(--danger) !important;
 }
 
+/* Chat Assistant Markdown Styling */
+.chat-message.assistant .message-text p {
+  margin-bottom: 0.5rem;
+}
+.chat-message.assistant .message-text p:last-child {
+  margin-bottom: 0;
+}
+.chat-message.assistant .message-text ul,
+.chat-message.assistant .message-text ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.chat-message.assistant .message-text li {
+  margin-bottom: 0.25rem;
+}
+.chat-message.assistant .message-text code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.1rem 0.3rem;
+  border-radius: var(--radius-sm);
+  font-family: monospace;
+  font-size: 0.85em;
+}
+.chat-message.assistant .message-text pre {
+  background: rgba(0, 0, 0, 0.07);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+.chat-message.assistant .message-text pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+
 
 

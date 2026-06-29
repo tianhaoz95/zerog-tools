@@ -1,4 +1,5 @@
 import './style.css';
+import { marked } from 'marked';
 
 // --- TOOLS DATA DEFINITION (20 Tools) ---
 const TOOLS = [
@@ -474,7 +475,11 @@ function addMessageToChat(role, text) {
 
   const content = document.createElement('div');
   content.className = 'message-text';
-  content.innerText = text;
+  if (role === 'assistant') {
+    content.innerHTML = marked.parse(text);
+  } else {
+    content.innerText = text;
+  }
 
   wrapper.appendChild(sender);
   wrapper.appendChild(content);
@@ -520,13 +525,13 @@ function handleStreamedToken(token) {
   }
 
   activeStreamedText += token;
-  activeStreamedMsgElement.innerText = activeStreamedText;
+  activeStreamedMsgElement.innerHTML = marked.parse(activeStreamedText);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function handleStreamedDone(fullText) {
   if (activeStreamedMsgElement) {
-    activeStreamedMsgElement.innerText = fullText;
+    activeStreamedMsgElement.innerHTML = marked.parse(fullText);
     parseToolSuggestions(activeStreamedMsgElement, fullText);
   } else {
     addMessageToChat('assistant', fullText);
@@ -2355,8 +2360,6 @@ markdownInput.addEventListener('input', updateMarkdownPreview);
 async function updateMarkdownPreview() {
   const text = markdownInput.value;
   try {
-    const markedModule = await import('marked');
-    const { marked } = markedModule.default || markedModule;
     const parsedHtml = marked.parse(text);
     markdownPreviewOutput.innerHTML = parsedHtml;
   } catch (err) {
