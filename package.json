@@ -1,0 +1,27 @@
+{
+  "name": "toolbox",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "./dev-server.sh",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "firebase-tools": "^15.22.3",
+    "vite": "^8.1.0"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
+    "diff": "^9.0.0",
+    "imagetracerjs": "^1.2.6",
+    "jsqr": "^1.4.0",
+    "marked": "^13.0.3",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "tesseract.js": "^7.0.0"
+  }
+}

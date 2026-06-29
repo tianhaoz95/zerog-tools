@@ -1,0 +1,1565 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZeroG Toolbox — Browser-Native AI Utilities</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- App Header -->
+      <header class="app-header">
+        <div class="logo-container" id="btn-header-logo">
+          <div class="logo-icon">⬡</div>
+          <div class="logo-text">ZeroG <span>Toolbox</span></div>
+        </div>
+        <!-- Global AI Status Widget -->
+        <div class="ai-status-widget">
+          <div class="status-dot offline" id="global-ai-status-dot"></div>
+          <span id="global-ai-status-text">AI Offline</span>
+          <div class="status-progress-bar" id="global-ai-status-progress-bar">
+            <div class="status-progress-bar-fill" id="global-ai-status-progress-bar-fill"></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Persistent AI Chat Sidebar -->
+      <aside class="chat-sidebar">
+        <div class="chat-panel">
+          <div class="chat-panel-header">
+            <h3>🤖 AI Chat Assistant</h3>
+            <p>Ask for recommendations or help with your task</p>
+          </div>
+          
+          <!-- Chat history scroll viewport -->
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-message assistant">
+              <div class="message-avatar">🤖</div>
+              <div class="message-content-wrapper">
+                <div class="message-sender">Assistant</div>
+                <div class="message-text">Hello! I am your ZeroG assistant. Ask me anything, e.g., "How can I crop my photo for my US visa?" or "I want to vectorize my logo." I will recommend the right tool for you!</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Typing indicator -->
+          <div class="chat-typing-indicator" id="chat-typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <span id="chat-typing-text">AI is typing...</span>
+          </div>
+          
+          <!-- Input area -->
+          <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" />
+            <button id="btn-send-chat">Send</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- VIEW 1: HOME PAGE WITH TOOLS PANEL -->
+      <main id="home-view" class="view active">
+        <section class="hero-section">
+          <h1>Browser-Native AI Utility Kit</h1>
+          <p>Zero servers. Complete privacy. All tools run 100% locally in your browser using client-side AI models.</p>
+        </section>
+
+        <!-- Tools Panel -->
+        <div class="tools-panel">
+          <div class="tools-panel-header">
+            <h3>⚙️ All Utility Tools</h3>
+            <p>Quick access to browser-native web tools</p>
+          </div>
+          
+          <!-- Quick Filter Bar -->
+          <div class="tools-filter-wrapper" style="margin-bottom: 1.5rem; position: relative;">
+            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none; font-size: 0.95rem;">🔍</span>
+            <input type="text" id="tools-search-input" class="input-custom" placeholder="Quick filter tools by name or keyword..." style="padding-left: 2.5rem; font-size: 0.9rem;" autocomplete="off" />
+          </div>
+          
+          <div class="tools-grid" id="tools-grid">
+            <!-- Dynamically Rendered -->
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 2: PASSPORT PHOTO GENERATOR -->
+      <main id="passport-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-passport-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Passport Photo Generator</h2>
+            <p>Generate biometric passport photos with face alignment guides and background replacement using in-browser AI matting.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls">
+            <!-- 1. Selection -->
+            <div class="control-group">
+              <label for="passport-template">1. Size Standard</label>
+              <select id="passport-template" class="select-custom">
+                <option value="us">US Passport (2 x 2 in / 51 x 51 mm, 1:1)</option>
+                <option value="eu">EU / UK Passport (35 x 45 mm, 7:9)</option>
+                <option value="cn">China Passport (33 x 48 mm, 11:16)</option>
+                <option value="custom">Custom Dimensions</option>
+              </select>
+            </div>
+
+            <!-- Custom dimensions row -->
+            <div class="btn-group-row" id="custom-dims-row" style="display: none;">
+              <div class="control-group" style="flex: 1;">
+                <label for="custom-w">Width (mm)</label>
+                <input type="number" id="custom-w" class="input-custom" value="35" min="10" max="200" />
+              </div>
+              <div class="control-group" style="flex: 1;">
+                <label for="custom-h">Height (mm)</label>
+                <input type="number" id="custom-h" class="input-custom" value="45" min="10" max="200" />
+              </div>
+            </div>
+
+            <!-- 2. AI Background Removal -->
+            <div class="control-group">
+              <label>2. AI Background Removal</label>
+              <button class="btn-primary" id="btn-remove-bg" disabled>
+                ✨ Remove Background (AI)
+              </button>
+            </div>
+
+            <!-- 3. Target Background Color -->
+            <div class="control-group">
+              <label>3. Background Color</label>
+              <div class="color-options" id="bg-color-options">
+                <div class="color-option selected" data-color="#ffffff" style="background-color: #ffffff;" title="White"></div>
+                <div class="color-option" data-color="#f4f4f5" style="background-color: #f4f4f5; border: 1px solid rgba(255,255,255,0.15);" title="Off-White"></div>
+                <div class="color-option" data-color="#3b82f6" style="background-color: #3b82f6;" title="Light Blue"></div>
+                <div class="color-option" data-color="transparent" style="background: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 10px 10px; background-position: 0 0, 0 5px, 5px -5px, -5px 0px;" title="Transparent"></div>
+              </div>
+            </div>
+
+            <!-- Zoom & Rotate Controls -->
+            <div class="slider-container">
+              <div class="slider-header">
+                <span>Zoom</span>
+                <span class="slider-val" id="val-zoom">100%</span>
+              </div>
+              <input type="range" id="slider-zoom" class="slider-custom" min="10" max="400" value="100" />
+            </div>
+
+            <div class="slider-container">
+              <div class="slider-header">
+                <span>Rotate</span>
+                <span class="slider-val" id="val-rotate">0°</span>
+              </div>
+              <input type="range" id="slider-rotate" class="slider-custom" min="-180" max="180" value="0" />
+            </div>
+
+            <button class="btn-secondary" id="btn-reset-crop">Reset Alignment</button>
+          </div>
+
+          <!-- Right Panel: Canvas Workspace -->
+          <div class="panel-workspace" id="passport-canvas-panel">
+            <div class="panel-loading" id="passport-loading-overlay">
+              <div class="spinner"></div>
+              <div class="loading-text" id="passport-loading-text">Loading Model...</div>
+              <div class="loading-progress" id="passport-loading-progress">0%</div>
+            </div>
+
+            <!-- Upload state -->
+            <div class="upload-container" id="passport-upload-container">
+              <div class="upload-icon">📸</div>
+              <div class="upload-text">
+                <h4>Upload Portrait Photo</h4>
+                <p>Drag & drop or click to choose a JPEG or PNG image</p>
+              </div>
+              <input type="file" id="passport-file-input" class="file-input" accept="image/*" />
+            </div>
+
+            <!-- Interactive editing state (hidden by default) -->
+            <div style="display: none; width: 100%; flex-direction: column; align-items: center; gap: 1.5rem;" id="passport-editor-container">
+              <div class="canvas-wrapper">
+                <canvas id="passport-canvas" class="canvas-element"></canvas>
+                <!-- Biometric Guideline Overlay -->
+                <div class="biometric-guide" id="passport-guide">
+                  <svg class="biometric-overlay-svg" viewBox="0 0 200 200">
+                    <!-- Head Oval -->
+                    <ellipse cx="100" cy="95" rx="42" ry="58" />
+                    <!-- Eyes Line -->
+                    <line x1="50" y1="90" x2="150" y2="90" />
+                    <!-- Mid Line -->
+                    <line x1="100" y1="37" x2="100" y2="153" />
+                    <!-- Chin line -->
+                    <line x1="75" y1="153" x2="125" y2="153" stroke-dasharray="3, 3" />
+                  </svg>
+                </div>
+              </div>
+              
+              <div class="btn-group-row">
+                <button class="btn-primary" style="flex: 1;" id="btn-download-single">📥 Single Photo</button>
+                <button class="btn-accent" style="flex: 1;" id="btn-download-sheet">📥 Print Sheet (4x6")</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 3: IMAGE VECTORIZER (PNG <-> SVG) -->
+      <main id="vectorizer-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-vectorizer-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Image Vectorizer (PNG &lt;-&gt; SVG)</h2>
+            <p>Trace PNG/JPG bitmap files into scalable vector graphics (SVG) or rasterize SVGs back to high-resolution PNGs.</p>
+          </div>
+        </div>
+
+        <!-- Subtabs -->
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-png-to-svg">PNG to SVG (Vectorizer)</button>
+          <button class="tab-btn" id="tab-svg-to-png">SVG to PNG (Rasterizer)</button>
+        </div>
+
+        <!-- Tab 1 Workspace: PNG to SVG -->
+        <div class="tool-workspace" id="workspace-png-to-svg">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="trace-mode">Tracing Mode</label>
+              <select id="trace-mode" class="select-custom">
+                <option value="detailed">Detailed (Color Trace)</option>
+                <option value="grayscale">Grayscale</option>
+                <option value="monochrome">Silhouette (Black & White)</option>
+              </select>
+            </div>
+
+            <div class="slider-container" id="colors-slider-container">
+              <div class="slider-header">
+                <span>Color Count</span>
+                <span class="slider-val" id="val-colors">16</span>
+              </div>
+              <input type="range" id="slider-colors" class="slider-custom" min="2" max="32" value="16" />
+            </div>
+
+            <div class="slider-container">
+              <div class="slider-header">
+                <span>Noise Filter (Path Omit)</span>
+                <span class="slider-val" id="val-noise">8px</span>
+              </div>
+              <input type="range" id="slider-noise" class="slider-custom" min="1" max="50" value="8" />
+            </div>
+
+            <div class="slider-container">
+              <div class="slider-header">
+                <span>Curve Smoothness</span>
+                <span class="slider-val" id="val-smooth">1.0</span>
+              </div>
+              <input type="range" id="slider-smooth" class="slider-custom" min="1" max="100" value="20" step="1" />
+            </div>
+
+            <button class="btn-primary" id="btn-vectorize" disabled>⚡ Trace & Vectorize</button>
+          </div>
+
+          <!-- Right Panel: Canvas Workspace -->
+          <div class="panel-workspace" id="vectorizer-panel-workspace">
+            <div class="panel-loading" id="vectorizer-loading-overlay">
+              <div class="spinner"></div>
+              <div class="loading-text">Tracing image...</div>
+            </div>
+
+            <!-- Upload state -->
+            <div class="upload-container" id="vector-upload-container">
+              <div class="upload-icon">📐</div>
+              <div class="upload-text">
+                <h4>Upload PNG or JPEG</h4>
+                <p>Drag & drop or click to choose a bitmap image</p>
+              </div>
+              <input type="file" id="vector-file-input" class="file-input" accept="image/png, image/jpeg, image/webp" />
+            </div>
+
+            <!-- Editor / Preview state (hidden by default) -->
+            <div class="vector-workspace" style="display: none;" id="vector-preview-container">
+              <div class="preview-grid">
+                <!-- Original Image -->
+                <div class="preview-box">
+                  <h4>Original Image</h4>
+                  <div class="preview-content">
+                    <img id="vector-orig-preview" src="" alt="Original Image" />
+                  </div>
+                </div>
+                
+                <!-- Vector Result -->
+                <div class="preview-box">
+                  <h4>SVG Vector Result</h4>
+                  <div class="preview-content" id="vector-svg-output">
+                    <!-- SVG string appended here -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="btn-group-row">
+                <button class="btn-primary" style="flex: 1;" id="btn-download-svg">📥 Download SVG</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2 Workspace: SVG to PNG -->
+        <div class="tool-workspace" id="workspace-svg-to-png" style="display: none;">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls">
+            <div class="slider-container">
+              <div class="slider-header">
+                <span>Export Scale Multiplier</span>
+                <span class="slider-val" id="val-svg-scale">2x</span>
+              </div>
+              <input type="range" id="slider-svg-scale" class="slider-custom" min="1" max="8" value="2" />
+            </div>
+
+            <button class="btn-primary" id="btn-download-png" disabled>📥 Export PNG</button>
+          </div>
+
+          <!-- Right Panel: Canvas Workspace -->
+          <div class="panel-workspace">
+            <!-- Upload state -->
+            <div class="upload-container" id="svg-raster-upload-container">
+              <div class="upload-icon">🖼️</div>
+              <div class="upload-text">
+                <h4>Upload SVG Vector File</h4>
+                <p>Drag & drop or click to choose an SVG image</p>
+              </div>
+              <input type="file" id="svg-raster-file-input" class="file-input" accept="image/svg+xml" />
+            </div>
+
+            <!-- Preview state (hidden by default) -->
+            <div class="vector-workspace" style="display: none;" id="svg-raster-preview-container">
+              <div class="preview-box" style="min-height: 400px; width: 100%;">
+                <h4>Rasterized Preview</h4>
+                <div class="preview-content">
+                  <canvas id="svg-raster-canvas" style="max-width: 100%; max-height: 350px; border: 1px dashed var(--border);"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 4: AI AUDIO TRANSCRIBER -->
+      <main id="transcriber-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-transcriber-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Audio Transcriber</h2>
+            <p>Record audio or upload a voice file (.mp3, .wav, .m4a) and transcribe it locally using OpenAI's Whisper speech-to-text.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>1. Select Audio Source</label>
+              
+              <!-- Record Button -->
+              <button class="btn-primary" id="btn-record-audio" style="background-color: var(--danger); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">
+                🎤 Start Recording
+              </button>
+              
+              <div id="recording-status" style="display: none; text-align: center; margin-top: 0.5rem; font-weight: 600; animation: pulse 1.5s infinite;">
+                🔴 Recording: <span id="recording-timer">00:00</span>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin: 0.5rem 0;">— OR —</div>
+
+            <!-- Upload Box -->
+            <div class="control-group">
+              <label>Upload Audio File</label>
+              <div class="upload-container" id="audio-upload-container" style="padding: 1.5rem 1rem;">
+                <div class="upload-icon" style="font-size: 2rem;">🎵</div>
+                <div class="upload-text">
+                  <h4 style="font-size: 0.95rem;">Upload MP3, WAV, or M4A</h4>
+                  <p style="font-size: 0.75rem;">Click to choose file</p>
+                </div>
+                <input type="file" id="audio-file-input" class="file-input" accept="audio/*" />
+              </div>
+              <div id="audio-file-name" style="display: none; font-size: 0.85rem; color: var(--accent); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <!-- Visualizer -->
+            <div class="control-group" id="audio-visualizer-group" style="display: none;">
+              <label>Audio Preview</label>
+              <audio id="audio-preview-element" controls style="width: 100%; border-radius: var(--radius-sm); outline: none; background: #0d0d11;"></audio>
+            </div>
+
+            <button class="btn-primary" id="btn-run-transcribe" disabled>⚡ Transcribe Audio (AI)</button>
+          </div>
+
+          <!-- Right Panel: Workspace / Output -->
+          <div class="panel-workspace" id="transcriber-panel-workspace">
+            <div class="panel-loading" id="transcriber-loading-overlay">
+              <div class="spinner"></div>
+              <div class="loading-text" id="transcriber-loading-text">Loading Whisper Model...</div>
+              <div class="loading-progress" id="transcriber-loading-progress">0%</div>
+            </div>
+
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <h4 style="font-size: 0.9rem; color: var(--text-secondary);">Transcription Output</h4>
+              
+              <textarea id="transcription-output" class="input-custom" style="flex-grow: 1; min-height: 350px; font-family: var(--font-body); line-height: 1.5; resize: none;" readonly placeholder="Your transcribed text will appear here..."></textarea>
+              
+              <button class="btn-secondary" id="btn-copy-transcription" disabled>📋 Copy to Clipboard</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 5: FILE ENCRYPTER & DECRYPTER -->
+      <main id="encrypter-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-encrypter-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>File Encrypter &amp; Decrypter</h2>
+            <p>Secure any file locally using military-grade AES-256-GCM symmetric encryption. No data leaves your machine.</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-encrypt">Encrypt File</button>
+          <button class="tab-btn" id="tab-decrypt">Decrypt File</button>
+        </div>
+
+        <!-- Encrypt Tab -->
+        <div class="tool-workspace" id="workspace-encrypt">
+          <!-- Left Panel -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="encrypt-password">Encryption Password</label>
+              <input type="password" id="encrypt-password" class="input-custom" placeholder="Enter secure password..." autocomplete="new-password" />
+            </div>
+
+            <!-- Upload Box -->
+            <div class="control-group">
+              <label>Select File to Encrypt</label>
+              <div class="upload-container" id="encrypt-upload-container">
+                <div class="upload-icon">🔒</div>
+                <div class="upload-text">
+                  <h4>Choose Any File</h4>
+                  <p>Drag & drop or click to upload</p>
+                </div>
+                <input type="file" id="encrypt-file-input" class="file-input" />
+              </div>
+              <div id="encrypt-file-name" style="display: none; font-size: 0.85rem; color: var(--primary); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <button class="btn-primary" id="btn-run-encrypt" disabled>🔒 Encrypt &amp; Download</button>
+          </div>
+
+          <!-- Right Panel (Explanation) -->
+          <div class="panel-workspace">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+              <h3 style="color: var(--text-primary);">🛡️ Zero-Knowledge Security</h3>
+              <p>ZeroG Encryption runs entirely locally within your browser using the hardware-accelerated <strong>Web Crypto API</strong>. The decryption key is derived locally and is never sent over any network.</p>
+              
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 1.25rem; border-radius: var(--radius-sm); font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="font-weight: 600; color: var(--text-primary);">Under the Hood:</div>
+                <div>• <strong>Algorithm</strong>: AES-256-GCM (Galois/Counter Mode).</div>
+                <div>• <strong>Key Derivation</strong>: PBKDF2 with HMAC-SHA256 and 100,000 iterations.</div>
+                <div>• <strong>Cryptographic Salt</strong>: Generated uniquely for each file (16 bytes).</div>
+                <div>• <strong>Initialization Vector</strong>: Randomly generated for every session (12 bytes).</div>
+              </div>
+
+              <div style="color: var(--danger); font-size: 0.85rem; font-weight: 600; border-left: 2px solid var(--danger); padding-left: 0.75rem;">
+                ⚠️ WARNING: There is no password recovery. If you forget your password, your file cannot be decrypted.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decrypt Tab -->
+        <div class="tool-workspace" id="workspace-decrypt" style="display: none;">
+          <!-- Left Panel -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="decrypt-password">Decryption Password</label>
+              <input type="password" id="decrypt-password" class="input-custom" placeholder="Enter file password..." />
+            </div>
+
+            <!-- Upload Box -->
+            <div class="control-group">
+              <label>Select Encrypted file (.enc)</label>
+              <div class="upload-container" id="decrypt-upload-container">
+                <div class="upload-icon">🔓</div>
+                <div class="upload-text">
+                  <h4>Choose Encrypted File</h4>
+                  <p>Drag & drop or click to upload</p>
+                </div>
+                <input type="file" id="decrypt-file-input" class="file-input" accept=".enc" />
+              </div>
+              <div id="decrypt-file-name" style="display: none; font-size: 0.85rem; color: var(--accent); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <button class="btn-primary" id="btn-run-decrypt" disabled>🔓 Decrypt &amp; Download</button>
+          </div>
+
+          <!-- Right Panel (Explanation) -->
+          <div class="panel-workspace">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+              <h3 style="color: var(--text-primary);">📂 Restoring Encrypted Files</h3>
+              <p>Upload a file ending in <strong>.enc</strong>, type the correct password, and your browser will recreate the original unencrypted file immediately for download.</p>
+              
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 1.25rem; border-radius: var(--radius-sm); font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="font-weight: 600; color: var(--text-primary);">Verification Steps:</div>
+                <div>1. Reads the salt & IV prepended to the binary data.</div>
+                <div>2. Regenerates the AES-256 decryption key from the password.</div>
+                <div>3. Decrypts and validates the authentication tag.</div>
+                <div>4. Prompts you to download the original file.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 6: AI DOCUMENT OCR SCANNER -->
+      <main id="ocr-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ocr-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Document OCR Scanner</h2>
+            <p>Upload any scanned document, invoice, receipt, or photo to extract editable text locally in your browser using Tesseract OCR.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls & Preview -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>1. Upload Document Image</label>
+              <div class="upload-container" id="ocr-upload-container">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">
+                  <h4>Choose PNG, JPG, or WebP</h4>
+                  <p>Drag & drop or click to upload</p>
+                </div>
+                <input type="file" id="ocr-file-input" class="file-input" accept="image/*" />
+              </div>
+              <div id="ocr-file-name" style="display: none; font-size: 0.85rem; color: var(--primary); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <!-- Image Preview Box -->
+            <div class="control-group" id="ocr-preview-group" style="display: none; text-align: center;">
+              <label>Document Preview</label>
+              <div style="background: #0d0d11; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm); max-height: 250px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <img id="ocr-doc-preview" style="max-width: 100%; max-height: 230px; object-fit: contain; border-radius: var(--radius-xs);" />
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="ocr-lang">2. Recognition Language</label>
+              <select id="ocr-lang" class="input-custom">
+                <option value="eng">English (eng)</option>
+                <option value="spa">Spanish (spa)</option>
+                <option value="fra">French (fra)</option>
+                <option value="deu">German (deu)</option>
+                <option value="chi_sim">Chinese Simplified (chi_sim)</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" id="btn-run-ocr" disabled>⚡ Extract Text (OCR)</button>
+          </div>
+
+          <!-- Right Panel: Output Workspace -->
+          <div class="panel-workspace" id="ocr-panel-workspace" style="position: relative;">
+            <!-- Custom OCR Progress Overlay -->
+            <div class="panel-loading" id="ocr-loading-overlay">
+              <div class="spinner"></div>
+              <div class="loading-text" id="ocr-loading-text">Loading OCR Engine...</div>
+              <div class="loading-progress" id="ocr-loading-progress">0%</div>
+            </div>
+
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="font-size: 0.9rem; color: var(--text-secondary);">Extracted Text</h4>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn-secondary" id="btn-copy-ocr" disabled style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📋 Copy</button>
+                  <button class="btn-secondary" id="btn-save-ocr" disabled style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">💾 Save .txt</button>
+                </div>
+              </div>
+              <textarea id="ocr-output" class="input-custom" style="flex-grow: 1; min-height: 350px; font-family: var(--font-body); line-height: 1.5; resize: none;" readonly placeholder="Extracted text will appear here..."></textarea>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 7: SECURE PASSWORD GENERATOR -->
+      <main id="password-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-password-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Secure Password Generator</h2>
+            <p>Generate cryptographically secure random passwords locally. Test entropy strength and secure credentials locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Parameters -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <label>Password Length</label>
+                <span id="val-pass-length" style="color: var(--primary); font-weight: 600;">16</span>
+              </div>
+              <input type="range" id="slider-pass-length" min="8" max="64" value="16" style="width: 100%;" />
+            </div>
+
+            <div class="control-group">
+              <label>Include Character Types</label>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="pass-upper" checked style="accent-color: var(--primary);" /> Uppercase Letters (A-Z)
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="pass-lower" checked style="accent-color: var(--primary);" /> Lowercase Letters (a-z)
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="pass-numbers" checked style="accent-color: var(--primary);" /> Numbers (0-9)
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="pass-symbols" checked style="accent-color: var(--primary);" /> Special Symbols (!@#$%^&*)
+                </label>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Filters</label>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="pass-exclude-similar" style="accent-color: var(--primary);" /> Exclude Similar Characters (i, l, 1, L, o, 0, O)
+                </label>
+              </div>
+            </div>
+
+            <button class="btn-primary" id="btn-generate-password">🔑 Generate Password</button>
+          </div>
+
+          <!-- Right Panel: Output and Strength -->
+          <div class="panel-workspace">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1.5rem; height: 100%;">
+              <h4 style="font-size: 0.9rem; color: var(--text-secondary);">Generated Credential</h4>
+              
+              <!-- Password Card Display -->
+              <div style="background: #0d0d11; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; position: relative;">
+                <div id="password-output" style="font-family: monospace; font-size: 1.35rem; color: var(--text-primary); letter-spacing: 0.05em; word-break: break-all; min-height: 2rem;">Generating...</div>
+                <button class="btn-secondary" id="btn-copy-password" style="flex-shrink: 0; padding: 0.5rem 1rem;">📋 Copy</button>
+              </div>
+
+              <!-- Password Strength Meter -->
+              <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.9rem; font-weight: 500;">Strength Rating:</span>
+                  <span id="password-strength-label" style="font-weight: 600; text-transform: uppercase;">Very Strong</span>
+                </div>
+                
+                <!-- Strength bar -->
+                <div style="height: 8px; width: 100%; background: var(--border); border-radius: 4px; overflow: hidden;">
+                  <div id="password-strength-bar" style="height: 100%; width: 100%; background: var(--success); transition: width 0.3s ease, background-color 0.3s ease;"></div>
+                </div>
+
+                <!-- Analysis details -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(255,255,255,0.01); font-size: 0.8rem;">
+                  <div>
+                    <span style="color: var(--text-muted);">Entropy:</span> 
+                    <strong id="password-entropy-val" style="color: var(--text-primary); margin-left: 0.25rem;">0 bits</strong>
+                  </div>
+                  <div>
+                    <span style="color: var(--text-muted);">Pool Size:</span> 
+                    <strong id="password-pool-val" style="color: var(--text-primary); margin-left: 0.25rem;">0 chars</strong>
+                  </div>
+                  <div style="grid-column: span 2;">
+                    <span style="color: var(--text-muted);">Brute-force Time Estimate:</span> 
+                    <strong id="password-crack-time" style="color: var(--text-primary); margin-left: 0.25rem;">Instant</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 8: JSON FORMATTER & VALIDATOR -->
+      <main id="json-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-json-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>JSON Formatter &amp; Validator</h2>
+            <p>Paste or type your JSON code to validate, format, prettify, or compress it immediately. Fully client-side parsing.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Input & Controls -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 50%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <label for="json-input">Input Raw JSON</label>
+              <button class="btn-secondary" id="btn-clear-json" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Clear</button>
+            </div>
+            
+            <textarea id="json-input" class="input-custom" style="width: 100%; height: 350px; font-family: monospace; font-size: 0.85rem; line-height: 1.4; resize: none; flex-grow: 1; box-sizing: border-box;" placeholder="Paste raw JSON here..."></textarea>
+            
+            <div class="control-group" style="margin-top: 1rem;">
+              <label for="json-indent">Formatting Indent</label>
+              <select id="json-indent" class="input-custom">
+                <option value="2">2 Spaces</option>
+                <option value="4">4 Spaces</option>
+                <option value="tab">Tab Indent</option>
+              </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+              <button class="btn-primary" id="btn-beautify-json">⚡ Beautify / Prettify</button>
+              <button class="btn-primary" id="btn-minify-json" style="background: linear-gradient(135deg, var(--accent), var(--primary));">🗜️ Minify / Compress</button>
+            </div>
+          </div>
+
+          <!-- Right Panel: Output / Validation -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 50%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="font-size: 0.9rem; color: var(--text-secondary);">Formatted Output</h4>
+                <button class="btn-secondary" id="btn-copy-json" disabled style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📋 Copy to Clipboard</button>
+              </div>
+
+              <!-- Status Banner -->
+              <div id="json-status-banner" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500;">
+                Valid JSON
+              </div>
+
+              <textarea id="json-output" class="input-custom" style="flex-grow: 1; min-height: 300px; font-family: monospace; font-size: 0.85rem; line-height: 1.4; resize: none;" readonly placeholder="Prettified JSON will output here..."></textarea>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 9: QR CODE GENERATOR & SCANNER -->
+      <main id="qr-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-qr-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>QR Code Generator &amp; Scanner</h2>
+            <p>Generate high-quality QR codes from text/URLs, or scan QR codes from uploaded images locally.</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-qr-generate">Generate QR Code</button>
+          <button class="tab-btn" id="tab-qr-scan">Scan QR Code</button>
+        </div>
+
+        <!-- Generate Tab -->
+        <div class="tool-workspace" id="workspace-qr-generate">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="qr-text-input">Text or URL to Encode</label>
+              <textarea id="qr-text-input" class="input-custom" style="height: 120px;" placeholder="Type link or message here...">https://zerog.toolbox</textarea>
+            </div>
+            
+            <div class="control-group">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <label>QR Code Size</label>
+                <span id="val-qr-size" style="color: var(--primary); font-weight: 600;">250px</span>
+              </div>
+              <input type="range" id="slider-qr-size" min="150" max="400" value="250" style="width: 100%;" />
+            </div>
+
+            <button class="btn-primary" id="btn-generate-qr">⚡ Generate QR Code</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; min-height: 350px;">
+            <div style="background: white; padding: 1.5rem; border-radius: var(--radius-md); box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+              <canvas id="qr-output-canvas"></canvas>
+            </div>
+            <button class="btn-secondary" id="btn-download-qr" disabled>💾 Download QR Image</button>
+          </div>
+        </div>
+
+        <!-- Scan Tab -->
+        <div class="tool-workspace" id="workspace-qr-scan" style="display: none;">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select QR Image File</label>
+              <div class="upload-container" id="qr-scan-upload-container">
+                <div class="upload-icon">🔍</div>
+                <div class="upload-text">
+                  <h4>Choose QR Code Image</h4>
+                  <p>Drag & drop or click to upload</p>
+                </div>
+                <input type="file" id="qr-scan-file-input" class="file-input" accept="image/*" />
+              </div>
+              <div id="qr-scan-file-name" style="display: none; font-size: 0.85rem; color: var(--accent); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+            
+            <button class="btn-primary" id="btn-run-qr-scan" disabled>🔍 Decode QR Image</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+            <div style="flex-grow: 1; min-height: 200px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); border: 1px dashed var(--border); overflow: hidden; padding: 0.5rem;">
+              <img id="qr-scan-preview-img" style="max-width: 100%; max-height: 250px; object-fit: contain; display: none;" />
+              <div id="qr-scan-placeholder" style="color: var(--text-muted); font-size: 0.9rem;">Uploaded QR image will show here</div>
+            </div>
+            
+            <label>Decoded QR Content</label>
+            <textarea id="qr-scan-result" class="input-custom" style="height: 100px; font-family: monospace;" readonly placeholder="Scanned QR code contents will appear here..."></textarea>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 10: BASE64 ENCODER & DECODER -->
+      <main id="base64-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-base64-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Base64 Encoder &amp; Decoder</h2>
+            <p>Convert plain text to Base64 format and back, or encode binary files directly into Base64 data URLs.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 50%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <label for="base64-input">Plain Text Input</label>
+              <button class="btn-secondary" id="btn-clear-base64" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Clear</button>
+            </div>
+            <textarea id="base64-input" class="input-custom" style="height: 250px; font-family: monospace; resize: none;" placeholder="Type or paste plain text here..."></textarea>
+            
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 0.5rem 0;">— OR FILE ENCODING —</div>
+            
+            <div class="control-group">
+              <label>Encode File to Base64</label>
+              <input type="file" id="base64-file-input" class="input-custom" style="font-size: 0.8rem;" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+              <button class="btn-primary" id="btn-encode-base64">⚡ Encode Text</button>
+              <button class="btn-primary" id="btn-decode-base64" style="background: linear-gradient(135deg, var(--accent), var(--primary));">🔓 Decode Base64</button>
+            </div>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 50%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="base64-output">Base64 Output</label>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn-secondary" id="btn-copy-base64" disabled style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📋 Copy</button>
+                  <button class="btn-secondary" id="btn-download-base64-file" disabled style="padding: 0.4rem 0.8rem; font-size: 0.8rem; display: none;">💾 Download File</button>
+                </div>
+              </div>
+              <textarea id="base64-output" class="input-custom" style="flex-grow: 1; min-height: 380px; font-family: monospace; resize: none;" readonly placeholder="Base64 encoded/decoded values will output here..."></textarea>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 11: MARKDOWN PREVIEWER -->
+      <main id="markdown-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-markdown-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Markdown Previewer &amp; HTML Converter</h2>
+            <p>Write Markdown syntax and instantly preview the rendered HTML document side-by-side locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 50%;">
+            <label for="markdown-input">Markdown Input</label>
+            <textarea id="markdown-input" class="input-custom" style="flex-grow: 1; height: 400px; font-family: monospace; resize: none; font-size: 0.85rem;" placeholder="Type markdown syntax here...
+# Hello World
+
+This is a **bold** paragraph, and here is a [link](https://zerog.toolbox).
+
+* Bullet 1
+* Bullet 2
+
+> A nice blockquote block.
+
+`inline code` and a block code:
+```javascript
+console.log('ZeroG');
+```"># Hello World
+
+This is a **bold** paragraph, and here is a [link](https://zerog.toolbox).
+
+* Bullet 1
+* Bullet 2
+
+> A nice blockquote block.
+
+`inline code` and a block code:
+```javascript
+console.log('ZeroG');
+```</textarea>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 50%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label>Live HTML Render</label>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn-secondary" id="btn-copy-markdown-html" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📋 Copy HTML Code</button>
+                  <button class="btn-secondary" id="btn-download-markdown-html" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">💾 Save .html</button>
+                </div>
+              </div>
+              <div id="markdown-preview-output" class="markdown-preview"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 12: URL ENCODER & DECODER -->
+      <main id="url-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-url-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>URL Encoder &amp; Decoder</h2>
+            <p>Encode query strings into valid URL formats, decode component payloads, and parse query parameters into an editable grid.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 50%;">
+            <label for="url-input">Target URL or String</label>
+            <textarea id="url-input" class="input-custom" style="height: 150px; font-family: monospace; resize: none;" placeholder="Type URL or query string here...">https://google.com/search?q=ZeroG Toolbox&amp;hl=en&amp;safe=active</textarea>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+              <button class="btn-primary" id="btn-encode-url">⚡ Encode URL</button>
+              <button class="btn-primary" id="btn-decode-url" style="background: linear-gradient(135deg, var(--accent), var(--primary));">🔓 Decode URL</button>
+            </div>
+            
+            <button class="btn-secondary" id="btn-parse-url-params" style="margin-top: 0.5rem; width: 100%;">🔍 Parse Query Parameters</button>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 50%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="url-output">Result Output</label>
+                <button class="btn-secondary" id="btn-copy-url" disabled style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📋 Copy</button>
+              </div>
+              <textarea id="url-output" class="input-custom" style="height: 120px; font-family: monospace; resize: none;" readonly placeholder="Encoded/decoded URLs will output here..."></textarea>
+              
+              <!-- Parsed query parameters -->
+              <div id="url-params-container" style="display: none; flex-grow: 1; flex-direction: column; gap: 0.5rem; overflow-y: auto;">
+                <label>Parsed Parameters</label>
+                <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                  <table class="param-table" id="url-params-table">
+                    <thead>
+                      <tr>
+                        <th>Parameter Key</th>
+                        <th>Parameter Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Rendered on demand -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 13: CSV TO JSON CONVERTER -->
+      <main id="csv-json-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-csv-json-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>CSV &lt;-&gt; JSON Converter</h2>
+            <p>Convert CSV structured table text into JSON array objects, or flatten JSON arrays into clean CSV tables offline.</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-csv-to-json">CSV to JSON</button>
+          <button class="tab-btn" id="tab-json-to-csv">JSON to CSV</button>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 50%;">
+            <label for="csv-json-input" id="csv-json-input-label">CSV Input</label>
+            <textarea id="csv-json-input" class="input-custom" style="height: 300px; font-family: monospace; font-size: 0.8rem; resize: none;" placeholder="name,age,city
+Alice,24,New York
+Bob,30,San Francisco
+Charlie,28,Seattle">name,age,city
+Alice,24,New York
+Bob,30,San Francisco
+Charlie,28,Seattle</textarea>
+            
+            <!-- Delimiter Selector (only active for CSV) -->
+            <div class="control-group" id="csv-delimiter-group" style="margin-top: 1rem;">
+              <label for="csv-delimiter">CSV Delimiter</label>
+              <select id="csv-delimiter" class="input-custom">
+                <option value=",">Comma (,)</option>
+                <option value=";">Semicolon (;)</option>
+                <option value="&#9;">Tab (\t)</option>
+              </select>
+            </div>
+
+            <button class="btn-primary" id="btn-run-csv-json" style="margin-top: 0.5rem; width: 100%;">⚡ Convert Content</button>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 50%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="csv-json-output" id="csv-json-output-label">JSON Output</label>
+                <button class="btn-secondary" id="btn-copy-csv-json" disabled style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">📋 Copy</button>
+              </div>
+              <textarea id="csv-json-output" class="input-custom" style="flex-grow: 1; min-height: 380px; font-family: monospace; font-size: 0.8rem; resize: none;" readonly placeholder="Conversion output will render here..."></textarea>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 14: IMAGE RESIZER & CONVERTER -->
+      <main id="image-resizer-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-image-resizer-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Image Resizer &amp; Format Converter</h2>
+            <p>Resize bitmap dimensions (width, height), scale percentages, adjust export quality, and convert formats (PNG, JPEG, WebP) natively.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select Image File</label>
+              <div class="upload-container" id="resizer-upload-container">
+                <div class="upload-icon">🖼️</div>
+                <div class="upload-text">
+                  <h4>Choose Any Image</h4>
+                  <p>Drag & drop or click to upload</p>
+                </div>
+                <input type="file" id="resizer-file-input" class="file-input" accept="image/*" />
+              </div>
+              <div id="resizer-file-name" style="display: none; font-size: 0.85rem; color: var(--primary); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <!-- Resize options -->
+            <div class="control-group">
+              <label>Resizing Dimensions</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                <div>
+                  <label for="resizer-width" style="font-size: 0.75rem; color: var(--text-secondary);">Width (px)</label>
+                  <input type="number" id="resizer-width" class="input-custom" disabled placeholder="Width..." />
+                </div>
+                <div>
+                  <label for="resizer-height" style="font-size: 0.75rem; color: var(--text-secondary);">Height (px)</label>
+                  <input type="number" id="resizer-height" class="input-custom" disabled placeholder="Height..." />
+                </div>
+              </div>
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; margin-top: 0.5rem; cursor: pointer; font-size: 0.8rem;">
+                <input type="checkbox" id="resizer-aspect-ratio" checked disabled style="accent-color: var(--primary);" /> Lock Aspect Ratio
+              </label>
+            </div>
+
+            <!-- Export options -->
+            <div class="control-group">
+              <label for="resizer-format">Export Format</label>
+              <select id="resizer-format" class="input-custom" disabled>
+                <option value="image/png">PNG Format</option>
+                <option value="image/jpeg">JPEG Format</option>
+                <option value="image/webp">WebP Format</option>
+              </select>
+            </div>
+            
+            <div class="control-group">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <label>Export Quality (JPEG/WebP)</label>
+                <span id="val-resizer-quality" style="color: var(--primary); font-weight: 600;">90%</span>
+              </div>
+              <input type="range" id="slider-resizer-quality" min="10" max="100" value="90" disabled style="width: 100%;" />
+            </div>
+
+            <button class="btn-primary" id="btn-run-resize" disabled>💾 Resize &amp; Download</button>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: center; justify-content: center; min-height: 400px; background: rgba(0,0,0,0.1); border-radius: var(--radius-md); border: 1px solid var(--border);">
+            <div style="max-width: 100%; max-height: 350px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0.5rem;">
+              <img id="resizer-preview-img" style="max-width: 100%; max-height: 330px; object-fit: contain; display: none; border-radius: var(--radius-sm); border: 1px solid var(--border);" />
+              <div id="resizer-placeholder" style="color: var(--text-muted); font-size: 0.95rem;">Image preview will load here</div>
+            </div>
+            <div id="resizer-original-meta" style="font-size: 0.8rem; color: var(--text-secondary); display: none;">Original: 0x0px</div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 15: PDF MERGER & SPLITTER -->
+      <main id="pdf-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-pdf-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>PDF Merger &amp; Splitter</h2>
+            <p>Combine multiple PDF documents into a single document, or extract a specific page range from an uploaded PDF file offline.</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-pdf-merge">Merge PDFs</button>
+          <button class="tab-btn" id="tab-pdf-split">Split PDF</button>
+        </div>
+
+        <!-- Merge Workspace -->
+        <div class="tool-workspace" id="workspace-pdf-merge">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select PDF Documents</label>
+              <div class="upload-container" id="pdf-merge-upload-container">
+                <div class="upload-icon">📂</div>
+                <div class="upload-text">
+                  <h4>Choose Multiple PDFs</h4>
+                  <p>Drag & drop or click to upload</p>
+                </div>
+                <input type="file" id="pdf-merge-file-input" class="file-input" accept="application/pdf" multiple />
+              </div>
+            </div>
+            
+            <button class="btn-primary" id="btn-run-pdf-merge" disabled>⚡ Merge &amp; Download PDF</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+            <h4 style="font-size: 0.9rem; color: var(--text-secondary);">Selected Documents Queue (Reorder/Remove)</h4>
+            <div class="pdf-file-list" id="pdf-merge-list-container">
+              <div style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem; text-align: center;">No PDFs added to the queue</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Split Workspace -->
+        <div class="tool-workspace" id="workspace-pdf-split" style="display: none;">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select PDF Document</label>
+              <div class="upload-container" id="pdf-split-upload-container">
+                <div class="upload-icon">✂️</div>
+                <div class="upload-text">
+                  <h4>Choose PDF to Split</h4>
+                  <p>Drag & drop or click to upload</p>
+                </div>
+                <input type="file" id="pdf-split-file-input" class="file-input" accept="application/pdf" />
+              </div>
+              <div id="pdf-split-file-name" style="display: none; font-size: 0.85rem; color: var(--primary); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <!-- Page Range Config -->
+            <div class="control-group">
+              <label for="pdf-split-range">Extract Pages (e.g. 1-3, 5, 8-10)</label>
+              <input type="text" id="pdf-split-range" class="input-custom" placeholder="e.g. 1-3, 5" disabled />
+            </div>
+
+            <button class="btn-primary" id="btn-run-pdf-split" disabled>⚡ Split &amp; Download PDF</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1.5rem; justify-content: center; color: var(--text-secondary); line-height: 1.6;">
+            <h3 style="color: var(--text-primary);">📂 Page Extract Details</h3>
+            <p>Upload a PDF document on the left, input the desired page numbers or ranges, and download the split document immediately.</p>
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 1.25rem; border-radius: var(--radius-sm); font-size: 0.85rem;">
+              • <strong>Format Examples</strong>: Use commas to separate individual pages and dashes for ranges. E.g., <code>1-3, 5</code> will extract pages 1, 2, 3, and 5.
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 16: REGEX TESTER & EXPLAINER -->
+      <main id="regex-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-regex-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Regex Tester &amp; Explainer</h2>
+            <p>Input a regular expression and test string to view matches, match positions, capture groups, and parsed structures.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 45%;">
+            <div class="control-group">
+              <label for="regex-pattern">Regular Expression Pattern</label>
+              <input type="text" id="regex-pattern" class="input-custom" style="font-family: monospace;" placeholder="e.g. [a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" value="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" />
+            </div>
+
+            <div class="control-group">
+              <label>Regex Flags</label>
+              <div style="display: flex; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.85rem;">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 0.25rem;"><input type="checkbox" id="regex-flag-g" checked style="accent-color: var(--primary);" /> global (g)</label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 0.25rem;"><input type="checkbox" id="regex-flag-i" style="accent-color: var(--primary);" /> case-insensitive (i)</label>
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 0.25rem;"><input type="checkbox" id="regex-flag-m" style="accent-color: var(--primary);" /> multiline (m)</label>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="regex-test-text">Test Text</label>
+              <textarea id="regex-test-text" class="input-custom" style="height: 180px; font-family: monospace; font-size: 0.85rem; resize: none;" placeholder="Type text to match here...">Send an email to contact@zerog.toolbox or info@google.com for support.</textarea>
+            </div>
+
+            <button class="btn-primary" id="btn-run-regex">⚡ Test Match Expression</button>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 55%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <label>Match Highlighting</label>
+              <div id="regex-matches-rendered" class="regex-match-output">
+                Matches will highlight here...
+              </div>
+
+              <!-- Matches Metadata -->
+              <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <label>Captured Substring Groups</label>
+                  <span id="val-regex-match-count" style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">0 Matches Found</span>
+                </div>
+                <div style="max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                  <table class="param-table" id="regex-groups-table">
+                    <thead>
+                      <tr>
+                        <th>Match #</th>
+                        <th>Position</th>
+                        <th>Substring Match Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Rendered dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 17: DIFF CHECKER -->
+      <main id="diff-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-diff-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Diff Checker &amp; Text Comparator</h2>
+            <p>Compare original and modified text blocks to visualize character deletions and insertions side-by-side offline.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel (Inputs) -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 50%;">
+            <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 1rem; height: 380px;">
+              <div style="display: flex; flex-direction: column;">
+                <label for="diff-text-original" style="margin-bottom: 0.25rem;">Original Version</label>
+                <textarea id="diff-text-original" class="input-custom" style="flex-grow: 1; font-family: monospace; font-size: 0.8rem; resize: none;" placeholder="Original text...">ZeroG Toolbox
+Version: 1.0.0
+Fully serverless suite of local utilities.
+Supported browsers:
+- Chrome
+- Safari</textarea>
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <label for="diff-text-modified" style="margin-bottom: 0.25rem;">Modified Version</label>
+                <textarea id="diff-text-modified" class="input-custom" style="flex-grow: 1; font-family: monospace; font-size: 0.8rem; resize: none;" placeholder="Modified text...">ZeroG Toolbox v2
+Version: 1.0.5
+Fully serverless suite of local utilities.
+Supported browsers:
+- Chrome
+- Firefox
+- Safari (soon)</textarea>
+              </div>
+            </div>
+
+            <button class="btn-primary" id="btn-run-diff" style="margin-top: 1rem; width: 100%;">⚡ Compare Versions</button>
+          </div>
+
+          <!-- Right Panel (Output) -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 50%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <label>Highlighted Differences</label>
+              <div class="diff-container" id="diff-result-output">
+                <!-- Rendered diff elements -->
+                <div style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem; text-align: center;">Click "Compare Versions" to run comparison</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 18: HASH GENERATOR -->
+      <main id="hash-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-hash-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Hash &amp; Checksum Generator</h2>
+            <p>Compute cryptographic hashes (MD5, SHA-1, SHA-256, SHA-512) for text blocks or uploaded files locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 45%;">
+            <label for="hash-input-text">Plain Text Input</label>
+            <textarea id="hash-input-text" class="input-custom" style="height: 150px; font-family: monospace; resize: none;" placeholder="Enter plain text here...">ZeroG Toolbox</textarea>
+            
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 0.5rem 0;">— OR FILE HASHING —</div>
+
+            <div class="control-group">
+              <label>Select Checksum File</label>
+              <input type="file" id="hash-file-input" class="input-custom" style="font-size: 0.8rem;" />
+            </div>
+
+            <button class="btn-primary" id="btn-run-hash" style="margin-top: 0.5rem; width: 100%;">⚡ Compute Cryptographic Hashes</button>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 55%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <label>Cryptographic Checksums</label>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; background: rgba(255,255,255,0.01);">
+                <table class="hash-table">
+                  <tbody>
+                    <tr>
+                      <td>MD5</td>
+                      <td><div id="hash-val-md5" class="hash-val-display">—</div></td>
+                    </tr>
+                    <tr>
+                      <td>SHA-1</td>
+                      <td><div id="hash-val-sha1" class="hash-val-display">—</div></td>
+                    </tr>
+                    <tr>
+                      <td>SHA-256</td>
+                      <td><div id="hash-val-sha256" class="hash-val-display">—</div></td>
+                    </tr>
+                    <tr>
+                      <td>SHA-512</td>
+                      <td><div id="hash-val-sha512" class="hash-val-display">—</div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 19: SVG PATH VISUALIZER -->
+      <main id="svg-editor-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-svg-editor-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>SVG Path Visualizer &amp; Editor</h2>
+            <p>Input an SVG path definition (d string) to preview and customize stroke, fill, scale, and transforms instantly.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="svg-path-input">SVG Path String (d)</label>
+              <textarea id="svg-path-input" class="input-custom" style="height: 120px; font-family: monospace; font-size: 0.85rem;" placeholder="e.g. M10 80 Q 95 10 180 80 T 350 80">M 10 100 L 100 100 L 100 10 L 10 Z</textarea>
+            </div>
+
+            <div class="control-group">
+              <label for="svg-stroke-color">Stroke Color</label>
+              <input type="color" id="svg-stroke-color" value="#6366f1" style="width: 100%; height: 35px; border-radius: var(--radius-xs); border: 1px solid var(--border); cursor: pointer;" />
+            </div>
+
+            <div class="control-group">
+              <label for="svg-fill-color">Fill Color</label>
+              <input type="color" id="svg-fill-color" value="transparent" style="width: 100%; height: 35px; border-radius: var(--radius-xs); border: 1px solid var(--border); cursor: pointer;" />
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; margin-top: 0.25rem; font-size: 0.75rem; cursor: pointer;">
+                <input type="checkbox" id="svg-fill-transparent" checked style="accent-color: var(--primary);" /> Transparent Fill
+              </label>
+            </div>
+
+            <div class="control-group">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <label>Stroke Width</label>
+                <span id="val-svg-stroke-width" style="color: var(--primary); font-weight: 600;">3px</span>
+              </div>
+              <input type="range" id="slider-svg-stroke-width" min="1" max="10" value="3" style="width: 100%;" />
+            </div>
+
+            <button class="btn-primary" id="btn-draw-svg-path">⚡ Draw Path</button>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; min-height: 400px; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); border: 1px solid var(--border);">
+            <div style="background: #0d0d11; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; width: 100%; max-width: 450px; display: flex; justify-content: center; align-items: center;">
+              <canvas id="svg-path-canvas" width="400" height="350" style="background: #09090b; border: 1px dashed var(--border); max-width: 100%;"></canvas>
+            </div>
+            <button class="btn-secondary" id="btn-download-drawn-svg" disabled>💾 Export SVG File</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 20: UNIT CONVERTER -->
+      <main id="unit-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-unit-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Unit Converter</h2>
+            <p>Convert metrics instantly across scientific and digital measurement categories, including length, weight, area, and storage.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 45%;">
+            <div class="control-group">
+              <label for="unit-category">Select Category</label>
+              <select id="unit-category" class="input-custom">
+                <option value="length">Length</option>
+                <option value="weight">Mass / Weight</option>
+                <option value="temperature">Temperature</option>
+                <option value="storage">Digital Storage (Bytes)</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="unit-value-input">Value to Convert</label>
+              <input type="number" id="unit-value-input" class="input-custom" value="1" placeholder="Enter value..." />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+              <div>
+                <label for="unit-select-from" style="font-size: 0.75rem; color: var(--text-secondary);">From Unit</label>
+                <select id="unit-select-from" class="input-custom"></select>
+              </div>
+              <div>
+                <label for="unit-select-to" style="font-size: 0.75rem; color: var(--text-secondary);">To Unit</label>
+                <select id="unit-select-to" class="input-custom"></select>
+              </div>
+            </div>
+
+            <button class="btn-primary" id="btn-run-unit-convert" style="margin-top: 1rem; width: 100%;">⚡ Convert Units</button>
+          </div>
+
+          <!-- Right Panel -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 55%; height: 100%; display: flex; align-items: center; justify-content: center;">
+            <div style="text-align: center; width: 100%;">
+              <div id="unit-result-display" style="font-size: 2.25rem; font-weight: 700; color: var(--primary); letter-spacing: -0.01em; margin-bottom: 0.5rem; word-break: break-all;">1 = 1</div>
+              <div id="unit-equation-display" style="font-size: 0.9rem; color: var(--text-muted);">Length conversions based on standard metric values</div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 21: COLOR PALETTE PICKER -->
+      <main id="color-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-color-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Color Palette Picker &amp; Accessibility Checker</h2>
+            <p>Pick colors, extract primary palette swatches from local images, and verify color contrast ratios against WCAG guidelines.</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-color-picker">Palette Picker</button>
+          <button class="tab-btn" id="tab-color-contrast">Contrast Checker</button>
+        </div>
+
+        <!-- Palette Picker Workspace -->
+        <div class="tool-workspace" id="workspace-color-picker">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="color-wheel-input">Manual Color Picker</label>
+              <input type="color" id="color-wheel-input" value="#6366f1" style="width: 100%; height: 50px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;" />
+            </div>
+
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 0.5rem 0;">— OR EXTRACT PALETTE —</div>
+
+            <div class="control-group">
+              <label>Upload Image file</label>
+              <input type="file" id="color-image-input" class="input-custom" accept="image/*" style="font-size: 0.8rem;" />
+            </div>
+
+            <button class="btn-primary" id="btn-run-palette" style="margin-top: 0.5rem; width: 100%;">⚡ Generate Palette</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+            <label>Extracted Swatches (Click to Copy HEX)</label>
+            <div class="swatches-grid" id="swatches-grid-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Contrast Checker Workspace -->
+        <div class="tool-workspace" id="workspace-color-contrast" style="display: none;">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="contrast-fg-color">Foreground Text Color</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="color" id="contrast-fg-color" value="#ffffff" style="width: 50px; height: 40px; border-radius: var(--radius-xs); border: 1px solid var(--border); cursor: pointer;" />
+                <input type="text" id="contrast-fg-text" class="input-custom" value="#ffffff" style="font-family: monospace; flex-grow: 1;" />
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="contrast-bg-color">Background Color</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="color" id="contrast-bg-color" value="#6366f1" style="width: 50px; height: 40px; border-radius: var(--radius-xs); border: 1px solid var(--border); cursor: pointer;" />
+                <input type="text" id="contrast-bg-text" class="input-custom" value="#6366f1" style="font-family: monospace; flex-grow: 1;" />
+              </div>
+            </div>
+
+            <button class="btn-primary" id="btn-run-contrast-check" style="margin-top: 0.5rem; width: 100%;">⚡ Check Contrast</button>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1.5rem; justify-content: center; align-items: center;">
+            <div style="text-align: center;">
+              <div id="contrast-ratio-display" style="font-size: 3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">4.5:1</div>
+              <div id="contrast-verdict-display" style="font-size: 1rem; text-transform: uppercase; font-weight: 700; color: var(--success); letter-spacing: 0.05em;">PASS (WCAG AA)</div>
+            </div>
+            
+            <div style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; background: rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>WCAG AA Normal Text (Min 4.5:1):</span>
+                <strong id="wcag-aa-normal" style="color: var(--success);">PASS</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>WCAG AA Large Text (Min 3.0:1):</span>
+                <strong id="wcag-aa-large" style="color: var(--success);">PASS</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>WCAG AAA Normal Text (Min 7.0:1):</span>
+                <strong id="wcag-aaa-normal" style="color: var(--danger);">FAIL</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>WCAG AAA Large Text (Min 4.5:1):</span>
+                <strong id="wcag-aaa-large" style="color: var(--success);">PASS</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- App Footer -->
+      <footer class="app-footer">
+        <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless.</p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+
