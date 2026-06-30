@@ -254,21 +254,26 @@ function initUpscaleWorker() {
       const overlay = document.getElementById('image-upscaler-loading-overlay');
       const overlayText = document.getElementById('image-upscaler-loading-text');
       const overlayProgress = document.getElementById('image-upscaler-loading-progress');
+      const overlayFill = document.getElementById('image-upscaler-loading-fill');
       const btnRun = document.getElementById('btn-run-image-upscaler');
 
       if (type === 'status') {
         if (data === 'loading') {
           overlay.style.display = 'flex';
-          overlayText.innerText = 'Loading Swin2SR model...';
-          overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          overlayText.innerText = 'Loading Swin2SR model…';
+          const pct = Math.round(progress || 0);
+          overlayProgress.innerText = `${pct}%`;
+          overlayFill.classList.remove('indeterminate');
+          overlayFill.style.width = `${pct}%`;
           btnRun.disabled = true;
           if (!isUpscaling) btnRun.innerText = 'Loading Model...';
         } else if (data === 'ready') {
           isUpscaleModelLoaded = true;
           if (isUpscaling) {
             // Model is ready; inference is about to start streaming tile progress.
-            overlayText.innerText = 'Upscaling...';
-            overlayProgress.innerText = '';
+            overlayText.innerText = 'Upscaling…';
+            overlayProgress.innerText = 'Preparing tiles…';
+            overlayFill.classList.add('indeterminate');
           } else {
             overlay.style.display = 'none';
             btnRun.disabled = !upscaleImageElement;
@@ -287,6 +292,8 @@ function initUpscaleWorker() {
         const pct = data.total ? Math.round((data.current / data.total) * 100) : 0;
         overlayText.innerText = `Upscaling… tile ${data.current} / ${data.total}`;
         overlayProgress.innerText = `${pct}%`;
+        overlayFill.classList.remove('indeterminate');
+        overlayFill.style.width = `${pct}%`;
       }
 
       else if (type === 'upscale_result') {
