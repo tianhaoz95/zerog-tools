@@ -20,4 +20,10 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  webServer: {
+    command: 'npx firebase emulators:start --only hosting',
+    url: 'http://localhost:5002',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+  },
 });

@@ -6398,6 +6398,311 @@ Supported browsers:
           </div>
         </div>
       </main>
+
+      <!-- VIEW: CODE SNIPPET TO IMAGE GENERATOR -->
+      <main id="code-to-image-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-code-to-image-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Code Snippet to Image Generator</h2>
+            <p>Convert code snippets into syntax-highlighted, beautifully framed images with customizable gradients, shadows, and themes.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
+            
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">1. Source Code</div>
+
+            <div class="control-group">
+              <label for="code-to-image-input">Code Snippet</label>
+              <textarea id="code-to-image-input" class="input-custom" style="height: 150px; font-family: monospace; resize: vertical; font-size: 0.85rem;" placeholder="Paste code here..."></textarea>
+            </div>
+
+            <div class="control-group">
+              <label for="code-to-image-lang">Language</label>
+              <select id="code-to-image-lang" class="select-custom">
+                <option value="javascript" selected>JavaScript</option>
+                <option value="python">Python</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="rust">Rust</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+                <option value="sql">SQL</option>
+                <option value="json">JSON</option>
+              </select>
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">2. Code Styling</div>
+
+            <div class="control-group">
+              <label for="code-to-image-theme">Syntax Theme</label>
+              <select id="code-to-image-theme" class="select-custom">
+                <option value="onedark" selected>One Dark</option>
+                <option value="vscode">VS Code Dark</option>
+                <option value="monokai">Monokai</option>
+                <option value="dracula">Dracula</option>
+                <option value="cyberpunk">Cyberpunk / Neon</option>
+                <option value="github-light">GitHub Light</option>
+                <option value="solarized-light">Solarized Light</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="code-to-image-font">Font Family</label>
+              <select id="code-to-image-font" class="select-custom">
+                <option value="Fira Code, SFMono-Regular, Consolas, Monaco, monospace" selected>Fira Code / System Mono</option>
+                <option value="Courier New, Courier, monospace">Courier New</option>
+                <option value="Space Grotesk, sans-serif">Space Grotesk (Sans)</option>
+              </select>
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-font-size">Font Size</label>
+                <span id="val-code-font-size" style="font-size: 0.8rem; color: var(--text-secondary);">14px</span>
+              </div>
+              <input type="range" id="slider-code-font-size" min="10" max="28" value="14" step="1" style="width:100%;" />
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.25rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" id="check-code-lines" checked /> Line Numbers
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" id="check-code-controls" checked /> Window Controls
+              </label>
+            </div>
+
+            <div class="control-group">
+              <label for="code-to-image-title">Window Title / Filename</label>
+              <input type="text" id="code-to-image-title" class="input-custom" value="snippet.js" placeholder="e.g. index.js" />
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">3. Card Frame &amp; Backdrop</div>
+
+            <div class="control-group">
+              <label for="code-to-image-bg-type">Backdrop Type</label>
+              <select id="code-to-image-bg-type" class="select-custom">
+                <option value="preset" selected>Preset Gradient</option>
+                <option value="custom">Custom Gradient</option>
+                <option value="solid">Solid Color</option>
+                <option value="transparent">Transparent</option>
+              </select>
+            </div>
+
+            <div class="control-group" id="group-code-preset-bg">
+              <label for="code-to-image-preset">Backdrop Preset</label>
+              <select id="code-to-image-preset" class="select-custom">
+                <option value="sunset" selected>Sunset Purple</option>
+                <option value="ocean">Ocean Breeze</option>
+                <option value="emerald">Emerald Teal</option>
+                <option value="lemon">Lemon Squeeze</option>
+                <option value="twilight">Twilight Sparkle</option>
+                <option value="cyber">Cyberpunk Magenta</option>
+              </select>
+            </div>
+
+            <div id="group-code-custom-bg" style="display: none; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; gap: 0.5rem;">
+                <div class="control-group" style="flex: 1;">
+                  <label for="code-custom-color1">Start Color</label>
+                  <input type="color" id="code-custom-color1" value="#6366f1" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;" />
+                </div>
+                <div class="control-group" style="flex: 1;">
+                  <label for="code-custom-color2">End Color</label>
+                  <input type="color" id="code-custom-color2" value="#06b6d4" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;" />
+                </div>
+              </div>
+              <div class="slider-container">
+                <div style="display: flex; justify-content: space-between;">
+                  <label for="slider-code-bg-angle">Gradient Angle</label>
+                  <span id="val-code-bg-angle" style="font-size: 0.8rem; color: var(--text-secondary);">135°</span>
+                </div>
+                <input type="range" id="slider-code-bg-angle" min="0" max="360" value="135" step="5" style="width:100%;" />
+              </div>
+            </div>
+
+            <div class="control-group" id="group-code-solid-bg" style="display: none;">
+              <label for="code-solid-color">Solid Color</label>
+              <input type="color" id="code-solid-color" value="#1e1e24" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;" />
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-padding">Backdrop Padding</label>
+                <span id="val-code-padding" style="font-size: 0.8rem; color: var(--text-secondary);">40px</span>
+              </div>
+              <input type="range" id="slider-code-padding" min="0" max="128" value="40" step="4" style="width:100%;" />
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-radius">Window Corner Radius</label>
+                <span id="val-code-radius" style="font-size: 0.8rem; color: var(--text-secondary);">12px</span>
+              </div>
+              <input type="range" id="slider-code-radius" min="0" max="32" value="12" step="2" style="width:100%;" />
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-shadow">Window Shadow</label>
+                <span id="val-code-shadow" style="font-size: 0.8rem; color: var(--text-secondary);">24px</span>
+              </div>
+              <input type="range" id="slider-code-shadow" min="0" max="64" value="24" step="4" style="width:100%;" />
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">4. Export Options</div>
+
+            <div class="control-group">
+              <label for="code-to-image-scale">Export Resolution (Scale)</label>
+              <select id="code-to-image-scale" class="select-custom">
+                <option value="1">1x Standard (Web)</option>
+                <option value="2" selected>2x Retina (Sharp)</option>
+                <option value="3">3x Ultra (High-Res)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+              <button class="btn-primary" id="btn-export-code-png" style="flex: 1;">💾 Download PNG</button>
+              <button class="btn-secondary" id="btn-export-code-jpg" style="flex: 1;">💾 Download JPG</button>
+            </div>
+            
+          </div>
+
+          <!-- Right Panel: Preview Area -->
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1.5rem; align-items: center; justify-content: center; min-height: 550px; background: #000; padding: 2rem; border-radius: var(--radius-md); position: relative; overflow: auto;">
+            
+            <div style="position: absolute; top: 1rem; left: 1rem; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); background: rgba(0,0,0,0.5); padding: 0.25rem 0.6rem; border-radius: 99px; border: 1px solid var(--border); backdrop-filter: blur(4px); z-index: 10;">
+              Live Preview
+            </div>
+
+            <!-- The wrapper that will be exported -->
+            <div id="code-preview-container" style="padding: 40px; background: linear-gradient(135deg, #f02fc2 0%, #6094ea 100%); display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; max-width: 650px; transition: none;">
+              
+              <!-- The code window -->
+              <div id="code-preview-window" class="theme-onedark" style="background: #282c34; color: #abb2bf; border-radius: 12px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); width: 100%; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; transition: none;">
+                
+                <!-- Window controls and title -->
+                <div id="code-preview-header" style="display: flex; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: sans-serif; font-size: 0.8rem; box-sizing: border-box; transition: none;">
+                  <div id="code-preview-controls" style="display: flex; gap: 6px; align-items: center; width: 60px; margin-right: -60px; transition: none;">
+                    <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56; display: inline-block;"></span>
+                    <span style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e; display: inline-block;"></span>
+                    <span style="width: 12px; height: 12px; border-radius: 50%; background: #27c93f; display: inline-block;"></span>
+                  </div>
+                  <div id="code-preview-filename" style="flex-grow: 1; text-align: center; color: rgba(255,255,255,0.4); font-weight: 500; transition: none;">
+                    snippet.js
+                  </div>
+                </div>
+
+                <!-- Code body -->
+                <div style="display: flex; font-family: 'Fira Code', SFMono-Regular, Consolas, Monaco, monospace; font-size: 14px; line-height: 1.5; padding: 1.25rem 1rem; box-sizing: border-box; transition: none;">
+                  <!-- Line numbers column -->
+                  <div id="code-preview-linenumbers" style="color: rgba(255,255,255,0.2); text-align: right; padding-right: 1rem; user-select: none; border-right: 1px solid rgba(255,255,255,0.05); margin-right: 1rem; transition: none;">
+                    1<br>2<br>3
+                  </div>
+                  <!-- Main preformatted code container -->
+                  <pre style="margin: 0; padding: 0; white-space: pre-wrap; word-break: break-all; flex-grow: 1; outline: none; background: transparent; border: none; color: inherit; box-sizing: border-box; transition: none;"><code id="code-preview-body" style="font-family: inherit; font-size: inherit; line-height: inherit; color: inherit; white-space: inherit; word-break: inherit; transition: none;"></code></pre>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 42: AI RESUME PROMPT INJECTOR -->
+      <main id="ai-resume-injector-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ai-resume-injector-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Resume Prompt Injector</h2>
+            <p>Inject invisible, AI-targeted prompts into your PDF resume to bypass automated screening filters and boost matching scores.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto;">
+            <div class="control-group">
+              <label>1. Upload PDF Resume</label>
+              <div class="file-upload-box" id="resume-injector-upload-box">
+                <span>📄 Select PDF Resume</span>
+                <input type="file" id="resume-injector-file" accept="application/pdf" style="display: none;" />
+              </div>
+              <div id="resume-injector-file-name" class="text-muted" style="margin-top: 0.5rem; font-size: 0.85rem; display: none;"></div>
+            </div>
+
+            <div id="resume-injector-editor-section" style="display: none; flex-direction: column; gap: 1rem;">
+              <div class="control-group">
+                <label for="resume-injector-prompt-select">2. Select Injection Template</label>
+                <select id="resume-injector-prompt-select" class="input-custom">
+                  <option value="ats-opt" selected>ATS Standard Maximizer (Recommended)</option>
+                  <option value="endorse">Full Endorsement Override</option>
+                  <option value="skills">Comprehensive Skillset Injector</option>
+                  <option value="system-note">System Note / AI Command Override</option>
+                  <option value="custom">Custom Injection Prompt...</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <label for="resume-injector-prompt-text">3. Injection Prompt Text</label>
+                <textarea id="resume-injector-prompt-text" rows="5" class="input-custom" style="width: 100%; resize: vertical; min-height: 120px; font-family: sans-serif; font-size: 0.9rem;" placeholder="Enter your prompt injection here..."></textarea>
+                <small class="text-muted" style="display: block; margin-top: 0.25rem; font-size: 0.75rem;">
+                  This text will be embedded into the PDF using invisible styling (white text and tiny font size) so human reviewers won't see it, but AI scanners will read it.
+                </small>
+              </div>
+
+              <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; font-size: 0.9rem; color: var(--primary);">4. Invisible Styling &amp; Position</div>
+
+              <div class="control-group">
+                <label for="resume-injector-size-select">Font Size</label>
+                <select id="resume-injector-size-select" class="input-custom">
+                  <option value="0.1">0.1 pt (Highly Invisible)</option>
+                  <option value="0.5">0.5 pt</option>
+                  <option value="1.0" selected>1.0 pt (Recommended)</option>
+                  <option value="2.0">2.0 pt</option>
+                  <option value="8.0">8.0 pt (Invisible via color only)</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <label for="resume-injector-color-select">Font Color</label>
+                <select id="resume-injector-color-select" class="input-custom">
+                  <option value="#ffffff" selected>Invisible Pure White (#ffffff)</option>
+                  <option value="#fafafa">Off-White (#fafafa)</option>
+                  <option value="#f9fafb">Very Light Gray (#f9fafb)</option>
+                  <option value="custom">Custom HEX Color...</option>
+                </select>
+                <input type="text" id="resume-injector-custom-color" class="input-custom" value="#ffffff" placeholder="#ffffff" style="display: none; margin-top: 0.5rem;" />
+              </div>
+
+              <div class="control-group">
+                <label for="resume-injector-placement-select">Placement Page(s)</label>
+                <select id="resume-injector-placement-select" class="input-custom">
+                  <option value="last" selected>Bottom of Last Page</option>
+                  <option value="first">Bottom of First Page</option>
+                  <option value="all">Bottom of All Pages</option>
+                </select>
+              </div>
+
+              <button class="btn-primary" id="btn-resume-injector-apply" style="width: 100%; margin-top: 0.5rem; font-weight: 600;">✨ Inject Prompt into Resume</button>
+              <button class="btn-primary" id="btn-resume-injector-download" style="width: 100%; margin-top: 0.25rem; font-weight: 600; background: var(--success); border-color: var(--success);" disabled>💾 Download Injected PDF</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch; justify-content: center; position: relative;">
+            <div id="resume-injector-preview-placeholder" class="text-muted" style="text-align: center; padding: 4rem;">
+              📄 Upload a PDF resume to configure and preview the prompt injection.
+            </div>
+            <!-- Dynamic PDF Preview Element -->
+            <iframe id="resume-injector-preview-iframe" style="display: none; width: 100%; height: 100%; min-height: 500px; border: 1px solid var(--border); border-radius: var(--radius-md);"></iframe>
+          </div>
+        </div>
+      </main>
         <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless. <a href="#" id="link-privacy" style="margin-left: 1rem; color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" id="link-terms" style="color: var(--primary); text-decoration: none;">User Agreement</a></p>
       </footer>
     </div>

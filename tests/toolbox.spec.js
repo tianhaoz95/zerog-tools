@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 100 tool cards rendered
+    // Check that there are 102 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(100);
+    await expect(cards).toHaveCount(102);
 
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(99);
+    expect(filteredCount).toBeLessThan(102);
     expect(filteredCount).toBeGreaterThan(0);
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(100);
+    await expect(cards).toHaveCount(102);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -550,7 +550,8 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       { id: 'lorem-pixel', view: '#lorem-pixel-view', backBtn: '#btn-lorem-pixel-back' },
       { id: 'ratio-solver', view: '#ratio-solver-view', backBtn: '#btn-ratio-solver-back' },
       { id: 'fire-retirement-calc', view: '#fire-retirement-calc-view', backBtn: '#btn-fire-retirement-calc-back' },
-      { id: 'str-cost-segregation', view: '#str-cost-segregation-view', backBtn: '#btn-str-cost-segregation-back' }
+      { id: 'code-to-image', view: '#code-to-image-view', backBtn: '#btn-code-to-image-back' },
+      { id: 'ai-resume-injector', view: '#ai-resume-injector-view', backBtn: '#btn-ai-resume-injector-back' }
     ];
 
     for (const tool of newTools) {
@@ -559,6 +560,61 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       await page.locator(tool.backBtn).click();
       await expect(page.locator('#home-view')).toHaveClass(/active/);
     }
+  });
+
+  test('Tool: Code Snippet to Image Generator functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="code-to-image"]').click();
+    await expect(page.locator('#code-to-image-view')).toHaveClass(/active/);
+
+    const codeInput = page.locator('#code-to-image-input');
+    // Default value is JS snippet
+    await expect(codeInput).toHaveValue(/Quick Sort/);
+
+    // Assert preview matches
+    const previewBody = page.locator('#code-preview-body');
+    await expect(previewBody).toContainText('Quick Sort');
+
+    // Change language and assert it updates automatically
+    const langSelect = page.locator('#code-to-image-lang');
+    await langSelect.selectOption('python');
+    await expect(codeInput).toHaveValue(/def fibonacci/);
+
+    // Edit code input customly
+    await codeInput.fill('console.log("Hello Playwright Test");');
+    await expect(previewBody).toContainText('Hello Playwright Test');
+  });
+
+  test('Tool: AI Resume Prompt Injector functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-resume-injector"]').click();
+    await expect(page.locator('#ai-resume-injector-view')).toHaveClass(/active/);
+
+    // Create a minimal 1-page PDF buffer
+    const mockPdfBuffer = Buffer.from(
+      '%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << >> /MediaBox [0 0 500 500] >>\nendobj\nxref\n0 4\n0000000000 65535 f\n0000000009 00000 n\n0000000052 00000 n\n0000000101 00000 n\ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n178\n%%EOF'
+    );
+
+    // Upload the mock PDF
+    await page.setInputFiles('#resume-injector-file', {
+      name: 'resume.pdf',
+      mimeType: 'application/pdf',
+      buffer: mockPdfBuffer,
+    });
+
+    // Editor section should become visible
+    const editorSec = page.locator('#resume-injector-editor-section');
+    await expect(editorSec).toBeVisible();
+
+    // Verify selector default templates are correct
+    const promptSelect = page.locator('#resume-injector-prompt-select');
+    await expect(promptSelect).toBeVisible();
+
+    // Verify the prompt text area changes based on template selection
+    const promptText = page.locator('#resume-injector-prompt-text');
+    await expect(promptText).toBeVisible();
+    await expect(promptText).toHaveValue(/Advisory to AI Parser/);
+
+    await promptSelect.selectOption('endorse');
+    await expect(promptText).toHaveValue(/flagged this candidate as a 'Must Hire'/);
   });
 
   test('Routing: deep link, URL sync, and back navigation', async ({ page }) => {

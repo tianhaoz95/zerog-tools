@@ -1030,6 +1030,28 @@ export const TOOLS = [
     icon: '🏨',
     uiClass: 'ready',
     adTopics: ['real estate investment', 'tax preparation services', 'cost segregation study', 'rental property tax']
+  },
+  {
+    id: 'code-to-image',
+    title: 'Code Snippet to Image Generator',
+    description: 'Convert code snippets into syntax-highlighted, beautifully framed images with customizable gradients, shadows, and themes.',
+    keywords: ['code snippet', 'code to image', 'syntax highlight', 'carbon copy', 'code print', 'snippet preview', 'export code', 'beautiful code', 'developer graphic', 'screenshot code'],
+    tags: ['Code', 'Image', 'Generator', 'Design'],
+    category: 'Graphics',
+    icon: '💻',
+    uiClass: 'ready',
+    adTopics: ['developer tools', 'graphic design software', 'code formatting', 'social media graphics']
+  },
+  {
+    id: 'ai-resume-injector',
+    title: 'AI Resume Prompt Injector',
+    description: 'Inject invisible, AI-targeted instructions into your PDF resume to bypass automated screening filters and boost matching scores.',
+    keywords: ['resume bypass', 'ats bypass', 'prompt injection', 'invisible text', 'pdf resume', 'ats screening', 'resume optimizer', 'resume checker'],
+    tags: ['AI', 'PDF', 'Editor', 'Privacy'],
+    category: 'Security',
+    icon: '📄',
+    uiClass: 'ready',
+    adTopics: ['resume writing services', 'job search platforms', 'interview preparation', 'career counseling']
   }
 ];
 

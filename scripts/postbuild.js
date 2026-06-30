@@ -5,7 +5,7 @@
 // Slack, Medium) and search engines read raw HTML. Serving a static page per
 // tool — each with its own title/description/OG image — gives every tool URL
 // (/tools/<id>) a unique, crawlable preview without any runtime server.
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
@@ -121,7 +121,13 @@ function renderOg(tool, outPath) {
     fitTo: { mode: 'width', value: 1200 },
     font: { loadSystemFonts: true },
   });
-  writeFileSync(outPath, resvg.render().asPng());
+  try {
+    writeFileSync(outPath, resvg.render().asPng());
+  } catch (err) {
+    console.error(`Error writing to ${outPath}`);
+    console.error(`Directory exists?`, existsSync(dirname(outPath)));
+    throw err;
+  }
 }
 
 // --- Main ---
