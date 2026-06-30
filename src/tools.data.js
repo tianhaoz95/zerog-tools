@@ -7,6 +7,18 @@
 // to render the chips on each tool card and to power the tag filter
 // autocomplete on the home page. Keep tags drawn from TAG_VOCABULARY so the
 // autocomplete list stays clean and predictable.
+//
+// Each tool object follows this metadata standard:
+//   id          – unique slug, doubles as the URL path and view id stem
+//   title       – display name (prefix "AI " for AI-powered tools → AI badge)
+//   description – one-line summary (also used as the <meta description>)
+//   keywords    – free-form search synonyms (powers home search)
+//   tags        – chips drawn from TAG_VOCABULARY
+//   category    – one of AD_TOPICS_BY_CATEGORY's keys; drives ad relevance
+//   icon        – single emoji
+//   uiClass     – 'ready' | 'beta' | 'experimental'
+//   adTopics    – OPTIONAL string[] of buyer-intent ad topics for this tool;
+//                 overrides the category default (see resolveAdContext below)
 export const TAG_VOCABULARY = [
   'AI', 'Image', 'Audio', 'Video', 'Text', 'PDF', 'Color', 'Code', 'Data',
   'Network', 'Security', 'Crypto', 'Privacy', 'Converter', 'Generator',
@@ -947,3 +959,34 @@ export const TOOLS = [
     uiClass: 'ready'
   }
 ];
+
+// --- IN-TOOL AD RELEVANCE STANDARD ---
+// Every tool view renders one contextual ad (see mountToolAd in main.js). To
+// keep ads relevant to the tool the user opened, we resolve a set of
+// buyer-intent "topics" per tool. Relevance is resolved as:
+//     tool.adTopics  (optional per-tool override)
+//   || AD_TOPICS_BY_CATEGORY[tool.category]
+// The topic strings are surfaced as on-page caption text next to the ad unit,
+// which (a) gives the AdSense contextual engine tool-specific signals to match
+// inventory against and (b) doubles as the visible "Ads related to …" label.
+// Keep one entry here for every category used in TOOLS above.
+export const AD_TOPICS_BY_CATEGORY = {
+  Graphics:    { label: 'design & photo',          topics: ['photo editing software', 'graphic design tools', 'stock photo subscriptions', 'online print services'] },
+  Audio:       { label: 'audio & media',           topics: ['audio editing software', 'transcription services', 'podcast hosting', 'studio headphones'] },
+  Text:        { label: 'writing & documents',      topics: ['document scanning apps', 'grammar checkers', 'note-taking apps', 'translation services'] },
+  Developer:   { label: 'developer tools',          topics: ['cloud hosting', 'API platforms', 'developer laptops', 'online coding courses'] },
+  Security:    { label: 'privacy & security',       topics: ['password managers', 'VPN services', 'encrypted cloud storage', 'antivirus software'] },
+  Calculators: { label: 'finance & productivity',   topics: ['budgeting apps', 'online banking', 'productivity software', 'financial planning'] },
+};
+
+// Fallback used when a tool's category has no registry entry.
+const AD_TOPICS_FALLBACK = { label: 'apps & software', topics: ['online tools', 'web apps', 'productivity software'] };
+
+// Resolve the ad context (visible label + contextual topics) for a tool.
+export function resolveAdContext(tool) {
+  const base = (tool && AD_TOPICS_BY_CATEGORY[tool.category]) || AD_TOPICS_FALLBACK;
+  const topics = (tool && Array.isArray(tool.adTopics) && tool.adTopics.length)
+    ? tool.adTopics
+    : base.topics;
+  return { label: base.label, topics };
+}

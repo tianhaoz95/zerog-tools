@@ -2,7 +2,7 @@ import './style.css';
 import './firebase.js';
 import './extra-tools.js';
 import { marked } from 'marked';
-import { TOOLS, TAG_VOCABULARY } from './tools.data.js';
+import { TOOLS, TAG_VOCABULARY, resolveAdContext } from './tools.data.js';
 import { TRIANGULATION } from './triangulation.data.js';
 import { FilesetResolver, FaceLandmarker } from '@mediapipe/tasks-vision';
 
@@ -718,6 +718,80 @@ function syncDocumentMeta(viewId) {
   }
 }
 
+// --- IN-TOOL CONTEXTUAL ADS ---
+// Every tool view gets exactly one responsive AdSense display unit injected
+// just below its header. The unit is contextually targeted to the tool the
+// user opened: resolveAdContext(tool) returns buyer-intent topics (per tool or
+// per category) that we render as a visible caption beside the ad, giving the
+// AdSense contextual engine tool-specific signals to match against.
+//
+// The client id lives in the loader <script> in index.html. ADSENSE_SLOT is
+// the ad-unit (slot) id from your AdSense dashboard — create one "Display"
+// responsive unit and paste its id here.
+const ADSENSE_CLIENT = 'ca-pub-7165098722767614';
+const ADSENSE_SLOT = '0000000000'; // TODO: replace with a real ad unit (slot) id
+
+// Inject (once) the contextual ad block at the top of the active tool view.
+// Views are kept in the DOM and merely toggled, so we mount the unit a single
+// time per view and guard re-entry with a data flag.
+function mountToolAd(viewId) {
+  const tool = TOOLS_BY_ID.get(viewId);
+  if (!tool) return;
+  const view = document.querySelector('.view.active');
+  if (!view || view.querySelector('.tool-ad')) return;
+
+  const { label, topics } = resolveAdContext(tool);
+  const top = topics.slice(0, 3);
+  const chips = top.map(t => `<span class="tool-ad-chip">${t}</span>`).join('');
+
+  const ad = document.createElement('aside');
+  ad.className = 'tool-ad';
+  ad.setAttribute('aria-label', 'Advertisement');
+  // The real AdSense unit and a pretty contextual placeholder are both mounted.
+  // The placeholder shows by default so the slot always looks intentional; it
+  // is hidden only once AdSense reports the unit actually filled with an ad.
+  ad.innerHTML = `
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="${ADSENSE_CLIENT}"
+         data-ad-slot="${ADSENSE_SLOT}"
+         data-ad-format="horizontal"></ins>
+    <div class="tool-ad-fallback" aria-hidden="true">
+      <span class="tool-ad-fallback-icon">✦</span>
+      <div class="tool-ad-fallback-body">
+        <span class="tool-ad-fallback-title">Sponsored slot · ${label}</span>
+        <span class="tool-ad-fallback-sub">Relevant picks for this tool will appear here</span>
+        <div class="tool-ad-chips">${chips}</div>
+      </div>
+    </div>`;
+
+  const header = view.querySelector('.tool-view-header');
+  if (header) header.insertAdjacentElement('afterend', ad);
+  else view.insertAdjacentElement('afterbegin', ad);
+
+  const ins = ad.querySelector('ins.adsbygoogle');
+  const fallback = ad.querySelector('.tool-ad-fallback');
+
+  // Show the real ad / hide the placeholder once AdSense fills the unit; keep
+  // the placeholder for every other outcome (no inventory, blocked, offline,
+  // or a placeholder slot id) so the UI is never broken or empty.
+  const settle = () => {
+    const filled = ins.dataset.adStatus === 'filled';
+    ad.classList.toggle('is-filled', filled);
+  };
+  new MutationObserver(settle).observe(ins, {
+    attributes: true,
+    attributeFilter: ['data-ad-status'],
+  });
+
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  } catch (e) {
+    // AdSense unavailable — the contextual placeholder stays in place.
+  }
+  settle();
+}
+
 // Navigation / View Switching (With Lazy Worker Triggering)
 // opts.skipPush: don't push history (used for initial load and popstate).
 function navigateTo(viewId, opts = {}) {
@@ -960,6 +1034,9 @@ function navigateTo(viewId, opts = {}) {
     }
   }
   syncDocumentMeta(viewId);
+
+  // Inject the tool's contextual ad (no-op for home and after first mount).
+  if (viewId !== 'home') mountToolAd(viewId);
 }
 
 // Back/forward buttons: re-open the view encoded in the URL without pushing.
