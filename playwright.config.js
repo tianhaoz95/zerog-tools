@@ -21,7 +21,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npx firebase emulators:start --only hosting',
+    command: 'npm run preview',
     url: 'http://localhost:5002',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
