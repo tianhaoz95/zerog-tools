@@ -1008,6 +1008,28 @@ export const TOOLS = [
     icon: '🏃',
     uiClass: 'ready',
     adTopics: ['fitness tracking apps', 'sports analytics software', 'motion capture tools', 'physical therapy apps'],
+  },
+  {
+    id: 'fire-retirement-calc',
+    title: 'FIRE Early Retirement Calculator',
+    description: 'Calculate your Financial Independence, Retire Early (FIRE) target number, determine your timeline, and simulate dynamic investment growth scenarios 100% locally.',
+    keywords: ['fire calculator', 'early retirement', 'financial independence', 'retire early', '4 percent rule', 'net worth projection', 'savings rate', 'financial freedom'],
+    tags: ['Calculator', 'Finance', 'Math'],
+    category: 'Calculators',
+    icon: '🔥',
+    uiClass: 'ready',
+    adTopics: ['retirement planning', 'investment portfolio', 'savings calculator', 'personal finance tools']
+  },
+  {
+    id: 'str-cost-segregation',
+    title: 'STR Cost Segregation Tax Saver',
+    description: 'Estimate tax savings from Short-Term Rental (STR) Cost Segregation and the STR tax loophole 100% locally.',
+    keywords: ['str cost segregation', 'cost segregation', 'tax savings', 'short term rental loophole', 'depreciation', 'bonus depreciation', 'real estate tax', 'str loophole', 'passive activity loss', 'tax write off'],
+    tags: ['Calculator', 'Finance', 'Math'],
+    category: 'Calculators',
+    icon: '🏨',
+    uiClass: 'ready',
+    adTopics: ['real estate investment', 'tax preparation services', 'cost segregation study', 'rental property tax']
   }
 ];
 

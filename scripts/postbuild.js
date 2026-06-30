@@ -116,6 +116,7 @@ function ogSvg(tool) {
 }
 
 function renderOg(tool, outPath) {
+  mkdirSync(dirname(outPath), { recursive: true });
   const resvg = new Resvg(ogSvg(tool), {
     fitTo: { mode: 'width', value: 1200 },
     font: { loadSystemFonts: true },

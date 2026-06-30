@@ -1031,6 +1031,12 @@ function navigateTo(viewId, opts = {}) {
     document.getElementById('ai-pose-estimator-view').classList.add('active');
     resetPoseEstimatorState();
     initPoseWorker();
+  } else if (viewId === 'fire-retirement-calc') {
+    document.getElementById('fire-retirement-calc-view').classList.add('active');
+    resetFireRetirementCalcState();
+  } else if (viewId === 'str-cost-segregation') {
+    document.getElementById('str-cost-segregation-view').classList.add('active');
+    resetStrCostSegregationState();
   } else {
     const customView = document.getElementById(`${viewId}-view`);
     if (customView) {
@@ -1127,7 +1133,7 @@ const newToolsIds = [
   'json-yaml-converter', 'device-info', 'stopwatch-lap', 'html-wysiwyg',
   'css-gradient-mesh', 'svg-path-viewer', 'guitar-tuner', 'speed-reader',
   'mime-inspector', 'sql-playground', 'hash-verifier', 'lorem-pixel',
-  'ratio-solver', 'ai-pose-estimator'
+  'ratio-solver', 'ai-pose-estimator', 'fire-retirement-calc', 'str-cost-segregation'
 ];
 newToolsIds.forEach(id => {
   const el = document.getElementById(`btn-${id}-back`);
@@ -11936,3 +11942,836 @@ async function populatePoseCameraList() {
   const btnStop = document.getElementById('btn-pose-stop');
   if (btnStop) btnStop.addEventListener('click', () => stopPoseEstimator());
 })();
+
+// --- FIRE EARLY RETIREMENT CALCULATOR LOGIC ---
+const fireCurrentAge = document.getElementById('fire-current-age');
+const fireCurrentNetworth = document.getElementById('fire-current-networth');
+const fireAnnualIncome = document.getElementById('fire-annual-income');
+const fireAnnualSavings = document.getElementById('fire-annual-savings');
+const fireRetExpenses = document.getElementById('fire-retirement-expenses');
+const fireSWR = document.getElementById('fire-swr');
+const fireReturnRate = document.getElementById('fire-investment-return');
+const btnFireCalc = document.getElementById('btn-fire-calculate');
+const btnFireMatchExpenses = document.getElementById('btn-fire-match-expenses');
+
+function resetFireRetirementCalcState() {
+  if (fireCurrentAge) fireCurrentAge.value = 30;
+  if (fireCurrentNetworth) fireCurrentNetworth.value = 100000;
+  if (fireAnnualIncome) fireAnnualIncome.value = 100000;
+  if (fireAnnualSavings) fireAnnualSavings.value = 40000;
+  if (fireRetExpenses) fireRetExpenses.value = 50000;
+  if (fireSWR) fireSWR.value = 4.0;
+  if (fireReturnRate) fireReturnRate.value = 7.0;
+  updateSavingsRateLabel();
+  calculateFIRE();
+}
+
+function updateSavingsRateLabel() {
+  if (!fireAnnualIncome || !fireAnnualSavings) return;
+  const income = parseFloat(fireAnnualIncome.value) || 0;
+  const savings = parseFloat(fireAnnualSavings.value) || 0;
+  const rate = income > 0 ? (savings / income) * 100 : 0;
+  const label = document.getElementById('fire-savings-rate-label');
+  if (label) label.textContent = `${Math.round(rate)}%`;
+}
+
+if (fireAnnualIncome) fireAnnualIncome.addEventListener('input', updateSavingsRateLabel);
+if (fireAnnualSavings) fireAnnualSavings.addEventListener('input', updateSavingsRateLabel);
+
+if (btnFireMatchExpenses) {
+  btnFireMatchExpenses.addEventListener('click', () => {
+    const income = parseFloat(fireAnnualIncome.value) || 0;
+    const savings = parseFloat(fireAnnualSavings.value) || 0;
+    const currentExpenses = Math.max(0, income - savings);
+    if (fireRetExpenses) fireRetExpenses.value = currentExpenses;
+    calculateFIRE();
+  });
+}
+
+if (btnFireCalc) {
+  btnFireCalc.addEventListener('click', calculateFIRE);
+}
+
+function simulateFIRE(currentNetWorth, annualSavings, retirementExpenses, swr, returnRate, currentAge) {
+  const fireTarget = retirementExpenses / (swr / 100);
+  let netWorth = currentNetWorth;
+  const history = [{
+    year: 0,
+    age: currentAge,
+    savings: 0,
+    growth: 0,
+    netWorth: currentNetWorth,
+    progress: fireTarget > 0 ? (currentNetWorth / fireTarget) * 100 : 100
+  }];
+
+  let maxYears = 50;
+  let targetReached = currentNetWorth >= fireTarget;
+  let yearsToFire = targetReached ? 0 : null;
+
+  for (let y = 1; y <= maxYears; y++) {
+    const growth = netWorth * (returnRate / 100);
+    netWorth = netWorth + growth + annualSavings;
+    const currentAgeAtYear = currentAge + y;
+    const progress = fireTarget > 0 ? (netWorth / fireTarget) * 100 : 100;
+
+    history.push({
+      year: y,
+      age: currentAgeAtYear,
+      savings: annualSavings,
+      growth: growth,
+      netWorth: netWorth,
+      progress: progress
+    });
+
+    if (!targetReached && netWorth >= fireTarget) {
+      targetReached = true;
+      const prevNetWorth = history[history.length - 2].netWorth;
+      const diffNetWorth = netWorth - prevNetWorth;
+      const fraction = diffNetWorth > 0 ? (fireTarget - prevNetWorth) / diffNetWorth : 0;
+      yearsToFire = (y - 1) + fraction;
+    }
+
+    if (targetReached && y >= (yearsToFire ? Math.ceil(yearsToFire) + 10 : 10)) {
+      break;
+    }
+  }
+
+  if (!targetReached) {
+    yearsToFire = Infinity;
+  }
+
+  return { yearsToFire, targetReached, history, fireTarget };
+}
+
+function calculateFIRE() {
+  const currentAge = parseFloat(fireCurrentAge.value) || 30;
+  const currentNetWorth = parseFloat(fireCurrentNetworth.value) || 0;
+  const annualIncome = parseFloat(fireAnnualIncome.value) || 0;
+  const annualSavings = parseFloat(fireAnnualSavings.value) || 0;
+  const retirementExpenses = parseFloat(fireRetExpenses.value) || 0;
+  const swr = parseFloat(fireSWR.value) || 4.0;
+  const returnRate = parseFloat(fireReturnRate.value) || 7.0;
+
+  const main = simulateFIRE(currentNetWorth, annualSavings, retirementExpenses, swr, returnRate, currentAge);
+
+  // Update Top Stats
+  document.getElementById('fire-target-number').textContent = `$${Math.round(main.fireTarget).toLocaleString()}`;
+  
+  const yrsDom = document.getElementById('fire-years-to-target');
+  const ageDom = document.getElementById('fire-retirement-age');
+  if (main.yearsToFire === Infinity) {
+    yrsDom.textContent = '50+ Years';
+    ageDom.textContent = 'N/A';
+  } else {
+    yrsDom.textContent = `${main.yearsToFire.toFixed(1)} Years`;
+    ageDom.textContent = `${(currentAge + main.yearsToFire).toFixed(1)}`;
+  }
+
+  const progressPercent = main.fireTarget > 0 ? Math.min(100, Math.round((currentNetWorth / main.fireTarget) * 100)) : 100;
+  document.getElementById('fire-progress-percent').textContent = `${progressPercent}%`;
+  document.getElementById('fire-progress-bar').style.width = `${progressPercent}%`;
+
+  // Draw chart
+  drawFireLineChart(main.history, main.fireTarget);
+
+  // What-if simulations
+  const wiSavings = simulateFIRE(currentNetWorth, annualSavings + 1200, retirementExpenses, swr, returnRate, currentAge);
+  const wiExpenses = simulateFIRE(currentNetWorth, annualSavings, retirementExpenses * 0.9, swr, returnRate, currentAge);
+  const wiReturn = simulateFIRE(currentNetWorth, annualSavings, retirementExpenses, swr, returnRate + 1, currentAge);
+
+  // Update What-if Labels
+  let labelSavingsText = '';
+  if (main.yearsToFire === Infinity) {
+    if (wiSavings.yearsToFire === Infinity) {
+      labelSavingsText = 'Save $100 more/month ($1,200/yr): <strong>Will still take 50+ years</strong>';
+    } else {
+      labelSavingsText = `Save $100 more/month ($1,200/yr): <strong>Enables FIRE in ${wiSavings.yearsToFire.toFixed(1)} years!</strong>`;
+    }
+  } else {
+    const diff = main.yearsToFire - wiSavings.yearsToFire;
+    labelSavingsText = diff > 0 
+      ? `Save $100 more/month ($1,200/yr): <strong>Retire ${diff.toFixed(1)} years earlier!</strong>` 
+      : `Save $100 more/month ($1,200/yr): <strong>No significant change</strong>`;
+  }
+  document.getElementById('fire-whatif-savings').innerHTML = labelSavingsText;
+
+  let labelExpensesText = '';
+  if (main.yearsToFire === Infinity) {
+    if (wiExpenses.yearsToFire === Infinity) {
+      labelExpensesText = 'Reduce retirement expenses by 10%: <strong>Will still take 50+ years</strong>';
+    } else {
+      labelExpensesText = `Reduce retirement expenses by 10%: <strong>Enables FIRE in ${wiExpenses.yearsToFire.toFixed(1)} years!</strong>`;
+    }
+  } else {
+    const diff = main.yearsToFire - wiExpenses.yearsToFire;
+    labelExpensesText = diff > 0 
+      ? `Reduce retirement expenses by 10%: <strong>Retire ${diff.toFixed(1)} years earlier!</strong>` 
+      : `Reduce retirement expenses by 10%: <strong>No significant change</strong>`;
+  }
+  document.getElementById('fire-whatif-expenses').innerHTML = labelExpensesText;
+
+  let labelReturnText = '';
+  if (main.yearsToFire === Infinity) {
+    if (wiReturn.yearsToFire === Infinity) {
+      labelReturnText = 'Increase investment return by 1%: <strong>Will still take 50+ years</strong>';
+    } else {
+      labelReturnText = `Increase investment return by 1%: <strong>Enables FIRE in ${wiReturn.yearsToFire.toFixed(1)} years!</strong>`;
+    }
+  } else {
+    const diff = main.yearsToFire - wiReturn.yearsToFire;
+    labelReturnText = diff > 0 
+      ? `Increase investment return by 1%: <strong>Retire ${diff.toFixed(1)} years earlier!</strong>` 
+      : `Increase investment return by 1%: <strong>No significant change</strong>`;
+  }
+  document.getElementById('fire-whatif-return').innerHTML = labelReturnText;
+
+  // Build Year-by-Year Table
+  const tableBody = document.getElementById('fire-table-body');
+  tableBody.innerHTML = '';
+  main.history.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border)';
+    tr.innerHTML = `
+      <td style="padding: 0.5rem 0.75rem;">Year ${row.year}</td>
+      <td style="padding: 0.5rem 0.75rem;">${row.age}</td>
+      <td style="padding: 0.5rem 0.75rem;">$${Math.round(row.savings).toLocaleString()}</td>
+      <td style="padding: 0.5rem 0.75rem;">$${Math.round(row.growth).toLocaleString()}</td>
+      <td style="padding: 0.5rem 0.75rem;">$${Math.round(row.netWorth).toLocaleString()}</td>
+      <td style="padding: 0.5rem 0.75rem; font-weight: 600; color: ${row.netWorth >= main.fireTarget ? '#10b981' : 'var(--text-secondary)'};">
+        ${Math.round(row.progress)}%
+      </td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+function drawFireLineChart(history, fireTarget) {
+  const svg = document.getElementById('fire-line-chart');
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  const w = svg.clientWidth || 500;
+  const h = svg.clientHeight || 250;
+  const paddingLeft = 65;
+  const paddingRight = 40;
+  const paddingTop = 30;
+  const paddingBottom = 40;
+
+  const count = history.length;
+  if (count === 0) return;
+
+  const maxNetWorth = Math.max(...history.map(d => d.netWorth));
+  const maxVal = Math.max(maxNetWorth, fireTarget) * 1.1;
+
+  const getX = (index) => paddingLeft + (index / (count - 1)) * (w - paddingLeft - paddingRight);
+  const getY = (val) => h - paddingBottom - (val / maxVal) * (h - paddingTop - paddingBottom);
+
+  // Gridlines
+  const gridLines = 4;
+  for (let i = 0; i <= gridLines; i++) {
+    const val = (maxVal / gridLines) * i;
+    const y = getY(val);
+    
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', `${paddingLeft}`);
+    line.setAttribute('y1', `${y}`);
+    line.setAttribute('x2', `${w - paddingRight}`);
+    line.setAttribute('y2', `${y}`);
+    line.setAttribute('stroke', 'rgba(255, 255, 255, 0.05)');
+    line.setAttribute('stroke-dasharray', '4 4');
+    svg.appendChild(line);
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', `${paddingLeft - 10}`);
+    text.setAttribute('y', `${y + 4}`);
+    text.setAttribute('text-anchor', 'end');
+    text.setAttribute('fill', 'var(--text-secondary)');
+    text.setAttribute('style', 'font-size: 0.7rem; font-family: sans-serif;');
+    if (val >= 1000000) {
+      text.textContent = `$${(val / 1000000).toFixed(1)}M`;
+    } else if (val >= 1000) {
+      text.textContent = `$${Math.round(val / 1000)}k`;
+    } else {
+      text.textContent = `$${Math.round(val)}`;
+    }
+    svg.appendChild(text);
+  }
+
+  // Gradient Definition
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  gradient.setAttribute('id', 'fire-chart-grad');
+  gradient.setAttribute('x1', '0%');
+  gradient.setAttribute('y1', '0%');
+  gradient.setAttribute('x2', '0%');
+  gradient.setAttribute('y2', '100%');
+  
+  const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+  stop1.setAttribute('offset', '0%');
+  stop1.setAttribute('stop-color', 'var(--primary)');
+  stop1.setAttribute('stop-opacity', '0.25');
+  gradient.appendChild(stop1);
+
+  const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+  stop2.setAttribute('offset', '100%');
+  stop2.setAttribute('stop-color', 'var(--primary)');
+  stop2.setAttribute('stop-opacity', '0.0');
+  gradient.appendChild(stop2);
+  defs.appendChild(gradient);
+  svg.appendChild(defs);
+
+  // Target Line
+  const fireY = getY(fireTarget);
+  const targetLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  targetLine.setAttribute('x1', `${paddingLeft}`);
+  targetLine.setAttribute('y1', `${fireY}`);
+  targetLine.setAttribute('x2', `${w - paddingRight}`);
+  targetLine.setAttribute('y2', `${fireY}`);
+  targetLine.setAttribute('stroke', '#fbbf24');
+  targetLine.setAttribute('stroke-width', '2');
+  targetLine.setAttribute('stroke-dasharray', '5 5');
+  svg.appendChild(targetLine);
+
+  const targetLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  targetLabel.setAttribute('x', `${w - paddingRight}`);
+  targetLabel.setAttribute('y', `${fireY - 6}`);
+  targetLabel.setAttribute('text-anchor', 'end');
+  targetLabel.setAttribute('fill', '#fbbf24');
+  targetLabel.setAttribute('style', 'font-size: 0.72rem; font-weight: 600; font-family: sans-serif;');
+  targetLabel.textContent = `Target: $${Math.round(fireTarget).toLocaleString()}`;
+  svg.appendChild(targetLabel);
+
+  // Paths
+  let pathD = '';
+  let areaD = '';
+
+  for (let i = 0; i < count; i++) {
+    const x = getX(i);
+    const y = getY(history[i].netWorth);
+    const command = i === 0 ? 'M' : 'L';
+    pathD += `${command}${x},${y} `;
+    
+    if (i === 0) {
+      areaD += `M${x},${h - paddingBottom} L${x},${y} `;
+    } else {
+      areaD += `L${x},${y} `;
+    }
+  }
+  areaD += `L${getX(count - 1)},${h - paddingBottom} Z`;
+
+  const areaPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  areaPath.setAttribute('d', areaD);
+  areaPath.setAttribute('fill', 'url(#fire-chart-grad)');
+  svg.appendChild(areaPath);
+
+  const linePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  linePath.setAttribute('d', pathD);
+  linePath.setAttribute('fill', 'none');
+  linePath.setAttribute('stroke', 'var(--primary)');
+  linePath.setAttribute('stroke-width', '3');
+  svg.appendChild(linePath);
+
+  // X-Axis Labels
+  const labelInterval = Math.max(1, Math.floor(count / 6));
+  for (let i = 0; i < count; i++) {
+    if (i === 0 || i === count - 1 || i % labelInterval === 0) {
+      const x = getX(i);
+      const ageLabel = history[i].age;
+
+      const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      tick.setAttribute('x1', `${x}`);
+      tick.setAttribute('y1', `${h - paddingBottom}`);
+      tick.setAttribute('x2', `${x}`);
+      tick.setAttribute('y2', `${h - paddingBottom + 5}`);
+      tick.setAttribute('stroke', 'var(--text-muted)');
+      tick.setAttribute('stroke-width', '1');
+      svg.appendChild(tick);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', `${x}`);
+      text.setAttribute('y', `${h - paddingBottom + 18}`);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('fill', 'var(--text-secondary)');
+      text.setAttribute('style', 'font-size: 0.72rem; font-family: sans-serif;');
+      text.textContent = `Age ${ageLabel}`;
+      svg.appendChild(text);
+    }
+  }
+
+  // Axis Lines
+  const axisX = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  axisX.setAttribute('x1', `${paddingLeft}`);
+  axisX.setAttribute('y1', `${h - paddingBottom}`);
+  axisX.setAttribute('x2', `${w - paddingRight}`);
+  axisX.setAttribute('y2', `${h - paddingBottom}`);
+  axisX.setAttribute('stroke', 'var(--border)');
+  axisX.setAttribute('stroke-width', '1');
+  svg.appendChild(axisX);
+
+  const axisY = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  axisY.setAttribute('x1', `${paddingLeft}`);
+  axisY.setAttribute('y1', `${paddingTop}`);
+  axisY.setAttribute('x2', `${paddingLeft}`);
+  axisY.setAttribute('y2', `${h - paddingBottom}`);
+  axisY.setAttribute('stroke', 'var(--border)');
+  axisY.setAttribute('stroke-width', '1');
+  svg.appendChild(axisY);
+
+  // Dot marker
+  let crossoverIndex = -1;
+  for (let i = 0; i < count; i++) {
+    if (history[i].netWorth >= fireTarget) {
+      crossoverIndex = i;
+      break;
+    }
+  }
+
+  if (crossoverIndex !== -1) {
+    const x = getX(crossoverIndex);
+    const y = getY(history[crossoverIndex].netWorth);
+
+    const glowCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    glowCircle.setAttribute('cx', `${x}`);
+    glowCircle.setAttribute('cy', `${y}`);
+    glowCircle.setAttribute('r', '8');
+    glowCircle.setAttribute('fill', '#10b981');
+    glowCircle.setAttribute('opacity', '0.4');
+    svg.appendChild(glowCircle);
+
+    const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    centerCircle.setAttribute('cx', `${x}`);
+    centerCircle.setAttribute('cy', `${y}`);
+    centerCircle.setAttribute('r', '4');
+    centerCircle.setAttribute('fill', '#ffffff');
+    centerCircle.setAttribute('stroke', '#10b981');
+    centerCircle.setAttribute('stroke-width', '2');
+    svg.appendChild(centerCircle);
+
+    const crossoverLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    crossoverLabel.setAttribute('x', `${x}`);
+    crossoverLabel.setAttribute('y', `${y - 12}`);
+    crossoverLabel.setAttribute('text-anchor', 'middle');
+    crossoverLabel.setAttribute('fill', '#10b981');
+    crossoverLabel.setAttribute('style', 'font-size: 0.72rem; font-weight: bold; font-family: sans-serif;');
+    crossoverLabel.textContent = `FIRE at Age ${history[crossoverIndex].age}`;
+    svg.appendChild(crossoverLabel);
+  }
+}
+
+window.addEventListener('resize', () => {
+  const fireView = document.getElementById('fire-retirement-calc-view');
+  if (fireView && fireView.classList.contains('active')) {
+    calculateFIRE();
+  }
+  const strView = document.getElementById('str-cost-segregation-view');
+  if (strView && strView.classList.contains('active')) {
+    calculateStrCostSegregation();
+  }
+});
+
+// --- STR COST SEGREGATION TAX SAVER LOGIC ---
+const strPurchasePrice = document.getElementById('str-purchase-price');
+const strLandPercent = document.getElementById('str-land-percent');
+const strLandValueLabel = document.getElementById('str-land-value-label');
+const strBuildingBasisLabel = document.getElementById('str-building-basis-label');
+const str5yrPercent = document.getElementById('str-5yr-percent');
+const str15yrPercent = document.getElementById('str-15yr-percent');
+const str27yrPercentLabel = document.getElementById('str-27yr-percent-label');
+const str27yrBasisLabel = document.getElementById('str-27yr-basis-label');
+const strPlacedYear = document.getElementById('str-placed-year');
+const strTaxRate = document.getElementById('str-tax-rate');
+const strStay7days = document.getElementById('str-stay-7days');
+const strMaterialParticipation = document.getElementById('str-material-participation');
+const btnStrCalculate = document.getElementById('btn-str-calculate');
+const strLoopholeBanner = document.getElementById('str-loophole-banner');
+const strYear1Savings = document.getElementById('str-year1-savings');
+const strYear1DeprecCostSeg = document.getElementById('str-year1-deprec-costseg');
+const strYear1DeprecStd = document.getElementById('str-year1-deprec-std');
+const strYear1DeprecIncremental = document.getElementById('str-year1-deprec-incremental');
+const strBarChart = document.getElementById('str-bar-chart');
+const strLineChart = document.getElementById('str-line-chart');
+const strTableBody = document.getElementById('str-table-body');
+
+function resetStrCostSegregationState() {
+  if (strPurchasePrice) strPurchasePrice.value = 500000;
+  if (strLandPercent) strLandPercent.value = 20;
+  if (str5yrPercent) str5yrPercent.value = 12;
+  if (str15yrPercent) str15yrPercent.value = 8;
+  if (strPlacedYear) strPlacedYear.value = "2026";
+  if (strTaxRate) strTaxRate.value = 37;
+  if (strStay7days) strStay7days.checked = true;
+  if (strMaterialParticipation) strMaterialParticipation.checked = true;
+  calculateStrCostSegregation();
+}
+
+function calculateStrCostSegregation() {
+  if (!strPurchasePrice) return;
+  
+  const price = parseFloat(strPurchasePrice.value) || 0;
+  let landPct = parseFloat(strLandPercent.value) || 0;
+  if (landPct < 0) landPct = 0;
+  if (landPct > 100) landPct = 100;
+  
+  let p5 = parseFloat(str5yrPercent.value) || 0;
+  let p15 = parseFloat(str15yrPercent.value) || 0;
+  
+  if (p5 < 0) p5 = 0;
+  if (p15 < 0) p15 = 0;
+  if (p5 + p15 > 100) {
+    const total = p5 + p15;
+    p5 = (p5 / total) * 100;
+    p15 = (p15 / total) * 100;
+  }
+  
+  const p27 = 100 - p5 - p15;
+  
+  if (str27yrPercentLabel) str27yrPercentLabel.innerText = Math.round(p27);
+  
+  const landValue = price * (landPct / 100);
+  const buildingBasis = price - landValue;
+  
+  const basis5 = buildingBasis * (p5 / 100);
+  const basis15 = buildingBasis * (p15 / 100);
+  const basis27 = buildingBasis * (p27 / 100);
+  
+  if (strLandValueLabel) strLandValueLabel.innerText = `$${Math.round(landValue).toLocaleString()}`;
+  if (strBuildingBasisLabel) strBuildingBasisLabel.innerText = `$${Math.round(buildingBasis).toLocaleString()}`;
+  if (str27yrBasisLabel) str27yrBasisLabel.innerText = `$${Math.round(basis27).toLocaleString()}`;
+  
+  const year = strPlacedYear ? strPlacedYear.value : "2026";
+  let bonusPct = 0.20;
+  if (year === "2023") bonusPct = 0.80;
+  else if (year === "2024") bonusPct = 0.60;
+  else if (year === "2025") bonusPct = 0.40;
+  else if (year === "2026") bonusPct = 0.20;
+  else if (year === "2027") bonusPct = 0.00;
+  
+  const taxRate = (parseFloat(strTaxRate.value) || 0) / 100;
+  
+  // Year 1 MACRS (Half-Year convention standard rates)
+  const bonus5_y1 = basis5 * bonusPct;
+  const std5_y1 = (basis5 - bonus5_y1) * 0.20;
+  const total5_y1 = bonus5_y1 + std5_y1;
+  
+  const bonus15_y1 = basis15 * bonusPct;
+  const std15_y1 = (basis15 - bonus15_y1) * 0.05;
+  const total15_y1 = bonus15_y1 + std15_y1;
+  
+  const total27_y1 = basis27 / 27.5;
+  
+  const totalCostSeg_y1 = total5_y1 + total15_y1 + total27_y1;
+  const totalStd_y1 = buildingBasis / 27.5;
+  const incremental_y1 = Math.max(0, totalCostSeg_y1 - totalStd_y1);
+  
+  const stay7 = strStay7days ? strStay7days.checked : false;
+  const material = strMaterialParticipation ? strMaterialParticipation.checked : false;
+  const isQualified = stay7 && material;
+  
+  const savings_y1 = incremental_y1 * taxRate;
+  
+  if (strYear1Savings) {
+    strYear1Savings.innerText = `$${Math.round(savings_y1).toLocaleString()}`;
+    strYear1Savings.style.color = isQualified ? '#10b981' : 'var(--text-secondary)';
+  }
+  if (strYear1DeprecCostSeg) strYear1DeprecCostSeg.innerText = `$${Math.round(totalCostSeg_y1).toLocaleString()}`;
+  if (strYear1DeprecStd) strYear1DeprecStd.innerText = `$${Math.round(totalStd_y1).toLocaleString()}`;
+  if (strYear1DeprecIncremental) strYear1DeprecIncremental.innerText = `$${Math.round(incremental_y1).toLocaleString()}`;
+  
+  if (strLoopholeBanner) {
+    if (isQualified) {
+      strLoopholeBanner.style.backgroundColor = 'rgba(16, 185, 129, 0.08)';
+      strLoopholeBanner.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+      strLoopholeBanner.innerHTML = `
+        <div style="font-size: 1.5rem; line-height: 1;">✅</div>
+        <div>
+          <h4 style="margin: 0 0 0.25rem 0; color: #10b981; font-size: 0.9rem;">STR Tax Loophole Active</h4>
+          <p style="margin: 0; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4;">
+            Awesome! You meet both criteria. Your accelerated depreciation losses are classified as <strong>non-passive</strong>, meaning you can use them to offset your W-2 wages or active business income in Year 1.
+          </p>
+        </div>
+      `;
+    } else {
+      strLoopholeBanner.style.backgroundColor = 'rgba(245, 158, 11, 0.08)';
+      strLoopholeBanner.style.borderColor = 'rgba(245, 158, 11, 0.2)';
+      strLoopholeBanner.innerHTML = `
+        <div style="font-size: 1.5rem; line-height: 1;">⚠️</div>
+        <div>
+          <h4 style="margin: 0 0 0.25rem 0; color: #f59e0b; font-size: 0.9rem;">Passive Rental Limitations Apply</h4>
+          <p style="margin: 0; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4;">
+            You do not meet one or both Loophole rules. The accelerated depreciation will still be calculated, but it is treated as a <strong>passive loss</strong>. It can only offset other passive income or must be carried forward to future tax years.
+          </p>
+        </div>
+      `;
+    }
+  }
+  
+  if (strTableBody) {
+    strTableBody.innerHTML = `
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 0.6rem 0.75rem; font-weight: bold;">5-Year Personal Property</td>
+        <td style="padding: 0.6rem 0.75rem;">${Math.round(p5)}%</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(basis5).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(bonus5_y1).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(std5_y1).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem; font-weight: bold; color: var(--primary);">$${Math.round(total5_y1).toLocaleString()}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 0.6rem 0.75rem; font-weight: bold;">15-Year Land Improvements</td>
+        <td style="padding: 0.6rem 0.75rem;">${Math.round(p15)}%</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(basis15).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(bonus15_y1).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(std15_y1).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem; font-weight: bold; color: var(--primary);">$${Math.round(total15_y1).toLocaleString()}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 0.6rem 0.75rem; font-weight: bold;">27.5-Year Structural Building</td>
+        <td style="padding: 0.6rem 0.75rem;">${Math.round(p27)}%</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(basis27).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem;">$0</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(total27_y1).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem; font-weight: bold; color: var(--primary);">$${Math.round(total27_y1).toLocaleString()}</td>
+      </tr>
+      <tr style="background: var(--bg-preview); font-weight: bold;">
+        <td style="padding: 0.6rem 0.75rem;">Total Building Basis</td>
+        <td style="padding: 0.6rem 0.75rem;">100%</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(buildingBasis).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(bonus5_y1 + bonus15_y1).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem;">$${Math.round(std5_y1 + std15_y1 + total27_y1).toLocaleString()}</td>
+        <td style="padding: 0.6rem 0.75rem; color: var(--primary);">$${Math.round(totalCostSeg_y1).toLocaleString()}</td>
+      </tr>
+    `;
+  }
+  
+  drawStrBarChart(totalStd_y1, totalCostSeg_y1);
+  drawStrLineChart(basis5, basis15, basis27, buildingBasis, bonusPct, taxRate);
+}
+
+function drawStrBarChart(std, costseg) {
+  const svg = strBarChart;
+  if (!svg) return;
+  svg.innerHTML = '';
+  
+  const maxVal = Math.max(std, costseg, 1);
+  const padding = 30;
+  const w = 220;
+  const h = 200;
+  const chartH = h - padding * 2;
+  
+  const stdHeight = (std / maxVal) * chartH;
+  const csHeight = (costseg / maxVal) * chartH;
+  
+  const stdX = 40;
+  const csX = 120;
+  const barWidth = 45;
+  
+  const stdY = h - padding - stdHeight;
+  const csY = h - padding - csHeight;
+  
+  const rectStd = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rectStd.setAttribute('x', stdX);
+  rectStd.setAttribute('y', stdY);
+  rectStd.setAttribute('width', barWidth);
+  rectStd.setAttribute('height', stdHeight);
+  rectStd.setAttribute('fill', 'var(--text-secondary)');
+  rectStd.setAttribute('opacity', '0.6');
+  rectStd.setAttribute('rx', '4');
+  svg.appendChild(rectStd);
+  
+  const rectCs = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rectCs.setAttribute('x', csX);
+  rectCs.setAttribute('y', csY);
+  rectCs.setAttribute('width', barWidth);
+  rectCs.setAttribute('height', csHeight);
+  rectCs.setAttribute('fill', 'var(--primary)');
+  rectCs.setAttribute('rx', '4');
+  svg.appendChild(rectCs);
+  
+  const textStdVal = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  textStdVal.setAttribute('x', stdX + barWidth/2);
+  textStdVal.setAttribute('y', stdY - 6);
+  textStdVal.setAttribute('text-anchor', 'middle');
+  textStdVal.setAttribute('fill', 'var(--text-secondary)');
+  textStdVal.setAttribute('style', 'font-size: 0.68rem; font-weight: bold; font-family: sans-serif;');
+  textStdVal.textContent = `$${Math.round(std/1000)}k`;
+  svg.appendChild(textStdVal);
+  
+  const textCsVal = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  textCsVal.setAttribute('x', csX + barWidth/2);
+  textCsVal.setAttribute('y', csY - 6);
+  textCsVal.setAttribute('text-anchor', 'middle');
+  textCsVal.setAttribute('fill', 'var(--primary)');
+  textCsVal.setAttribute('style', 'font-size: 0.68rem; font-weight: bold; font-family: sans-serif;');
+  textCsVal.textContent = `$${Math.round(costseg/1000)}k`;
+  svg.appendChild(textCsVal);
+  
+  const baseLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  baseLine.setAttribute('x1', '20');
+  baseLine.setAttribute('y1', h - padding);
+  baseLine.setAttribute('x2', w - 20);
+  baseLine.setAttribute('y2', h - padding);
+  baseLine.setAttribute('stroke', 'var(--border)');
+  baseLine.setAttribute('stroke-width', '1');
+  svg.appendChild(baseLine);
+  
+  const textStdLbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  textStdLbl.setAttribute('x', stdX + barWidth/2);
+  textStdLbl.setAttribute('y', h - 12);
+  textStdLbl.setAttribute('text-anchor', 'middle');
+  textStdLbl.setAttribute('fill', 'var(--text-secondary)');
+  textStdLbl.setAttribute('style', 'font-size: 0.68rem; font-family: sans-serif;');
+  textStdLbl.textContent = 'Standard';
+  svg.appendChild(textStdLbl);
+  
+  const textCsLbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  textCsLbl.setAttribute('x', csX + barWidth/2);
+  textCsLbl.setAttribute('y', h - 12);
+  textCsLbl.setAttribute('text-anchor', 'middle');
+  textCsLbl.setAttribute('fill', 'var(--primary)');
+  textCsLbl.setAttribute('style', 'font-size: 0.68rem; font-weight: bold; font-family: sans-serif;');
+  textCsLbl.textContent = 'Cost Seg';
+  svg.appendChild(textCsLbl);
+}
+
+function drawStrLineChart(basis5, basis15, basis27, buildingBasis, bonusPct, taxRate) {
+  const svg = strLineChart;
+  if (!svg) return;
+  svg.innerHTML = '';
+  
+  const w = svg.clientWidth || 350;
+  const h = 200;
+  const paddingLeft = 45;
+  const paddingRight = 15;
+  const paddingTop = 20;
+  const paddingBottom = 30;
+  
+  const remainingBasis5 = basis5 * (1 - bonusPct);
+  const remainingBasis15 = basis15 * (1 - bonusPct);
+  
+  const rates5 = [0.20, 0.32, 0.192, 0.1152, 0.1152];
+  const rates15 = [0.05, 0.095, 0.0855, 0.077, 0.0693];
+  
+  let cumulativeSavings = [0];
+  let runningSavings = 0;
+  
+  for (let year = 1; year <= 5; year++) {
+    const stdDep = buildingBasis / 27.5;
+    let csDep = 0;
+    if (year === 1) {
+      const bonus5 = basis5 * bonusPct;
+      const std5 = remainingBasis5 * rates5[0];
+      const bonus15 = basis15 * bonusPct;
+      const std15 = remainingBasis15 * rates15[0];
+      csDep = (bonus5 + std5) + (bonus15 + std15) + (basis27 / 27.5);
+    } else {
+      const std5 = remainingBasis5 * rates5[year - 1];
+      const std15 = remainingBasis15 * rates15[year - 1];
+      csDep = std5 + std15 + (basis27 / 27.5);
+    }
+    
+    const incremental = csDep - stdDep;
+    runningSavings += incremental * taxRate;
+    cumulativeSavings.push(runningSavings);
+  }
+  
+  const maxVal = Math.max(...cumulativeSavings, 1);
+  const count = cumulativeSavings.length;
+  
+  const getX = (index) => paddingLeft + (index / (count - 1)) * (w - paddingLeft - paddingRight);
+  const getY = (val) => h - paddingBottom - (val / maxVal) * (h - paddingTop - paddingBottom);
+  
+  for (let i = 0; i <= 4; i++) {
+    const val = (i / 4) * maxVal;
+    const y = getY(val);
+    
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', `${paddingLeft}`);
+    line.setAttribute('y1', `${y}`);
+    line.setAttribute('x2', `${w - paddingRight}`);
+    line.setAttribute('y2', `${y}`);
+    line.setAttribute('stroke', 'var(--border)');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '3,3');
+    svg.appendChild(line);
+    
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', `${paddingLeft - 6}`);
+    label.setAttribute('y', `${y + 4}`);
+    label.setAttribute('text-anchor', 'end');
+    label.setAttribute('fill', 'var(--text-muted)');
+    label.setAttribute('style', 'font-size: 0.65rem; font-family: sans-serif;');
+    label.textContent = `$${Math.round(val/1000)}k`;
+    svg.appendChild(label);
+  }
+  
+  let points = '';
+  for (let i = 0; i < count; i++) {
+    const x = getX(i);
+    const y = getY(cumulativeSavings[i]);
+    points += `${x},${y} `;
+  }
+  
+  let areaPoints = `${getX(0)},${h - paddingBottom} ` + points + `${getX(count - 1)},${h - paddingBottom}`;
+  const area = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  area.setAttribute('points', areaPoints);
+  area.setAttribute('fill', 'rgba(16, 185, 129, 0.08)');
+  svg.appendChild(area);
+  
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke', '#10b981');
+  path.setAttribute('stroke-width', '3');
+  path.setAttribute('points', points);
+  svg.appendChild(path);
+  
+  for (let i = 0; i < count; i++) {
+    const x = getX(i);
+    const y = getY(cumulativeSavings[i]);
+    
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', `${x}`);
+    circle.setAttribute('cy', `${y}`);
+    circle.setAttribute('r', '4');
+    circle.setAttribute('fill', '#10b981');
+    circle.setAttribute('stroke', 'var(--bg-body)');
+    circle.setAttribute('stroke-width', '1.5');
+    svg.appendChild(circle);
+    
+    const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    xLabel.setAttribute('x', `${x}`);
+    xLabel.setAttribute('y', `${h - 8}`);
+    xLabel.setAttribute('text-anchor', 'middle');
+    xLabel.setAttribute('fill', 'var(--text-secondary)');
+    xLabel.setAttribute('style', 'font-size: 0.68rem; font-family: sans-serif;');
+    xLabel.textContent = i === 0 ? 'Start' : `Yr ${i}`;
+    svg.appendChild(xLabel);
+    
+    if (i > 0) {
+      const valText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      valText.setAttribute('x', `${x}`);
+      valText.setAttribute('y', `${y - 8}`);
+      valText.setAttribute('text-anchor', 'middle');
+      valText.setAttribute('fill', '#10b981');
+      valText.setAttribute('style', 'font-size: 0.65rem; font-weight: bold; font-family: sans-serif;');
+      valText.textContent = `$${Math.round(cumulativeSavings[i]/1000)}k`;
+      svg.appendChild(valText);
+    }
+  }
+}
+
+if (btnStrCalculate) {
+  btnStrCalculate.addEventListener('click', calculateStrCostSegregation);
+}
+
+const strInputs = [strPurchasePrice, strLandPercent, str5yrPercent, str15yrPercent, strPlacedYear, strTaxRate, strStay7days, strMaterialParticipation];
+strInputs.forEach(input => {
+  if (input) {
+    input.addEventListener('input', calculateStrCostSegregation);
+    input.addEventListener('change', calculateStrCostSegregation);
+  }
+});
+
+// Expose reset state global function
+window.resetStrCostSegregationState = resetStrCostSegregationState;
+window.calculateStrCostSegregation = calculateStrCostSegregation;
+
+

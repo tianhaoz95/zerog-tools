@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 93 tool cards rendered
+    // Check that there are 100 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(93);
+    await expect(cards).toHaveCount(100);
 
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(92);
+    expect(filteredCount).toBeLessThan(99);
     expect(filteredCount).toBeGreaterThan(0);
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(93);
+    await expect(cards).toHaveCount(100);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -470,6 +470,27 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     expect(pageErrors).toHaveLength(0);
   });
 
+  test('Tool: FIRE Early Retirement Calculator functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="fire-retirement-calc"]').click();
+    await expect(page.locator('#fire-retirement-calc-view')).toHaveClass(/active/);
+
+    // Initial state check
+    await expect(page.locator('#fire-target-number')).not.toHaveText('—');
+    await expect(page.locator('#fire-years-to-target')).not.toHaveText('—');
+
+    // Trigger calculation
+    await page.locator('#btn-fire-calculate').click();
+    await expect(page.locator('#fire-line-chart')).toBeVisible();
+
+    // Verify projection table populated
+    const rows = page.locator('#fire-table-body tr');
+    await expect(rows.first()).toBeVisible();
+
+    // Test back button
+    await page.locator('#btn-fire-retirement-calc-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
   test('New Tools: Navigation and basic rendering tests', async ({ page }) => {
     test.setTimeout(120000);
     const newTools = [
@@ -527,7 +548,9 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       { id: 'sql-playground', view: '#sql-playground-view', backBtn: '#btn-sql-playground-back' },
       { id: 'hash-verifier', view: '#hash-verifier-view', backBtn: '#btn-hash-verifier-back' },
       { id: 'lorem-pixel', view: '#lorem-pixel-view', backBtn: '#btn-lorem-pixel-back' },
-      { id: 'ratio-solver', view: '#ratio-solver-view', backBtn: '#btn-ratio-solver-back' }
+      { id: 'ratio-solver', view: '#ratio-solver-view', backBtn: '#btn-ratio-solver-back' },
+      { id: 'fire-retirement-calc', view: '#fire-retirement-calc-view', backBtn: '#btn-fire-retirement-calc-back' },
+      { id: 'str-cost-segregation', view: '#str-cost-segregation-view', backBtn: '#btn-str-cost-segregation-back' }
     ];
 
     for (const tool of newTools) {

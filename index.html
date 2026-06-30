@@ -6071,8 +6071,333 @@ Supported browsers:
         </div>
       </main>
 
-      <!-- App Footer -->
-      <footer class="app-footer">
+      <!-- VIEW: FIRE EARLY RETIREMENT CALCULATOR -->
+      <main id="fire-retirement-calc-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-fire-retirement-calc-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>FIRE Early Retirement Calculator</h2>
+            <p>Determine your timeline to financial independence, simulate investment growth scenarios, and visualize your path to early retirement.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Inputs & Controls -->
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="control-group">
+              <label for="fire-current-age">Current Age</label>
+              <input type="number" id="fire-current-age" class="input-custom" value="30" min="1" max="100" />
+            </div>
+
+            <div class="control-group">
+              <label for="fire-current-networth">Current Net Worth ($)</label>
+              <input type="number" id="fire-current-networth" class="input-custom" value="100000" min="0" step="5000" />
+            </div>
+
+            <div class="control-group">
+              <label for="fire-annual-income">Annual Income ($)</label>
+              <input type="number" id="fire-annual-income" class="input-custom" value="100000" min="0" step="5000" />
+            </div>
+
+            <div class="control-group">
+              <label for="fire-annual-savings">Annual Savings ($)</label>
+              <input type="number" id="fire-annual-savings" class="input-custom" value="40000" min="0" step="1000" />
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                <span>Savings Rate:</span>
+                <span id="fire-savings-rate-label">40%</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="fire-retirement-expenses">Annual Expenses in Retirement ($)</label>
+                <button type="button" id="btn-fire-match-expenses" style="background: none; border: none; color: var(--primary); font-size: 0.75rem; cursor: pointer; padding: 0;">Match current expenses</button>
+              </div>
+              <input type="number" id="fire-retirement-expenses" class="input-custom" value="50000" min="1000" step="1000" />
+            </div>
+
+            <div class="control-group">
+              <label for="fire-swr">Safe Withdrawal Rate (SWR) (%)</label>
+              <input type="number" id="fire-swr" class="input-custom" value="4.0" min="1.0" max="10.0" step="0.1" />
+            </div>
+
+            <div class="control-group">
+              <label for="fire-investment-return">Expected Investment Return (Real %)</label>
+              <input type="number" id="fire-investment-return" class="input-custom" value="7.0" min="0.0" max="20.0" step="0.1" />
+              <small style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; line-height: 1.3;">* Real return adjusted for inflation (e.g., 7% represents nominal 9% minus 2% inflation).</small>
+            </div>
+
+            <button class="btn-primary" id="btn-fire-calculate" style="width: 100%;">🔥 Calculate Timeline</button>
+          </div>
+
+          <!-- Right Panel: Results Dashboard -->
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1.5rem; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+            <!-- Top Dashboard Stats Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">FIRE Target Number</div>
+                <div id="fire-target-number" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">$1,250,000</div>
+              </div>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Years to FIRE</div>
+                <div id="fire-years-to-target" style="font-size: 1.5rem; font-weight: bold; color: #fbbf24;">15.1 Years</div>
+              </div>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">FIRE Age</div>
+                <div id="fire-retirement-age" style="font-size: 1.5rem; font-weight: bold; color: #f472b6;">45.1</div>
+              </div>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">FIRE Progress</div>
+                <div id="fire-progress-percent" style="font-size: 1.25rem; font-weight: bold; color: #67e8f9; margin-bottom: 0.25rem;">8.0%</div>
+                <div style="width: 100%; background: var(--border); height: 6px; border-radius: 3px; overflow: hidden;">
+                  <div id="fire-progress-bar" style="width: 8%; height: 100%; background: #67e8f9; border-radius: 3px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column;">
+              <h4 style="margin-bottom: 0.75rem;">Net Worth Projection &amp; FIRE Target</h4>
+              <svg id="fire-line-chart" width="100%" height="250" viewBox="0 0 500 250" style="width: 100%; height: 250px; display: block; overflow: visible;"></svg>
+              <div style="display: flex; justify-content: center; gap: 1.5rem; font-size: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                <span><i style="display: inline-block; width: 12px; height: 3px; background: var(--primary); margin-right: 4px; vertical-align: middle;"></i> Net Worth Projection</span>
+                <span><i style="display: inline-block; width: 12px; height: 3px; background: #fbbf24; border-top: 2px dashed #fbbf24; margin-right: 4px; vertical-align: middle;"></i> FIRE Target</span>
+              </div>
+            </div>
+
+            <!-- What-If Optimizations Panel -->
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-preview); display: flex; flex-direction: column; gap: 0.75rem;">
+              <h4 style="margin-bottom: 0.25rem;">⚡ What-If Scenarios to Accelerate FIRE</h4>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm); border-left: 3px solid #67e8f9; background: rgba(103, 232, 249, 0.03);">
+                  <span>📈</span>
+                  <span id="fire-whatif-savings">Save $100 more per month: <strong>Retire 0.5 years earlier</strong></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm); border-left: 3px solid #fbbf24; background: rgba(251, 191, 36, 0.03);">
+                  <span>🔥</span>
+                  <span id="fire-whatif-expenses">Reduce retirement expenses by 10%: <strong>Retire 1.2 years earlier</strong></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm); border-left: 3px solid #a855f7; background: rgba(168, 85, 247, 0.03);">
+                  <span>💎</span>
+                  <span id="fire-whatif-return">Increase investment return by 1%: <strong>Retire 0.8 years earlier</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Projection Table -->
+            <div>
+              <h4 style="margin-bottom: 0.5rem;">Year-by-Year Wealth Accumulation</h4>
+              <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-md);">
+                <table class="table-custom" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                  <thead>
+                    <tr style="background: var(--bg-preview); border-bottom: 1px solid var(--border); text-align: left;">
+                      <th style="padding: 0.5rem 0.75rem;">Year</th>
+                      <th style="padding: 0.5rem 0.75rem;">Age</th>
+                      <th style="padding: 0.5rem 0.75rem;">Annual Savings</th>
+                      <th style="padding: 0.5rem 0.75rem;">Investment Return</th>
+                      <th style="padding: 0.5rem 0.75rem;">Net Worth</th>
+                      <th style="padding: 0.5rem 0.75rem;">Progress</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fire-table-body">
+                    <!-- Projection schedule generated here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: STR COST SEGREGATION TAX SAVER -->
+      <main id="str-cost-segregation-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-str-cost-segregation-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>STR Cost Segregation Tax Saver</h2>
+            <p>Estimate accelerated depreciation deductions and tax savings using the Short-Term Rental (STR) tax loophole 100% locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Inputs & Controls -->
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
+            
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">1. Purchase Details</div>
+            
+            <div class="control-group">
+              <label for="str-purchase-price">Property Purchase Price ($)</label>
+              <input type="number" id="str-purchase-price" class="input-custom" value="500000" min="10000" step="10000" />
+            </div>
+
+            <div class="control-group">
+              <label for="str-land-percent">Land Value Allocation (%)</label>
+              <input type="number" id="str-land-percent" class="input-custom" value="20" min="0" max="90" step="1" />
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                <span>Land Value: <strong id="str-land-value-label">$100,000</strong></span>
+                <span>Building Basis: <strong id="str-building-basis-label">$400,000</strong></span>
+              </div>
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">2. Cost Segregation Allocations</div>
+
+            <div class="control-group">
+              <label for="str-5yr-percent">5-Year Personal Property (%)</label>
+              <input type="number" id="str-5yr-percent" class="input-custom" value="12" min="0" max="50" step="1" />
+              <small style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.2; display: block; margin-top: 0.15rem;">Furniture, appliances, carpets, specialty lighting, etc. (Typical: 10-15%)</small>
+            </div>
+
+            <div class="control-group">
+              <label for="str-15yr-percent">15-Year Land Improvements (%)</label>
+              <input type="number" id="str-15yr-percent" class="input-custom" value="8" min="0" max="50" step="1" />
+              <small style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.2; display: block; margin-top: 0.15rem;">Fencing, driveways, sidewalks, landscaping, outdoor lighting. (Typical: 5-10%)</small>
+            </div>
+
+            <div class="control-group" style="background: var(--bg-preview); padding: 0.6rem; border-radius: var(--radius-sm); border: 1px dashed var(--border);">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                <span class="text-muted">27.5-Year Structural Building:</span>
+                <span style="font-weight: bold;"><span id="str-27yr-percent-label">80</span>%</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.25rem;">
+                <span class="text-muted">Structural Building Basis:</span>
+                <span style="font-weight: bold;" id="str-27yr-basis-label">$320,000</span>
+              </div>
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">3. Taxes &amp; Placed in Service</div>
+
+            <div class="control-group">
+              <label for="str-placed-year">Year Placed in Service</label>
+              <select id="str-placed-year" class="input-custom" style="width: 100%;">
+                <option value="2023">2023 (80% Bonus Depreciation)</option>
+                <option value="2024">2024 (60% Bonus Depreciation)</option>
+                <option value="2025">2025 (40% Bonus Depreciation)</option>
+                <option value="2026" selected>2026 (20% Bonus Depreciation)</option>
+                <option value="2027">2027+ (0% Bonus Depreciation)</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="str-tax-rate">Combined Marginal Income Tax Rate (%)</label>
+              <input type="number" id="str-tax-rate" class="input-custom" value="37" min="0" max="60" step="1" />
+              <small style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.2; display: block; margin-top: 0.15rem;">Federal tax bracket % + State / Local income tax % (e.g. 32% Fed + 5% State = 37%)</small>
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">4. STR Loophole Qualification</div>
+
+            <div class="control-group" style="display: flex; flex-direction: column; gap: 0.5rem; background: var(--bg-preview); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+              <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; font-weight: normal; margin: 0;">
+                <input type="checkbox" id="str-stay-7days" checked style="margin-top: 2px;" />
+                <span>Average guest stay is <strong>7 days or less</strong>.</span>
+              </label>
+              <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; font-weight: normal; margin: 0;">
+                <input type="checkbox" id="str-material-participation" checked style="margin-top: 2px;" />
+                <span>You <strong>materially participate</strong> in rental operations (e.g., &gt;100 hours and more than anyone else).</span>
+              </label>
+            </div>
+
+            <button class="btn-primary" id="btn-str-calculate" style="width: 100%;">📊 Estimate Tax Savings</button>
+          </div>
+
+          <!-- Right Panel: Results Dashboard -->
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1.5rem; align-items: stretch; justify-content: flex-start; overflow-y: auto;">
+            
+            <!-- Loophole Status Banner -->
+            <div id="str-loophole-banner" style="border-radius: var(--radius-md); padding: 1rem; border: 1px solid transparent; display: flex; gap: 0.75rem; align-items: flex-start; transition: all 0.3s ease;">
+              <!-- Dynamic content injected here -->
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center; border-top: 4px solid #10b981;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Estimated Year 1 Tax Savings</div>
+                <div id="str-year1-savings" style="font-size: 1.75rem; font-weight: bold; color: #10b981;">$0</div>
+              </div>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Cost Seg Year 1 Depreciation</div>
+                <div id="str-year1-deprec-costseg" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">$0</div>
+              </div>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Standard Year 1 Depreciation</div>
+                <div id="str-year1-deprec-std" style="font-size: 1.5rem; font-weight: bold; color: var(--text-secondary);">$0</div>
+              </div>
+              <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-preview); text-align: center;">
+                <div class="text-muted" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Additional Deduction</div>
+                <div id="str-year1-deprec-incremental" style="font-size: 1.5rem; font-weight: bold; color: var(--warning);">$0</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+              <!-- Year 1 Comparison Bar Chart -->
+              <div style="flex: 1; min-width: 250px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; display: flex; flex-direction: column; align-items: center;">
+                <h4 style="margin-bottom: 0.75rem; font-size: 0.9rem; align-self: flex-start;">Year 1 Depreciation Comparison</h4>
+                <svg id="str-bar-chart" width="220" height="200" viewBox="0 0 220 200" style="display: block; overflow: visible;"></svg>
+                <div style="display: flex; gap: 1rem; font-size: 0.72rem; margin-top: 0.5rem; justify-content: center;">
+                  <span><i style="display: inline-block; width: 10px; height: 10px; background: var(--text-secondary); border-radius: 2px; margin-right: 4px;"></i> Standard (27.5-yr)</span>
+                  <span><i style="display: inline-block; width: 10px; height: 10px; background: var(--primary); border-radius: 2px; margin-right: 4px;"></i> Cost Segregation</span>
+                </div>
+              </div>
+
+              <!-- 5-Year Cumulative Savings Line Chart -->
+              <div style="flex: 1.5; min-width: 280px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; display: flex; flex-direction: column; align-items: center;">
+                <h4 style="margin-bottom: 0.75rem; font-size: 0.9rem; align-self: flex-start;">5-Year Cumulative Tax Savings</h4>
+                <svg id="str-line-chart" width="100%" height="200" viewBox="0 0 350 200" style="width: 100%; height: 200px; display: block; overflow: visible;"></svg>
+                <div style="display: flex; justify-content: center; gap: 1rem; font-size: 0.72rem; margin-top: 0.5rem;">
+                  <span><i style="display: inline-block; width: 12px; height: 3px; background: #10b981; margin-right: 4px; vertical-align: middle;"></i> Cumulative Cash Saved ($)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Asset Table -->
+            <div>
+              <h4 style="margin-bottom: 0.5rem; font-size: 0.95rem;">Component Class Breakdown</h4>
+              <div style="overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md);">
+                <table class="table-custom" style="width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 500px;">
+                  <thead>
+                    <tr style="background: var(--bg-preview); border-bottom: 1px solid var(--border); text-align: left;">
+                      <th style="padding: 0.5rem 0.75rem;">Asset Class</th>
+                      <th style="padding: 0.5rem 0.75rem;">Allocation %</th>
+                      <th style="padding: 0.5rem 0.75rem;">Allocated Basis</th>
+                      <th style="padding: 0.5rem 0.75rem;">Bonus Deprec.</th>
+                      <th style="padding: 0.5rem 0.75rem;">MACRS Year 1</th>
+                      <th style="padding: 0.5rem 0.75rem;">Total Year 1</th>
+                    </tr>
+                  </thead>
+                  <tbody id="str-table-body">
+                    <!-- Breakdown rows generated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tax Loophole Educational & Audit Defense Info -->
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-preview); display: flex; flex-direction: column; gap: 0.75rem;">
+              <h4 style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">💡 How the "STR Tax Loophole" Works</h4>
+              <p style="font-size: 0.82rem; line-height: 1.45; margin: 0; color: var(--text-secondary);">
+                Under Section 469 of the Internal Revenue Code, rental activities are typically considered passive by default, meaning losses cannot offset active income like W-2 wages. However, an exception exists if the <strong>average guest stay is 7 days or less</strong>. Under these conditions, the property is classified as a business rather than a rental activity, freeing it from the passive loss rules, provided you <strong>materially participate</strong> in the operations.
+              </p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-top: 0.25rem;">
+                <div style="background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                  <span style="font-weight: bold; font-size: 0.8rem; color: var(--primary);">⏱️ Material Participation Tests</span>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    You must meet at least one of these tests (the most common are):
+                    <br>• <strong>500 hours:</strong> Spend 500+ hours on the activity.
+                    <br>• <strong>100 hours + most:</strong> Spend 100+ hours, and more than any other single person (including cleaning crews/property managers).
+                    <br>• <strong>Sole participant:</strong> You do substantially all the work.
+                  </span>
+                </div>
+                <div style="background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem;">
+                  <span style="font-weight: bold; font-size: 0.8rem; color: var(--warning);">🛡️ Audit Defense &amp; Log Prep</span>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    Because this loophole is highly lucrative, it is heavily scrutinized by the IRS. To protect your deductions, you should maintain a <strong>contemporaneous time log</strong> showing the date, duration, and details of every task you perform (e.g., messaging guests, staging, maintenance, purchasing supplies). Avoid relying on post-facto estimates.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
         <p>&copy; 2026 ZeroG Toolbox. Powered by <a href="https://github.com/huggingface/transformers.js" target="_blank">transformers.js</a> and WebAssembly. Secure, private, serverless. <a href="#" id="link-privacy" style="margin-left: 1rem; color: var(--primary); text-decoration: none;">Privacy Policy</a> | <a href="#" id="link-terms" style="color: var(--primary); text-decoration: none;">User Agreement</a></p>
       </footer>
     </div>
