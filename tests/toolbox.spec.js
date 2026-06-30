@@ -13,27 +13,34 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 66 tool cards rendered
+    // Check that there are 93 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(66);
+    await expect(cards).toHaveCount(93);
 
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(65);
+    expect(filteredCount).toBeLessThan(92);
     expect(filteredCount).toBeGreaterThan(0);
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(66);
+    await expect(cards).toHaveCount(93);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
     await page.locator('.tool-card[data-id="passport-photo"]').click();
     await expect(page.locator('#passport-view')).toHaveClass(/active/);
     await page.locator('#btn-passport-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool 1.5: AI Deep Face Swap view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-face-swap"]').click();
+    await expect(page.locator('#ai-face-swap-view')).toHaveClass(/active/);
+    await page.locator('#btn-face-swap-back').click();
     await expect(page.locator('#home-view')).toHaveClass(/active/);
   });
 
@@ -316,6 +323,23 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await expect(page.locator('#home-view')).toHaveClass(/active/);
   });
 
+  test('Tool 34.5: AI Image Upscaler view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="image-upscaler"]').click();
+    await expect(page.locator('#image-upscaler-view')).toHaveClass(/active/);
+    // Upload control and run button present; result comparison hidden until a run
+    await expect(page.locator('#image-upscaler-upload-container')).toBeVisible();
+    await expect(page.locator('#btn-run-image-upscaler')).toBeVisible();
+    await expect(page.locator('#image-upscaler-compare')).toBeHidden();
+    // Two upscale-factor toggles, with 2x active by default
+    await expect(page.locator('.image-upscaler-scale')).toHaveCount(2);
+    await expect(page.locator('.image-upscaler-scale[data-scale="2"]')).toHaveClass(/active/);
+    // Selecting 4x moves the active state
+    await page.locator('.image-upscaler-scale[data-scale="4"]').click();
+    await expect(page.locator('.image-upscaler-scale[data-scale="4"]')).toHaveClass(/active/);
+    await page.locator('#btn-image-upscaler-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
   test('Tool 35: AI Video Background Swap view navigation', async ({ page }) => {
     await page.locator('.tool-card[data-id="video-bg-swap"]').click();
     await expect(page.locator('#video-bg-view')).toHaveClass(/active/);
@@ -368,6 +392,7 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
   });
 
   test('New Tools: Navigation and basic rendering tests', async ({ page }) => {
+    test.setTimeout(120000);
     const newTools = [
       { id: 'ai-summarizer', view: '#ai-summarizer-view', backBtn: '#btn-ai-summarizer-back' },
       { id: 'ai-semantic-search', view: '#ai-semantic-search-view', backBtn: '#btn-ai-semantic-search-back' },
@@ -398,7 +423,32 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       { id: 'tip-calculator', view: '#tip-calculator-view', backBtn: '#btn-tip-calculator-back' },
       { id: 'life-progress', view: '#life-progress-view', backBtn: '#btn-life-progress-back' },
       { id: 'graphing-calc', view: '#graphing-calc-view', backBtn: '#btn-graphing-calc-back' },
-      { id: 'password-analyzer', view: '#password-analyzer-view', backBtn: '#btn-password-analyzer-back' }
+      { id: 'password-analyzer', view: '#password-analyzer-view', backBtn: '#btn-password-analyzer-back' },
+      { id: 'luhn-validator', view: '#luhn-validator-view', backBtn: '#btn-luhn-validator-back' },
+      { id: 'binary-translator', view: '#binary-translator-view', backBtn: '#btn-binary-translator-back' },
+      { id: 'color-palette-gen', view: '#color-palette-gen-view', backBtn: '#btn-color-palette-gen-back' },
+      { id: 'lorem-markdown', view: '#lorem-markdown-view', backBtn: '#btn-lorem-markdown-back' },
+      { id: 'user-flowchart', view: '#user-flowchart-view', backBtn: '#btn-user-flowchart-back' },
+      { id: 'metronome-tapper', view: '#metronome-tapper-view', backBtn: '#btn-metronome-tapper-back' },
+      { id: 'caesar-cipher', view: '#caesar-cipher-view', backBtn: '#btn-caesar-cipher-back' },
+      { id: 'timezone-converter', view: '#timezone-converter-view', backBtn: '#btn-timezone-converter-back' },
+      { id: 'date-calculator', view: '#date-calculator-view', backBtn: '#btn-date-calculator-back' },
+      { id: 'compound-interest', view: '#compound-interest-view', backBtn: '#btn-compound-interest-back' },
+      { id: 'tdee-calculator', view: '#tdee-calculator-view', backBtn: '#btn-tdee-calculator-back' },
+      { id: 'sort-list', view: '#sort-list-view', backBtn: '#btn-sort-list-back' },
+      { id: 'json-yaml-converter', view: '#json-yaml-converter-view', backBtn: '#btn-json-yaml-converter-back' },
+      { id: 'device-info', view: '#device-info-view', backBtn: '#btn-device-info-back' },
+      { id: 'stopwatch-lap', view: '#stopwatch-lap-view', backBtn: '#btn-stopwatch-lap-back' },
+      { id: 'html-wysiwyg', view: '#html-wysiwyg-view', backBtn: '#btn-html-wysiwyg-back' },
+      { id: 'css-gradient-mesh', view: '#css-gradient-mesh-view', backBtn: '#btn-css-gradient-mesh-back' },
+      { id: 'svg-path-viewer', view: '#svg-path-viewer-view', backBtn: '#btn-svg-path-viewer-back' },
+      { id: 'guitar-tuner', view: '#guitar-tuner-view', backBtn: '#btn-guitar-tuner-back' },
+      { id: 'speed-reader', view: '#speed-reader-view', backBtn: '#btn-speed-reader-back' },
+      { id: 'mime-inspector', view: '#mime-inspector-view', backBtn: '#btn-mime-inspector-back' },
+      { id: 'sql-playground', view: '#sql-playground-view', backBtn: '#btn-sql-playground-back' },
+      { id: 'hash-verifier', view: '#hash-verifier-view', backBtn: '#btn-hash-verifier-back' },
+      { id: 'lorem-pixel', view: '#lorem-pixel-view', backBtn: '#btn-lorem-pixel-back' },
+      { id: 'ratio-solver', view: '#ratio-solver-view', backBtn: '#btn-ratio-solver-back' }
     ];
 
     for (const tool of newTools) {

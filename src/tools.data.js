@@ -13,6 +13,15 @@ export const TOOLS = [
     uiClass: 'ready'
   },
   {
+    id: 'ai-face-swap',
+    title: 'AI Deep Face Swap',
+    description: 'Upload a source face and a target base scene, and swap the face client-side using AI landmark alignment and seamless color blending.',
+    keywords: ['face swap', 'deepfake', 'face copy', 'face replace', 'ai face', 'portrait edit', 'morph face'],
+    category: 'Graphics',
+    icon: '🎭',
+    uiClass: 'ready'
+  },
+  {
     id: 'image-vectorizer',
     title: 'PNG to SVG Vectorizer',
     description: 'Trace bitmap images (PNG, JPEG, WebP) into scalable vector graphics (SVG) using color edge contours, or rasterize SVGs back to PNG.',
@@ -310,6 +319,15 @@ export const TOOLS = [
     uiClass: 'ready'
   },
   {
+    id: 'image-upscaler',
+    title: 'AI Image Upscaler & Super-Resolution',
+    description: 'Upscale and sharpen low-resolution images 2x or 4x with the Swin2SR super-resolution AI model. Recover detail from small photos, 100% locally in your browser.',
+    keywords: ['upscale image', 'super resolution', 'super-resolution', 'enhance image', 'increase resolution', 'sharpen', 'swin2sr', 'image enlarger', 'ai upscaler', 'upscale photo', 'denoise', 'restore image'],
+    category: 'Graphics',
+    icon: '🔬',
+    uiClass: 'ready'
+  },
+  {
     id: 'video-bg-swap',
     title: 'AI Video Background Swap',
     description: 'Upload a short clip and replace its background with a solid color or your own image using the MODNet matting AI, 100% locally. Exports a WebM video.',
@@ -595,6 +613,231 @@ export const TOOLS = [
     keywords: ['password strength', 'entropy analyzer', 'password security', 'crack time', 'password safety', 'brute force estimate'],
     category: 'Security',
     icon: '🛡️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'luhn-validator',
+    title: 'Credit Card Luhn Validator',
+    description: 'Validate credit card numbers locally, detect card network issuers, and verify Luhn algorithm checksums.',
+    keywords: ['luhn algorithm', 'credit card validator', 'card check', 'validate card', 'card issuer'],
+    category: 'Security',
+    icon: '💳',
+    uiClass: 'ready'
+  },
+  {
+    id: 'binary-translator',
+    title: 'Binary to Text Translator',
+    description: 'Convert plain text into binary code (0s and 1s) and decode binary back to legible text characters.',
+    keywords: ['binary translator', 'text to binary', 'binary to text', 'ascii binary', 'decode binary'],
+    category: 'Developer',
+    icon: '🔢',
+    uiClass: 'ready'
+  },
+  {
+    id: 'color-palette-gen',
+    title: 'Color Palette & Contrast Evaluator',
+    description: 'Generate analogous, complementary, or triadic color schemes from a seed, and evaluate WCAG contrast ratios.',
+    keywords: ['color palette', 'palette generator', 'contrast checker', 'wcag contrast', 'color schemes', 'color wheel'],
+    category: 'Graphics',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'lorem-markdown',
+    title: 'Lorem Ipsum Markdown Generator',
+    description: 'Generate structured dummy paragraphs, lists, headers, code blocks, blockquotes, and tables in Markdown format.',
+    keywords: ['lorem markdown', 'markdown generator', 'dummy text', 'placeholder markdown', 'md generator'],
+    category: 'Text',
+    icon: '📝',
+    uiClass: 'ready'
+  },
+  {
+    id: 'user-flowchart',
+    title: 'Visual Flowchart & Diagram Maker',
+    description: 'Design interactive node charts and logic diagrams from simple text rules (e.g. A -> B) rendered to SVG diagrams.',
+    keywords: ['flowchart maker', 'diagram generator', 'text to diagram', 'graph visualizer', 'mermaid lite', 'svg flowchart'],
+    category: 'Developer',
+    icon: '📊',
+    uiClass: 'ready'
+  },
+  {
+    id: 'metronome-tapper',
+    title: 'BPM Tapper & Audio Metronome',
+    description: 'Tap along to measure tempo in beats per minute, or play customizable metronome click rates using Web Audio.',
+    keywords: ['bpm tapper', 'metronome', 'bpm counter', 'audio click', 'tempo tap', 'music tuner'],
+    category: 'Audio',
+    icon: '🥁',
+    uiClass: 'ready'
+  },
+  {
+    id: 'caesar-cipher',
+    title: 'Caesar & ROT13 Cipher Encoder',
+    description: 'Encrypt or decrypt messages using Caesar shifts and ROT13 ciphers, with live key adjustment sliders.',
+    keywords: ['caesar cipher', 'rot13', 'cipher encode', 'text encrypt', 'rot13 cipher', 'substitution cipher'],
+    category: 'Security',
+    icon: '🕵️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'timezone-converter',
+    title: 'Global Time Zone Converter',
+    description: 'Compare hours across multiple global time zones visually using interactive 24-hour slider sliders.',
+    keywords: ['timezone converter', 'world clock', 'time zones', 'timezone slider', 'time comparison'],
+    category: 'Calculators',
+    icon: '🗺️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'date-calculator',
+    title: 'Date Difference & Addition Calculator',
+    description: 'Calculate the exact intervals in days/weeks/months/years between two dates, or add/subtract days from a calendar day.',
+    keywords: ['date calculator', 'date difference', 'add days', 'days between dates', 'time calculator'],
+    category: 'Calculators',
+    icon: '📅',
+    uiClass: 'ready'
+  },
+  {
+    id: 'compound-interest',
+    title: 'Compound Interest Calculator',
+    description: 'Calculate savings growth over time with monthly additions and compound frequencies, plotted on a canvas bar chart.',
+    keywords: ['compound interest', 'investment calculator', 'savings calculator', 'finance growth', 'growth chart'],
+    category: 'Calculators',
+    icon: '📈',
+    uiClass: 'ready'
+  },
+  {
+    id: 'tdee-calculator',
+    title: 'BMI & TDEE Health Calculator',
+    description: 'Calculate your BMI, BMR, and TDEE calorie requirements, with protein/carb/fat macro split recommendations.',
+    keywords: ['tdee calculator', 'bmr calculator', 'bmi calculator', 'calorie needs', 'macros calculator'],
+    category: 'Calculators',
+    icon: '🥗',
+    uiClass: 'ready'
+  },
+  {
+    id: 'sort-list',
+    title: 'List Sorter & Deduplicator',
+    description: 'Clean up text lists by sorting alphabetically/numerically, shuffling, removing duplicate lines, or removing empty gaps.',
+    keywords: ['list sorter', 'deduplicate list', 'shuffle lines', 'sort text', 'clean list'],
+    category: 'Text',
+    icon: '🔤',
+    uiClass: 'ready'
+  },
+  {
+    id: 'json-yaml-converter',
+    title: 'JSON, YAML & CSV Converter',
+    description: 'Convert structured config files between JSON, YAML, and CSV tables, client-side, in real-time.',
+    keywords: ['json to yaml', 'yaml to json', 'json to csv', 'csv to json', 'format converter'],
+    category: 'Developer',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'device-info',
+    title: 'WebAPI & Device Tester',
+    description: 'Run compatibility checks for modern WebAPIs (Bluetooth, USB, Gamepad, Battery) and view detailed system characteristics.',
+    keywords: ['device info', 'webapi support', 'battery level', 'hardware tests', 'browser capabilities'],
+    category: 'Developer',
+    icon: '🖥️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'stopwatch-lap',
+    title: 'Precision Stopwatch & Lap Log',
+    description: 'Track elapsed time with millisecond precision, log laps in a grid table, and download results as a CSV spreadsheet.',
+    keywords: ['stopwatch', 'lap timer', 'split timer', 'chronometer', 'timer csv'],
+    category: 'Calculators',
+    icon: '⏱️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'html-wysiwyg',
+    title: 'Visual HTML WYSIWYG Editor',
+    description: 'Edit formatted text in a rich text visual editor and extract clean, responsive HTML markup instantly.',
+    keywords: ['wysiwyg editor', 'rich text', 'html editor', 'visual editor', 'generate html'],
+    category: 'Text',
+    icon: '🌐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-gradient-mesh',
+    title: 'CSS Gradient Builder',
+    description: 'Design linear or radial CSS gradients, add custom color stops on a visual slider, and copy CSS rules.',
+    keywords: ['css gradient', 'gradient maker', 'color stops', 'linear-gradient', 'radial-gradient'],
+    category: 'Developer',
+    icon: '🌈',
+    uiClass: 'ready'
+  },
+  {
+    id: 'svg-path-viewer',
+    title: 'SVG Path Visualizer & Grid Editor',
+    description: 'Paste SVG path d="..." attributes to draw them on an interactive grid, scale dimensions, and export clean SVGs.',
+    keywords: ['svg path', 'path visualizer', 'svg editor', 'path d', 'vector paths'],
+    category: 'Graphics',
+    icon: '🗺️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'guitar-tuner',
+    title: 'Microphone Instrument & Guitar Tuner',
+    description: 'Tune your musical instruments via microphone inputs using real-time pitch detection and a visual needle scale.',
+    keywords: ['guitar tuner', 'pitch detector', 'instrument tuner', 'frequency counter', 'chromatic tuner'],
+    category: 'Audio',
+    icon: '🎸',
+    uiClass: 'ready'
+  },
+  {
+    id: 'speed-reader',
+    title: 'Focus Speed Reader',
+    description: 'Read text using Rapid Serial Visual Presentation (RSVP), flashing words at customizable speeds (WPM) to increase focus.',
+    keywords: ['speed reader', 'rsvp reading', 'wpm speed', 'focus reading', 'spritz reader'],
+    category: 'Text',
+    icon: '⚡',
+    uiClass: 'ready'
+  },
+  {
+    id: 'mime-inspector',
+    title: 'File MIME Magic Byte Inspector',
+    description: 'Inspect uploaded files using hex magic byte signatures to identify their true extension and MIME-type classification.',
+    keywords: ['mime inspector', 'magic bytes', 'file signature', 'identify file', 'file type hex'],
+    category: 'Security',
+    icon: '🔍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'sql-playground',
+    title: 'SQL Query Playground & Sandbox',
+    description: 'Execute basic SQL commands (CREATE, INSERT, SELECT) on mock, in-memory table structures to test queries.',
+    keywords: ['sql playground', 'sql database', 'sandbox sql', 'learn sql', 'mock database'],
+    category: 'Developer',
+    icon: '💾',
+    uiClass: 'ready'
+  },
+  {
+    id: 'hash-verifier',
+    title: 'File Checksum & Hash Verifier',
+    description: 'Generate cryptographic hashes (MD5, SHA-256) of uploaded files locally and compare them to verify file integrity.',
+    keywords: ['checksum', 'file hash', 'sha256 file', 'md5 file', 'file verification'],
+    category: 'Security',
+    icon: '🛡️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'lorem-pixel',
+    title: 'SVG Placeholder Image Generator',
+    description: 'Generate customizable placeholder images with custom dimensions, labels, and colors, and copy the inline SVG.',
+    keywords: ['placeholder image', 'lorem pixel', 'svg placeholder', 'image generator', 'design placeholder'],
+    category: 'Graphics',
+    icon: '🖼️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ratio-solver',
+    title: 'Ratio & Proportion Solver',
+    description: 'Solve proportions (A:B = C:D) for missing variables, scale dimensions, and simplify ratio proportions.',
+    keywords: ['ratio solver', 'proportion', 'solve ratio', 'math ratio', 'scale dimensions'],
+    category: 'Calculators',
+    icon: '⚖️',
     uiClass: 'ready'
   }
 ];

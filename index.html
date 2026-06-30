@@ -278,6 +278,190 @@
         </div>
       </main>
 
+      <!-- VIEW 2.5: AI DEEP FACE SWAP -->
+      <main id="ai-face-swap-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-face-swap-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Deep Face Swap</h2>
+            <p>Swap faces between two images locally in your browser. Uses AI landmark regression, Delaunay triangulation, and Reinhard skin-tone blending.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls" style="min-width: 320px;">
+            <!-- 1. Source Face Image -->
+            <div class="control-group">
+              <label>1. Source Face (Identity)</label>
+              <div class="face-swap-upload-box" id="face-swap-source-box">
+                <div class="face-swap-upload-box-content" id="face-swap-source-prompt">
+                  <span class="upload-box-icon">👤</span>
+                  <span class="upload-box-text">Choose Face Image</span>
+                </div>
+                <input type="file" id="face-swap-source-input" class="file-input-hidden" accept="image/*" style="display: none;" />
+                <img id="face-swap-source-thumb" class="face-swap-thumb" style="display: none;" />
+              </div>
+            </div>
+
+            <!-- 2. Target Base Image -->
+            <div class="control-group">
+              <label>2. Target Scene (Base Image)</label>
+              <div class="face-swap-upload-box" id="face-swap-target-box">
+                <div class="face-swap-upload-box-content" id="face-swap-target-prompt">
+                  <span class="upload-box-icon">🖼️</span>
+                  <span class="upload-box-text">Choose Base Image</span>
+                </div>
+                <input type="file" id="face-swap-target-input" class="file-input-hidden" accept="image/*" style="display: none;" />
+                <img id="face-swap-target-thumb" class="face-swap-thumb" style="display: none;" />
+              </div>
+            </div>
+
+            <!-- 3. Face Selection Dropdowns (Shown if multiple faces detected) -->
+            <div class="control-group" id="face-swap-selection-group" style="display: none;">
+              <label>3. Select Face Mapping</label>
+              <div class="face-swap-selectors" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div class="selector-item">
+                  <span class="selector-label" style="font-size: 0.8rem; color: var(--text-secondary);">Source Face:</span>
+                  <select id="face-swap-src-select" class="select-custom" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; margin-top: 0.25rem;">
+                    <option value="0">Face #1 (Default)</option>
+                  </select>
+                </div>
+                <div class="selector-item">
+                  <span class="selector-label" style="font-size: 0.8rem; color: var(--text-secondary);">Target Face:</span>
+                  <select id="face-swap-tgt-select" class="select-custom" style="padding: 0.5rem 0.75rem; font-size: 0.85rem; margin-top: 0.25rem;">
+                    <option value="0">Face #1 (Default)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Advanced Adjustments -->
+            <div class="control-group">
+              <label>4. Blending & Color Adjustments</label>
+              
+              <div class="checkbox-container" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; margin-bottom: 0.5rem;">
+                <input type="checkbox" id="face-swap-auto-color" checked style="cursor: pointer; width: 16px; height: 16px;" />
+                <label for="face-swap-auto-color" style="cursor: pointer; margin: 0; user-select: none;">Auto Skin Tone Match (AI)</label>
+              </div>
+
+              <!-- Edge Feathering -->
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem;">
+                  <span>Edge Feathering</span>
+                  <span class="slider-val" id="val-face-feather">12px</span>
+                </div>
+                <input type="range" id="slider-face-feather" class="slider-custom" min="0" max="50" value="12" />
+              </div>
+
+              <!-- Mask Size (Shrink factor) -->
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem;">
+                  <span>Mask Size (Inner Face)</span>
+                  <span class="slider-val" id="val-face-mask-scale">85%</span>
+                </div>
+                <input type="range" id="slider-face-mask-scale" class="slider-custom" min="50" max="100" value="85" />
+              </div>
+
+              <!-- Shading Preservation -->
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem;">
+                  <span>Shading Preservation</span>
+                  <span class="slider-val" id="val-face-shading">30%</span>
+                </div>
+                <input type="range" id="slider-face-shading" class="slider-custom" min="0" max="100" value="30" />
+              </div>
+
+              <!-- Brightness Adjust -->
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem;">
+                  <span>Brightness Offset</span>
+                  <span class="slider-val" id="val-face-brightness">0%</span>
+                </div>
+                <input type="range" id="slider-face-brightness" class="slider-custom" min="-50" max="50" value="0" />
+              </div>
+
+              <!-- Contrast Adjust -->
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem;">
+                  <span>Contrast Offset</span>
+                  <span class="slider-val" id="val-face-contrast">0%</span>
+                </div>
+                <input type="range" id="slider-face-contrast" class="slider-custom" min="-50" max="50" value="0" />
+              </div>
+
+              <!-- Color balance adjustments (Manual Color Shift) -->
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem; color: #ef4444;">
+                  <span>Red Balance</span>
+                  <span class="slider-val" id="val-face-red">0%</span>
+                </div>
+                <input type="range" id="slider-face-red" class="slider-custom" min="-50" max="50" value="0" />
+              </div>
+
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem; color: #22c55e;">
+                  <span>Green Balance</span>
+                  <span class="slider-val" id="val-face-green">0%</span>
+                </div>
+                <input type="range" id="slider-face-green" class="slider-custom" min="-50" max="50" value="0" />
+              </div>
+
+              <div class="slider-container" style="margin-top: 0.25rem;">
+                <div class="slider-header" style="font-size: 0.8rem; color: #3b82f6;">
+                  <span>Blue Balance</span>
+                  <span class="slider-val" id="val-face-blue">0%</span>
+                </div>
+                <input type="range" id="slider-face-blue" class="slider-custom" min="-50" max="50" value="0" />
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="btn-group-row" style="margin-top: 0.5rem; gap: 0.75rem;">
+              <button class="btn-primary" id="btn-run-face-swap" disabled style="flex: 1;">✨ Run Face Swap</button>
+            </div>
+            <div class="btn-group-row" style="margin-top: 0.25rem; gap: 0.75rem;">
+              <button class="btn-accent" id="btn-download-face-swap" disabled style="flex: 1;">📥 Download Image</button>
+            </div>
+
+            <!-- Safety Disclaimer -->
+            <div class="disclaimer-box" style="margin-top: 1rem; padding: 0.75rem; border-radius: var(--radius-sm); background: rgba(239, 68, 68, 0.05); border: 1px dashed rgba(239, 68, 68, 0.2); font-size: 0.75rem; line-height: 1.35; color: var(--text-secondary);">
+              <span style="color: #ef4444; font-weight: bold; display: flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem;">⚠️ Safety & Legal Disclaimer</span> 
+              This tool runs strictly in your browser (100% client-side). No images are uploaded to any server. It is designed for creative, educational, and experimental use. You must obtain explicit permission from any individuals whose likenesses you use. Generating non-consensual deepfakes, impersonations, or misleading content is strictly prohibited.
+            </div>
+          </div>
+
+          <!-- Right Panel: Canvas Workspace -->
+          <div class="panel-workspace" id="face-swap-canvas-panel" style="flex: 1;">
+            <div class="panel-loading" id="face-swap-loading-overlay" style="display: none; position: absolute; z-index: 10; top: 0; left: 0; width: 100%; height: 100%; background: rgba(9, 9, 11, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
+              <div class="spinner"></div>
+              <div class="loading-text" id="face-swap-loading-text" style="font-weight: 600; color: var(--text-primary);">Loading AI Face Model...</div>
+              <div class="loading-progress" id="face-swap-loading-progress" style="font-size: 0.9rem; color: var(--text-secondary);">0%</div>
+            </div>
+
+            <!-- Upload state placeholders -->
+            <div class="upload-container" id="face-swap-placeholder" style="display: flex;">
+              <div class="upload-icon">🎭</div>
+              <div class="upload-text">
+                <h4>AI Deep Face Swap Canvas</h4>
+                <p>Upload a source face (1) and a target image (2) to get started</p>
+              </div>
+            </div>
+
+            <!-- Render/Preview Canvas state (hidden by default) -->
+            <div style="display: none; width: 100%; flex-direction: column; align-items: center; gap: 1.5rem;" id="face-swap-editor-container">
+              <div class="canvas-wrapper" style="position: relative; max-width: 100%; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+                <canvas id="face-swap-canvas" class="canvas-element" style="display: block; max-width: 100%; max-height: 70vh; background: #000;"></canvas>
+              </div>
+
+              <div class="btn-group-row" style="width: auto; gap: 1rem;">
+                <button class="btn-secondary" id="btn-compare-face-swap" style="min-width: 180px; user-select: none;">🔍 Hold to Show Original</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <!-- VIEW 3: IMAGE VECTORIZER (PNG <-> SVG) -->
       <main id="vectorizer-view" class="view">
         <div class="tool-view-header">
@@ -2233,6 +2417,69 @@ Supported browsers:
             <label>Preview</label>
             <div id="bg-remover-preview-group" class="bg-checkerboard" style="position: relative; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 250px;">
               <canvas id="bg-remover-canvas" style="max-width: 100%; max-height: 400px; display: block;"></canvas>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 34.5: AI IMAGE UPSCALER (Swin2SR Super-Resolution) -->
+      <main id="image-upscaler-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-image-upscaler-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Image Upscaler &amp; Super-Resolution</h2>
+            <p>Upload a low-resolution image and enlarge it 2x or 4x with the Swin2SR super-resolution AI model. Drag the slider to compare against a plain resize. Everything runs 100% locally.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select Source Image</label>
+              <div class="upload-box" id="image-upscaler-upload-container">
+                <div class="upload-icon">🔬</div>
+                <p>Drag &amp; drop image here, or <span>browse files</span></p>
+                <input type="file" id="image-upscaler-file-input" class="file-input" accept="image/*" />
+              </div>
+
+              <div id="image-upscaler-file-name" style="display: none; font-size: 0.85rem; color: var(--primary); font-weight: 500; text-align: center; margin-top: 0.5rem; word-break: break-all;"></div>
+            </div>
+
+            <div class="control-group">
+              <label>Upscale Factor</label>
+              <div class="seg-control" id="image-upscaler-scale-group" style="display: flex; gap: 0.5rem;">
+                <button class="btn-secondary image-upscaler-scale active" data-scale="2" style="flex: 1;">2x</button>
+                <button class="btn-secondary image-upscaler-scale" data-scale="4" style="flex: 1;">4x</button>
+              </div>
+              <div id="image-upscaler-note" style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.5rem; line-height: 1.4;"></div>
+
+              <button class="btn-primary" id="btn-run-image-upscaler" style="margin-top: 0.75rem; width: 100%;" disabled>🔬 Upscale Image</button>
+              <button class="btn-secondary" id="btn-download-image-upscaler" style="width: 100%; margin-top: 0.5rem;" disabled>⬇️ Download PNG</button>
+            </div>
+          </div>
+
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
+            <div id="image-upscaler-loading-overlay" class="loading-overlay-custom" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-md);">
+              <div class="spinner"></div>
+              <div id="image-upscaler-loading-text" style="font-weight: 500; font-size: 0.9rem;">Loading Swin2SR model...</div>
+              <div id="image-upscaler-loading-progress" style="font-size: 0.8rem; color: var(--text-secondary);">0%</div>
+            </div>
+
+            <label>Preview <span id="image-upscaler-dims" style="font-weight: 400; color: var(--text-secondary); font-size: 0.8rem;"></span></label>
+
+            <div id="image-upscaler-compare" class="upscale-compare bg-checkerboard" style="display: none;">
+              <img id="image-upscaler-before-img" class="upscale-compare-img" alt="Resized original" />
+              <div id="image-upscaler-after-wrap" class="upscale-compare-after">
+                <img id="image-upscaler-after-img" class="upscale-compare-img" alt="AI upscaled" />
+              </div>
+              <div id="image-upscaler-divider" class="upscale-compare-divider"></div>
+              <span class="upscale-compare-tag upscale-tag-before">Resized</span>
+              <span class="upscale-compare-tag upscale-tag-after">AI Upscaled</span>
+              <input type="range" id="image-upscaler-slider" class="upscale-compare-slider" min="0" max="100" value="50" aria-label="Compare slider" />
+            </div>
+
+            <div id="image-upscaler-placeholder" style="border: 1px dashed var(--border); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; min-height: 250px; color: var(--text-secondary); font-size: 0.9rem; text-align: center; padding: 1rem;">
+              Upload an image and click <b style="margin: 0 0.25rem;">Upscale</b> to see the super-resolution result here.
             </div>
           </div>
         </div>
@@ -4197,6 +4444,1133 @@ Supported browsers:
                   <span>Supercomputer (1T attempts/sec)</span>
                   <span id="pwd-crack-super" style="font-family: monospace; font-weight: bold;">Instant</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 67: CREDIT CARD LUHN VALIDATOR -->
+      <main id="luhn-validator-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-luhn-validator-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Credit Card Luhn Validator</h2>
+            <p>Validate card number structure, verify Luhn checksum, and detect issuer network.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="luhn-card-input">Card Number</label>
+              <input type="text" id="luhn-card-input" class="input-custom" placeholder="4xxx xxxx xxxx xxxx" autocomplete="off" />
+            </div>
+            <button class="btn-primary" id="btn-luhn-validate" style="width: 100%; margin-top: 1rem;">💳 Validate Card</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Validation Results</h4>
+              <div id="luhn-badge" style="padding: 1rem; border-radius: var(--radius-sm); font-weight: bold; text-align: center; background: var(--border); font-size: 1.1rem;">
+                Enter a card number to check validity.
+              </div>
+              <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Issuer Network:</span>
+                  <span id="luhn-network" style="font-weight: bold;">Unknown</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Checksum:</span>
+                  <span id="luhn-checksum-status">N/A</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Format Check:</span>
+                  <span id="luhn-format-status">N/A</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 68: BINARY TO TEXT TRANSLATOR -->
+      <main id="binary-translator-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-binary-translator-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Binary to Text Translator</h2>
+            <p>Convert plain text strings into binary code representations and vice-versa.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="binary-text-input">Plain Text</label>
+              <textarea id="binary-text-input" class="input-custom" style="height: 120px; resize: none;" placeholder="Type plain text here..."></textarea>
+            </div>
+            <button class="btn-primary" id="btn-binary-to-bin" style="width: 100%; margin-top: 0.5rem;">Convert to Binary ➔</button>
+            <button class="btn-secondary" id="btn-binary-to-txt" style="width: 100%; margin-top: 0.5rem;">◀ Convert to Text</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Binary Code</h4>
+              <textarea id="binary-bin-input" class="input-custom" style="flex: 1; font-family: monospace; resize: none;" placeholder="01001000 01000101 01001100 01001100 01001111..."></textarea>
+              <button class="btn-secondary" id="btn-binary-copy" style="width: 100%;">📋 Copy Output</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 69: COLOR PALETTE GENERATOR -->
+      <main id="color-palette-gen-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-color-palette-gen-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Color Palette &amp; Contrast Evaluator</h2>
+            <p>Generate matching color palettes and verify accessibility text contrast values.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="palette-seed-color">Seed Color</label>
+              <input type="color" id="palette-seed-color" class="input-custom" value="#6366f1" style="height: 50px; padding: 0.25rem; cursor: pointer;" />
+            </div>
+            <div class="control-group" style="margin-top: 0.75rem;">
+              <label for="palette-harmony">Harmony Rule</label>
+              <select id="palette-harmony" class="input-custom">
+                <option value="complementary">Complementary</option>
+                <option value="analogous" selected>Analogous</option>
+                <option value="triadic">Triadic</option>
+                <option value="monochromatic">Monochromatic</option>
+                <option value="split">Split Complementary</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-palette-generate" style="width: 100%; margin-top: 1rem;">🎨 Generate Palette</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Generated Scheme</h4>
+              <div id="palette-colors-container" style="display: flex; flex-wrap: wrap; gap: 0.75rem; min-height: 160px; margin-bottom: 0.5rem;">
+                <!-- Colors show up here -->
+              </div>
+              <h4>Contrast Analyzer (Seed vs Target)</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div id="contrast-light-card" style="padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                  <strong>White Text (#FFF)</strong>
+                  <div id="contrast-light-ratio" style="font-size: 1.25rem; font-weight: bold; margin: 0.25rem 0;">1.00:1</div>
+                  <div id="contrast-light-pass" style="font-size: 0.8rem; font-weight: bold;">Fail</div>
+                </div>
+                <div id="contrast-dark-card" style="padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                  <strong>Black Text (#000)</strong>
+                  <div id="contrast-dark-ratio" style="font-size: 1.25rem; font-weight: bold; margin: 0.25rem 0;">1.00:1</div>
+                  <div id="contrast-dark-pass" style="font-size: 0.8rem; font-weight: bold;">Fail</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 70: LOREM IPSUM MARKDOWN GENERATOR -->
+      <main id="lorem-markdown-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-lorem-markdown-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Lorem Ipsum Markdown Generator</h2>
+            <p>Generate styled placeholder markdown structures to test editors and CSS layouts.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Include Elements</label>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="md-inc-headings" checked /> Headings
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="md-inc-lists" checked /> Bullet Lists
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="md-inc-code" checked /> Code Blocks
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="md-inc-tables" checked /> Tables
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="md-inc-quotes" checked /> Blockquotes
+                </label>
+              </div>
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="md-len-select">Article Length</label>
+              <select id="md-len-select" class="input-custom">
+                <option value="short">Short (1 section)</option>
+                <option value="medium" selected>Medium (3 sections)</option>
+                <option value="long">Long (5 sections)</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-md-generate" style="width: 100%; margin-top: 0.5rem;">📝 Generate Markdown</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Markdown Output</h4>
+              <textarea id="md-generated-output" class="input-custom" style="flex: 1; font-family: monospace; resize: none;" readonly placeholder="Markdown text will appear here..."></textarea>
+              <button class="btn-secondary" id="btn-md-copy" style="width: 100%;">📋 Copy Markdown</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 71: TEXT-TO-SVG DIAGRAM MAKER -->
+      <main id="user-flowchart-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-user-flowchart-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Visual Flowchart &amp; Diagram Maker</h2>
+            <p>Generate node flowcharts automatically using simple text relations.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="flowchart-rules">Flowchart Declarations</label>
+              <textarea id="flowchart-rules" class="input-custom" style="height: 180px; font-family: monospace; resize: none; font-size: 0.85rem;" placeholder="Start -> Login&#10;Login -> Dashboard&#10;Dashboard -> Edit&#10;Dashboard -> Logout"></textarea>
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="flowchart-direction">Direction</label>
+              <select id="flowchart-direction" class="input-custom">
+                <option value="TB" selected>Top-to-Bottom</option>
+                <option value="LR">Left-to-Right</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-flowchart-render" style="width: 100%; margin-top: 0.5rem;">📊 Render Diagram</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; height: 100%;">
+              <h4>Diagram Preview</h4>
+              <div id="flowchart-svg-container" style="flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-preview); overflow: auto; display: flex; align-items: center; justify-content: center; padding: 1rem; position: relative;">
+                <!-- SVG outputs here -->
+              </div>
+              <button class="btn-secondary" id="btn-flowchart-copy" style="width: 100%;">📋 Copy SVG Code</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 72: BPM TAPPER & AUDIO METRONOME -->
+      <main id="metronome-tapper-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-metronome-tapper-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>BPM Tapper &amp; Audio Metronome</h2>
+            <p>Tap beats in real-time to analyze tempo or run an audio click track metronome.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="metronome-bpm-slider">Metronome BPM (<span id="metronome-bpm-val">120</span>)</label>
+              <input type="range" id="metronome-bpm-slider" min="40" max="240" value="120" style="margin-top: 0.25rem;" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="metronome-sound-select">Metronome Sound</label>
+              <select id="metronome-sound-select" class="input-custom">
+                <option value="sine">Synth Beep</option>
+                <option value="wood">Wood Block</option>
+                <option value="white">Cowbell Click</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-metronome-toggle" style="width: 100%; margin-top: 0.5rem;">🥁 Start Metronome</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; align-items: center; justify-content: center;">
+              <div id="metronome-visual-indicator" style="width: 80px; height: 80px; border-radius: 50%; background: var(--border); margin-bottom: 1.5rem; transition: background 0.1s ease; border: 4px solid var(--bg-card);"></div>
+              <button id="btn-bpm-tap-target" style="width: 180px; height: 180px; border-radius: 50%; background: var(--primary-glow); border: 2px dashed var(--primary); color: var(--text-primary); font-size: 1.25rem; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; outline: none; transition: transform 0.05s ease;">
+                TAP BEAT
+                <span id="tap-current-bpm" style="font-size: 2.25rem; margin-top: 0.5rem; font-family: monospace;">--</span>
+                <span style="font-size: 0.7rem; font-weight: normal; margin-top: 0.25rem; color: var(--text-secondary);">Click or press Spacebar</span>
+              </button>
+              <button class="btn-secondary" id="btn-bpm-tap-reset" style="margin-top: 1rem; width: 120px;">Clear Tap History</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 73: CAESAR & ROT13 CIPHER -->
+      <main id="caesar-cipher-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-caesar-cipher-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Caesar &amp; ROT13 Cipher Encoder</h2>
+            <p>Encode or decode text messages client-side using customizable alphabet shift keys.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="caesar-shift-slider">Shift Amount (<span id="caesar-shift-val">3</span>)</label>
+              <input type="range" id="caesar-shift-slider" min="0" max="25" value="3" style="margin-top: 0.25rem;" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="caesar-mode">Cipher Operation</label>
+              <select id="caesar-mode" class="input-custom">
+                <option value="encode" selected>Encode (Shift Right)</option>
+                <option value="decode">Decode (Shift Left)</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-caesar-rot13-quick" style="width: 100%; margin-top: 0.5rem;">🕵️ Set to ROT13 (Shift 13)</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: grid; grid-template-rows: 1fr auto 1fr; gap: 0.75rem; width: 100%;">
+              <div>
+                <h4>Input Text</h4>
+                <textarea id="caesar-input-txt" class="input-custom" style="height: 120px; resize: none;" placeholder="Enter message to encipher..."></textarea>
+              </div>
+              <div style="text-align: center; color: var(--text-secondary);">⬇ Translated Message ⬇</div>
+              <div>
+                <h4>Output Result</h4>
+                <textarea id="caesar-output-txt" class="input-custom" readonly style="height: 120px; resize: none; font-family: monospace;" placeholder="Cipher result will show up here..."></textarea>
+              </div>
+              <button class="btn-secondary" id="btn-caesar-copy" style="width: 100%;">📋 Copy Output</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 74: GLOBAL TIME ZONE CONVERTER -->
+      <main id="timezone-converter-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-timezone-converter-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Global Time Zone Converter</h2>
+            <p>Compare times across different global locations and adjust values visually.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="tz-select-input">Add Global Time Zone</label>
+              <select id="tz-select-input" class="input-custom">
+                <option value="UTC">UTC (Universal Coordinated Time)</option>
+                <option value="America/New_York">New York (EST/EDT)</option>
+                <option value="America/Los_Angeles">Los Angeles (PST/PDT)</option>
+                <option value="America/Chicago">Chicago (CST/CDT)</option>
+                <option value="Europe/London">London (GMT/BST)</option>
+                <option value="Europe/Paris">Paris (CET/CEST)</option>
+                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                <option value="Asia/Shanghai">Shanghai / Beijing (CST)</option>
+                <option value="Asia/Kolkata">Mumbai / Kolkata (IST)</option>
+                <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-tz-add" style="width: 100%; margin-top: 0.5rem;">🗺️ Add Time Zone</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <h4>Visual Chronology</h4>
+                <button class="btn-secondary" id="btn-tz-reset" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">Reset to Current Time</button>
+              </div>
+              <div style="background: var(--bg-preview); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <label for="tz-hour-slider" style="font-size: 0.8rem; font-weight: bold; margin-bottom: 0.5rem; display: block;">Adjust Hour (UTC Offset Baseline: <span id="tz-slider-hour-label">12:00</span>)</label>
+                <input type="range" id="tz-hour-slider" min="0" max="1439" value="720" style="width: 100%;" />
+              </div>
+              <div id="tz-cards-container" style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; overflow-y: auto; max-height: 280px;">
+                <!-- Added zones will appear here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 75: DATE DIFFERENCE & ADDITION CALCULATOR -->
+      <main id="date-calculator-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-date-calculator-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Date Difference &amp; Addition Calculator</h2>
+            <p>Compute exact day offsets between two dates, or add and subtract time components.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="date-calc-mode">Operation Mode</label>
+              <select id="date-calc-mode" class="input-custom">
+                <option value="diff" selected>Days Between Two Dates</option>
+                <option value="add-sub">Add / Subtract Days</option>
+              </select>
+            </div>
+            <div id="date-calc-diff-inputs">
+              <div class="control-group" style="margin-top: 0.5rem;">
+                <label for="date-calc-start">Start Date</label>
+                <input type="date" id="date-calc-start" class="input-custom" />
+              </div>
+              <div class="control-group" style="margin-top: 0.5rem;">
+                <label for="date-calc-end">End Date</label>
+                <input type="date" id="date-calc-end" class="input-custom" />
+              </div>
+            </div>
+            <div id="date-calc-add-inputs" style="display: none;">
+              <div class="control-group" style="margin-top: 0.5rem;">
+                <label for="date-calc-base">Base Date</label>
+                <input type="date" id="date-calc-base" class="input-custom" />
+              </div>
+              <div class="control-group" style="margin-top: 0.5rem;">
+                <label for="date-calc-offset-val">Value (Days)</label>
+                <input type="number" id="date-calc-offset-val" class="input-custom" value="30" />
+              </div>
+              <div class="control-group" style="margin-top: 0.5rem;">
+                <label for="date-calc-op">Action</label>
+                <select id="date-calc-op" class="input-custom">
+                  <option value="add" selected>Add</option>
+                  <option value="sub">Subtract</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" id="btn-date-calculate" style="width: 100%; margin-top: 1rem;">📅 Calculate Date</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; align-items: center; justify-content: center;">
+              <h4>Result Output</h4>
+              <div id="date-calc-result-badge" style="padding: 1.25rem; font-weight: bold; border-radius: var(--radius-sm); border: 1px solid var(--border); text-align: center; width: 100%; background: var(--bg-preview); font-size: 1.25rem;">
+                Calculate to reveal results.
+              </div>
+              <div id="date-calc-steps" style="width: 100%; font-size: 0.85rem; font-family: monospace; line-height: 1.5; color: var(--text-secondary); margin-top: 0.5rem; text-align: center;">
+                No calculation performed.
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 76: COMPOUND INTEREST CALCULATOR -->
+      <main id="compound-interest-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-compound-interest-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Compound Interest Calculator</h2>
+            <p>Calculate saving asset growth with visual stacked canvas charts and schedule breakdowns.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 550px; overflow-y: auto;">
+            <div class="control-group">
+              <label for="compound-principal">Principal Amount ($)</label>
+              <input type="number" id="compound-principal" class="input-custom" value="10000" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="compound-rate">Annual Interest Rate (%)</label>
+              <input type="number" id="compound-rate" class="input-custom" value="7" step="0.1" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="compound-years">Duration (Years)</label>
+              <input type="number" id="compound-years" class="input-custom" value="10" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="compound-addition">Monthly Addition ($)</label>
+              <input type="number" id="compound-addition" class="input-custom" value="200" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="compound-frequency">Compounding Period</label>
+              <select id="compound-frequency" class="input-custom">
+                <option value="12" selected>Monthly (12/yr)</option>
+                <option value="4">Quarterly (4/yr)</option>
+                <option value="1">Annually (1/yr)</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-compound-calculate" style="width: 100%; margin-top: 1rem;">📈 Calculate Growth</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; height: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4>Growth Breakdown</h4>
+                <div id="compound-total-badge" style="font-weight: bold; color: var(--accent); font-family: monospace;">Total: $0.00</div>
+              </div>
+              <canvas id="compound-chart-canvas" width="400" height="240" style="width: 100%; height: 240px; background: var(--bg-preview); border: 1px solid var(--border); border-radius: var(--radius-sm);"></canvas>
+              <div style="display: flex; gap: 1rem; font-size: 0.75rem; justify-content: center; margin-top: 0.25rem;">
+                <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="display: inline-block; width: 10px; height: 10px; background: var(--primary);"></span> Principal &amp; Contributions</span>
+                <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="display: inline-block; width: 10px; height: 10px; background: var(--accent);"></span> Accrued Interest</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 77: BMI & TDEE HEALTH CALCULATOR -->
+      <main id="tdee-calculator-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-tdee-calculator-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>BMI &amp; TDEE Health Calculator</h2>
+            <p>Compute Body Mass Index, BMR calories, and daily TDEE energy targets client-side.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls" style="max-height: 550px; overflow-y: auto;">
+            <div class="control-group">
+              <label for="tdee-gender">Gender</label>
+              <select id="tdee-gender" class="input-custom">
+                <option value="male" selected>Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="tdee-age">Age (Years)</label>
+              <input type="number" id="tdee-age" class="input-custom" value="25" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="tdee-weight">Weight (kg)</label>
+              <input type="number" id="tdee-weight" class="input-custom" value="70" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="tdee-height">Height (cm)</label>
+              <input type="number" id="tdee-height" class="input-custom" value="175" />
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="tdee-activity">Activity Level</label>
+              <select id="tdee-activity" class="input-custom">
+                <option value="1.2" selected>Sedentary (Office job)</option>
+                <option value="1.375">Lightly Active (1-3 days/wk)</option>
+                <option value="1.55">Moderately Active (3-5 days/wk)</option>
+                <option value="1.725">Very Active (6-7 days/wk)</option>
+              </select>
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="tdee-goal">Fitness Goal</label>
+              <select id="tdee-goal" class="input-custom">
+                <option value="-500">Weight Loss (-500 kcal)</option>
+                <option value="0" selected>Maintain Weight</option>
+                <option value="500">Weight Gain (+500 kcal)</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-tdee-calculate" style="width: 100%; margin-top: 1rem;">🥗 Calculate Targets</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Physiology Indicators</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div style="border: 1px solid var(--border); padding: 0.75rem; border-radius: var(--radius-sm); text-align: center; background: var(--bg-preview);">
+                  <div style="font-size: 0.8rem; color: var(--text-secondary);">BMI Category</div>
+                  <div id="tdee-bmi-val" style="font-size: 1.25rem; font-weight: bold; margin-top: 0.25rem;">22.9 (Normal)</div>
+                </div>
+                <div style="border: 1px solid var(--border); padding: 0.75rem; border-radius: var(--radius-sm); text-align: center; background: var(--bg-preview);">
+                  <div style="font-size: 0.8rem; color: var(--text-secondary);">Daily Calories Goal</div>
+                  <div id="tdee-calories-val" style="font-size: 1.25rem; font-weight: bold; margin-top: 0.25rem; color: var(--accent);">2,400 kcal</div>
+                </div>
+              </div>
+              <h4 style="margin-top: 0.5rem;">Estimated Daily Macros (40/30/30 Split)</h4>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span>Protein (4 kcal/g)</span>
+                  <span id="tdee-macro-prot" style="font-family: monospace; font-weight: bold;">-- g</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span>Carbs (4 kcal/g)</span>
+                  <span id="tdee-macro-carb" style="font-family: monospace; font-weight: bold;">-- g</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span>Fats (9 kcal/g)</span>
+                  <span id="tdee-macro-fat" style="font-family: monospace; font-weight: bold;">-- g</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 78: LIST SORTER & DEDUPLICATOR -->
+      <main id="sort-list-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-sort-list-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>List Sorter &amp; Deduplicator</h2>
+            <p>Sort text arrays alphabetically, remove duplicates, or random-shuffle lists of string lines.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="sort-list-select">Sorting Rule</label>
+              <select id="sort-list-select" class="input-custom">
+                <option value="asc" selected>Alphabetical (A-Z)</option>
+                <option value="desc">Reverse Alphabetical (Z-A)</option>
+                <option value="num-asc">Numeric Ascending</option>
+                <option value="num-desc">Numeric Descending</option>
+                <option value="len-asc">Length Ascending</option>
+                <option value="len-desc">Length Descending</option>
+                <option value="shuffle">Random Shuffle</option>
+              </select>
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label>Modifiers</label>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="sort-list-dedup" checked /> Remove Duplicates
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="sort-list-trim" checked /> Trim Whitespace
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" id="sort-list-skip-empty" checked /> Remove Empty Lines
+                </label>
+              </div>
+            </div>
+            <button class="btn-primary" id="btn-sort-list-run" style="width: 100%; margin-top: 0.5rem;">🔤 Clean &amp; Sort List</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; width: 100%;">
+              <div style="display: flex; flex-direction: column;">
+                <h4>Original List</h4>
+                <textarea id="sort-list-input" class="input-custom" style="flex: 1; font-family: monospace; resize: none;" placeholder="Line 1&#10;Line 2&#10;Line 1 (Duplicate)&#10;Line 3"></textarea>
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <h4>Cleaned List</h4>
+                <textarea id="sort-list-output" class="input-custom" readonly style="flex: 1; font-family: monospace; resize: none;" placeholder="Output will appear here..."></textarea>
+              </div>
+            </div>
+            <button class="btn-secondary" id="btn-sort-list-copy" style="width: 100%; margin-top: 0.5rem;">📋 Copy Sorted List</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 79: JSON, YAML & CSV CONVERTER -->
+      <main id="json-yaml-converter-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-json-yaml-converter-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>JSON, YAML &amp; CSV Converter</h2>
+            <p>Convert structures client-side between JSON records, YAML configurations, and flat CSVs.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="json-yaml-direction">Conversion Mode</label>
+              <select id="json-yaml-direction" class="input-custom">
+                <option value="json2yaml" selected>JSON to YAML</option>
+                <option value="yaml2json">YAML to JSON</option>
+                <option value="json2csv">JSON to CSV</option>
+                <option value="csv2json">CSV to JSON</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-json-yaml-convert" style="width: 100%; margin-top: 1rem;">🔄 Convert Data</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: grid; grid-template-rows: 1fr auto 1fr; gap: 0.75rem; width: 100%;">
+              <div>
+                <h4>Input Payload</h4>
+                <textarea id="json-yaml-input" class="input-custom" style="height: 120px; font-family: monospace; resize: none;" placeholder='{"name": "App", "version": "1.0"}'></textarea>
+              </div>
+              <div style="text-align: center; color: var(--text-secondary);">⬇ Converted Structure ⬇</div>
+              <div>
+                <h4>Output Result</h4>
+                <textarea id="json-yaml-output" class="input-custom" readonly style="height: 120px; font-family: monospace; resize: none;" placeholder="Converted text appears here..."></textarea>
+              </div>
+              <button class="btn-secondary" id="btn-json-yaml-copy" style="width: 100%;">📋 Copy Output</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 80: WEBAPI & DEVICE TESTER -->
+      <main id="device-info-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-device-info-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>WebAPI &amp; Device Tester</h2>
+            <p>Diagnose physical hardware features and query modern in-browser WebAPI support indicators.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <h4 style="margin-bottom: 0.5rem;">Diagnostic Controls</h4>
+            <button class="btn-primary" id="btn-device-info-run" style="width: 100%;">🖥️ Re-run System Checks</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; width: 100%;">
+              <div>
+                <h4>System &amp; Browser Characteristics</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; margin-top: 0.5rem;">
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                    <span style="color: var(--text-secondary);">CPU Logical Cores:</span>
+                    <span id="dev-cpu-cores">--</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                    <span style="color: var(--text-secondary);">Estimated Memory:</span>
+                    <span id="dev-ram">--</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                    <span style="color: var(--text-secondary);">Screen Dimensions:</span>
+                    <span id="dev-screen">--</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                    <span style="color: var(--text-secondary);">Pixel Aspect Ratio:</span>
+                    <span id="dev-dpr">--</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                    <span style="color: var(--text-secondary);">Device Battery Level:</span>
+                    <span id="dev-battery">--</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                    <span style="color: var(--text-secondary);">Network Link State:</span>
+                    <span id="dev-network">--</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h4>WebAPI Support Checklist</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem; margin-top: 0.5rem;" id="dev-webapi-checklist">
+                  <!-- API check rows -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 81: PRECISION STOPWATCH & LAP LOG -->
+      <main id="stopwatch-lap-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-stopwatch-lap-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Precision Stopwatch &amp; Lap Log</h2>
+            <p>High-resolution split and lap logging timer with export features.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div style="font-size: 2.75rem; font-family: monospace; text-align: center; background: var(--bg-preview); padding: 1.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border); font-weight: bold;" id="stopwatch-readout">
+              00:00.000
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+              <button class="btn-primary" id="btn-stopwatch-start" style="flex: 1.5;">⏱️ Start</button>
+              <button class="btn-secondary" id="btn-stopwatch-lap" style="flex: 1;">Lap</button>
+            </div>
+            <button class="btn-secondary" id="btn-stopwatch-reset" style="width: 100%; margin-top: 0.5rem;">Reset Timer</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4>Laps Track Log</h4>
+                <button class="btn-secondary" id="btn-stopwatch-export" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">Export CSV</button>
+              </div>
+              <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-preview);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;" id="stopwatch-laps-table">
+                  <thead>
+                    <tr style="border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); text-align: left;">
+                      <th style="padding: 0.5rem;">Lap #</th>
+                      <th style="padding: 0.5rem;">Split Time</th>
+                      <th style="padding: 0.5rem;">Total Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Lap records populate here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 82: VISUAL HTML WYSIWYG EDITOR -->
+      <main id="html-wysiwyg-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-html-wysiwyg-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Visual HTML WYSIWYG Editor</h2>
+            <p>Compose rich text formatting visually and generate clean HTML source structures.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <h4 style="margin-bottom: 0.5rem;">Visual Formats</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <button class="btn-secondary" id="btn-wysiwyg-bold" style="padding: 0.5rem;"><b>B</b></button>
+              <button class="btn-secondary" id="btn-wysiwyg-italic" style="padding: 0.5rem;"><i>I</i></button>
+              <button class="btn-secondary" id="btn-wysiwyg-ul" style="padding: 0.5rem;">• List</button>
+              <button class="btn-secondary" id="btn-wysiwyg-link" style="padding: 0.5rem;">🔗 Link</button>
+              <button class="btn-secondary" id="btn-wysiwyg-h1" style="padding: 0.5rem; grid-column: span 2;">Header H1</button>
+            </div>
+            <button class="btn-primary" id="btn-wysiwyg-extract" style="width: 100%; margin-top: 1rem;">🌐 Extract Source Code</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: grid; grid-template-rows: 1fr 1fr; gap: 1rem; width: 100%;">
+              <div style="display: flex; flex-direction: column;">
+                <h4>Visual Canvas (Editable)</h4>
+                <div id="wysiwyg-canvas" contenteditable="true" style="flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; background: var(--bg-preview); overflow-y: auto; color: var(--text-primary); outline: none;">
+                  Start typing and format using the controls...
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <h4>HTML Markup Code</h4>
+                <textarea id="wysiwyg-output" class="input-custom" readonly style="flex: 1; font-family: monospace; resize: none;" placeholder="HTML source output..."></textarea>
+              </div>
+            </div>
+            <button class="btn-secondary" id="btn-wysiwyg-copy" style="width: 100%; margin-top: 0.5rem;">📋 Copy HTML Markup</button>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 83: CSS GRADIENT BUILDER -->
+      <main id="css-gradient-mesh-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-css-gradient-mesh-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>CSS Gradient Builder</h2>
+            <p>Design beautiful linear CSS gradients visually and compile CSS background rules.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="grad-angle-slider">Angle (<span id="grad-angle-label">90</span>°)</label>
+              <input type="range" id="grad-angle-slider" min="0" max="360" value="90" />
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+              <div class="control-group">
+                <label for="grad-color-1">Color 1</label>
+                <input type="color" id="grad-color-1" class="input-custom" value="#6366f1" style="height: 40px; padding: 0.25rem; cursor: pointer;" />
+              </div>
+              <div class="control-group">
+                <label for="grad-color-2">Color 2</label>
+                <input type="color" id="grad-color-2" class="input-custom" value="#ec4899" style="height: 40px; padding: 0.25rem; cursor: pointer;" />
+              </div>
+            </div>
+            <button class="btn-primary" id="btn-grad-invert" style="width: 100%; margin-top: 1rem;">🔄 Reverse Direction</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Gradient Preview</h4>
+              <div id="grad-preview-box" style="flex: 1; min-height: 180px; border-radius: var(--radius-sm); border: 1px solid var(--border);"></div>
+              <h4>CSS Background Rules</h4>
+              <input type="text" id="grad-css-output" class="input-custom" readonly style="font-family: monospace;" />
+              <button class="btn-secondary" id="btn-grad-copy" style="width: 100%;">📋 Copy CSS Gradient</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 84: SVG PATH VISUALIZER & GRID EDITOR -->
+      <main id="svg-path-viewer-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-svg-path-viewer-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>SVG Path Visualizer &amp; Grid Editor</h2>
+            <p>Paste SVG path d="..." string rules, view them plotted on coordinate grids, and scale path bounds.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="svg-path-d-input">Path Data (d Attribute)</label>
+              <textarea id="svg-path-d-input" class="input-custom" style="height: 150px; font-family: monospace; resize: none;" placeholder="M10 80 Q 95 10 180 80"></textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+              <div class="control-group">
+                <label for="svg-path-stroke">Stroke Color</label>
+                <input type="color" id="svg-path-stroke" class="input-custom" value="#6366f1" style="height: 38px; padding: 0.25rem;" />
+              </div>
+              <div class="control-group">
+                <label for="svg-path-fill">Fill Color</label>
+                <input type="color" id="svg-path-fill" class="input-custom" value="#000000" style="height: 38px; padding: 0.25rem;" />
+              </div>
+            </div>
+            <button class="btn-primary" id="btn-svg-path-render" style="width: 100%; margin-top: 1rem;">🎨 Render Path</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Grid Canvas View</h4>
+              <div id="svg-path-render-container" style="flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-preview); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                <!-- Plotted SVG Path inside -->
+              </div>
+              <button class="btn-secondary" id="btn-svg-path-copy" style="width: 100%;">📋 Copy Full SVG Code</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 85: MICROPHONE GUITAR TUNER -->
+      <main id="guitar-tuner-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-guitar-tuner-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Microphone Instrument &amp; Guitar Tuner</h2>
+            <p>Tune instrument strings using real-time pitch autocorrelation analysis via microphone input.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <button class="btn-primary" id="btn-tuner-mic-toggle" style="width: 100%;">🎙️ Enable Microphone</button>
+            <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+              <strong>Standard Guitar Tuning:</strong><br/>
+              - 6th String: <b>E2</b> (82.4 Hz)<br/>
+              - 5th String: <b>A2</b> (110.0 Hz)<br/>
+              - 4th String: <b>D3</b> (146.8 Hz)<br/>
+              - 3rd String: <b>G3</b> (196.0 Hz)<br/>
+              - 2nd String: <b>B3</b> (246.9 Hz)<br/>
+              - 1st String: <b>E4</b> (329.6 Hz)
+            </div>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; align-items: center; justify-content: center;">
+              <div id="tuner-note-box" style="font-size: 3.75rem; font-weight: bold; font-family: Space Grotesk, sans-serif; color: var(--accent); margin-bottom: 0.5rem;">--</div>
+              <div id="tuner-freq-box" style="font-family: monospace; font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1.5rem;">-- Hz</div>
+              <canvas id="tuner-needle-canvas" width="300" height="100" style="width: 300px; height: 100px; background: var(--bg-preview); border: 1px solid var(--border); border-radius: var(--radius-sm);"></canvas>
+              <div style="display: flex; justify-content: space-between; width: 300px; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                <span>Flat (Too Low)</span>
+                <span>In Tune</span>
+                <span>Sharp (Too High)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 86: FOCUS SPEED READER -->
+      <main id="speed-reader-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-speed-reader-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Focus Speed Reader</h2>
+            <p>Paste paragraphs and digest text using rapid serial visual word presentation (RSVP).</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="speed-reader-wpm">Reading Speed (WPM)</label>
+              <select id="speed-reader-wpm" class="input-custom">
+                <option value="200">200 WPM (Leisurely)</option>
+                <option value="300" selected>300 WPM (Average)</option>
+                <option value="400">400 WPM (Fast)</option>
+                <option value="500">500 WPM (Speedy)</option>
+                <option value="600">600 WPM (Expert)</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+              <button class="btn-primary" id="btn-speed-reader-start" style="flex: 1.5;">⚡ Play</button>
+              <button class="btn-secondary" id="btn-speed-reader-pause" style="flex: 1;">Pause</button>
+            </div>
+            <button class="btn-secondary" id="btn-speed-reader-reset" style="width: 100%; margin-top: 0.5rem;">Reset Reader</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; align-items: center; justify-content: center;">
+              <div id="speed-reader-box" style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2rem; width: 100%; height: 160px; background: var(--bg-preview); display: flex; align-items: center; justify-content: center; font-size: 2.25rem; font-family: monospace; position: relative;">
+                <!-- Focussed word display -->
+                <span id="speed-reader-target" style="display: flex; justify-content: center; width: 100%;">Paste text to start</span>
+              </div>
+              <textarea id="speed-reader-input" class="input-custom" style="width: 100%; height: 120px; resize: none; margin-top: 0.5rem;" placeholder="Paste text here to read rapidly..."></textarea>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 87: FILE MIME MAGIC BYTE INSPECTOR -->
+      <main id="mime-inspector-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-mime-inspector-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>File MIME Magic Byte Inspector</h2>
+            <p>Inspect uploaded files client-side using binary magic byte signatures to identify their true extensions.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Select File</label>
+              <input type="file" id="mime-file-input" style="display: none;" />
+              <div id="mime-dropzone" style="border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 2.5rem 1rem; text-align: center; background: var(--bg-input); cursor: pointer; transition: var(--transition);">
+                📁 Click or Drag File Here
+              </div>
+            </div>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>File Analysis</h4>
+              <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; margin-top: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Uploaded File Name:</span>
+                  <span id="mime-file-name" style="font-weight: bold;">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Reported Extension:</span>
+                  <span id="mime-file-ext">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Detected Magic Bytes (Hex):</span>
+                  <span id="mime-magic-hex" style="font-family: monospace; font-weight: bold; color: var(--accent);">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Determined MIME Type:</span>
+                  <span id="mime-detected-type" style="font-weight: bold;">--</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem;">
+                  <span style="color: var(--text-secondary);">Integrity Match check:</span>
+                  <span id="mime-match-badge" style="font-weight: bold; padding: 0.1rem 0.5rem; border-radius: var(--radius-sm);">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 88: SQL QUERY PLAYGROUND & SANDBOX -->
+      <main id="sql-playground-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-sql-playground-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>SQL Query Playground &amp; Sandbox</h2>
+            <p>Simulate database schemas, run CREATE, INSERT, and SELECT queries locally in memory.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label for="sql-query-input">SQL Queries</label>
+              <textarea id="sql-query-input" class="input-custom" style="height: 180px; font-family: monospace; resize: none; font-size: 0.85rem;" placeholder="CREATE TABLE users (id, name, role);&#10;INSERT INTO users VALUES (1, 'Alice', 'Admin');&#10;INSERT INTO users VALUES (2, 'Bob', 'Member');&#10;SELECT * FROM users;"></textarea>
+            </div>
+            <button class="btn-primary" id="btn-sql-query-run" style="width: 100%; margin-top: 0.5rem;">💾 Run SQL Query</button>
+            <button class="btn-secondary" id="btn-sql-query-reset" style="width: 100%; margin-top: 0.5rem;">Reset Sandbox DB</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h4>Result Table Output</h4>
+                <div id="sql-status" style="font-size: 0.8rem; color: var(--text-secondary);">Tables: None</div>
+              </div>
+              <div id="sql-result-container" style="flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-preview); padding: 0.5rem;">
+                <div style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem; text-align: center;">Execute a query to see outputs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 89: FILE CHECKSUM & HASH VERIFIER -->
+      <main id="hash-verifier-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-hash-verifier-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>File Checksum &amp; Hash Verifier</h2>
+            <p>Calculate local SHA-256 and SHA-1 cryptographic file checksums and verify integrity values.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Target File</label>
+              <input type="file" id="hashver-file-input" style="display: none;" />
+              <div id="hashver-dropzone" style="border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 2.5rem 1rem; text-align: center; background: var(--bg-input); cursor: pointer; transition: var(--transition);">
+                📁 Drop File to Generate Hashes
+              </div>
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="hashver-target-input">Compare Against (Target Hash)</label>
+              <input type="text" id="hashver-target-input" class="input-custom" placeholder="Paste expected hash here..." />
+            </div>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Computed Checksums</h4>
+              <div class="control-group">
+                <label for="hashver-sha256-output">SHA-256 Checksum</label>
+                <input type="text" id="hashver-sha256-output" class="input-custom" readonly style="font-family: monospace; font-size: 0.85rem;" />
+              </div>
+              <div class="control-group">
+                <label for="hashver-sha1-output">SHA-1 Checksum</label>
+                <input type="text" id="hashver-sha1-output" class="input-custom" readonly style="font-family: monospace; font-size: 0.85rem;" />
+              </div>
+              <div id="hashver-match-badge" style="padding: 0.75rem; text-align: center; border-radius: var(--radius-sm); font-weight: bold; margin-top: 0.5rem; border: 1px solid var(--border);">
+                Pending file checksum generation.
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 90: SVG PLACEHOLDER IMAGE GENERATOR -->
+      <main id="lorem-pixel-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-lorem-pixel-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>SVG Placeholder Image Generator</h2>
+            <p>Generate responsive mockup placeholder images with custom text labels, sizing, and color tags.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <div class="control-group">
+                <label for="pixel-width">Width (px)</label>
+                <input type="number" id="pixel-width" class="input-custom" value="300" />
+              </div>
+              <div class="control-group">
+                <label for="pixel-height">Height (px)</label>
+                <input type="number" id="pixel-height" class="input-custom" value="200" />
+              </div>
+            </div>
+            <div class="control-group" style="margin-top: 0.5rem;">
+              <label for="pixel-label">Image Label text</label>
+              <input type="text" id="pixel-label" class="input-custom" value="300 x 200" />
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+              <div class="control-group">
+                <label for="pixel-bg-color">Background</label>
+                <input type="color" id="pixel-bg-color" class="input-custom" value="#27272a" style="height: 38px; padding: 0.25rem;" />
+              </div>
+              <div class="control-group">
+                <label for="pixel-txt-color">Text color</label>
+                <input type="color" id="pixel-txt-color" class="input-custom" value="#a1a1aa" style="height: 38px; padding: 0.25rem;" />
+              </div>
+            </div>
+            <button class="btn-primary" id="btn-pixel-generate" style="width: 100%; margin-top: 1rem;">🖼️ Generate Mockup</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%;">
+              <h4>Mockup Preview</h4>
+              <div id="pixel-preview-container" style="flex: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-preview); display: flex; align-items: center; justify-content: center; padding: 1rem; overflow: hidden;">
+                <!-- Generated SVG rendered inside -->
+              </div>
+              <button class="btn-secondary" id="btn-pixel-copy" style="width: 100%;">📋 Copy SVG Code</button>
+              <button class="btn-secondary" id="btn-pixel-download-png" style="width: 100%;">💾 Download PNG Image</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 91: RATIO & PROPORTION SOLVER -->
+      <main id="ratio-solver-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ratio-solver-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Ratio &amp; Proportion Solver</h2>
+            <p>Solve proportion math equations (A : B = C : D) for unknown variables client-side.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <div class="panel-controls">
+            <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: center; padding: 1rem; background: var(--bg-preview); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+              <input type="number" id="ratio-a" class="input-custom" style="width: 60px; text-align: center;" value="2" />
+              <span>:</span>
+              <input type="number" id="ratio-b" class="input-custom" style="width: 60px; text-align: center;" value="3" />
+              <span>=</span>
+              <input type="number" id="ratio-c" class="input-custom" style="width: 60px; text-align: center;" value="4" />
+              <span>:</span>
+              <input type="text" id="ratio-d" class="input-custom" style="width: 60px; text-align: center; font-weight: bold; color: var(--accent);" value="X" placeholder="X" />
+            </div>
+            <button class="btn-primary" id="btn-ratio-solve" style="width: 100%; margin-top: 1rem;">⚖️ Solve Ratio</button>
+          </div>
+          <div class="panel-workspace">
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--bg-input); flex: 1; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; align-items: center; justify-content: center;">
+              <h4>Mathematical Solution</h4>
+              <div id="ratio-result-badge" style="padding: 1.25rem; font-weight: bold; border-radius: var(--radius-sm); border: 1px solid var(--border); text-align: center; width: 100%; background: var(--bg-preview); font-size: 1.5rem; color: var(--accent);">
+                X = 6
+              </div>
+              <div id="ratio-steps" style="width: 100%; font-size: 0.85rem; font-family: monospace; line-height: 1.6; color: var(--text-secondary); margin-top: 0.5rem; text-align: center;">
+                Equation: 2 / 3 = 4 / X<br/>Cross multiply: 2 * X = 3 * 4<br/>X = 12 / 2 = 6
               </div>
             </div>
           </div>

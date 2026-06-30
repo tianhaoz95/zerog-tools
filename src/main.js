@@ -1,60 +1,31 @@
 import './style.css';
 import './firebase.js';
+import './extra-tools.js';
 import { marked } from 'marked';
 import { TOOLS } from './tools.data.js';
+import { TRIANGULATION } from './triangulation.data.js';
+import { FilesetResolver, FaceLandmarker } from '@mediapipe/tasks-vision';
 
 // System Prompt describing the tools to the LLM
-const SYSTEM_PROMPT = `You are ZeroG Assistant, an expert AI advisor helping users find the right client-side utility tool.
-Here are the available tools:
-1. AI Passport Photo Generator (ID: passport-photo)
-2. PNG to SVG Vectorizer (ID: image-vectorizer)
-3. AI Audio Transcriber (ID: audio-transcriber)
-4. File Encrypter & Decrypter (ID: file-encrypter)
-5. AI Document OCR Scanner (ID: ocr-scanner)
-6. Secure Password Generator (ID: password-gen)
-7. JSON Formatter & Validator (ID: json-formatter)
-8. QR Code Generator & Scanner (ID: qr-tool)
-9. Base64 Encoder & Decoder (ID: base64-tool)
-10. Markdown Live Previewer (ID: markdown-tool)
-11. URL Encoder & Decoder (ID: url-tool)
-12. CSV <-> JSON Converter (ID: csv-json-tool)
-13. Image Resizer & Format Converter (ID: image-resizer)
-14. PDF Merger & Splitter (ID: pdf-tool)
-15. Regex Tester & Explainer (ID: regex-tester)
-16. Diff Checker & Text Comparator (ID: diff-checker)
-17. Hash & Checksum Generator (ID: hash-generator)
-18. SVG Path Visualizer (ID: svg-editor)
-19. Unit Converter (ID: unit-converter)
-20. Color Palette & WCAG Checker (ID: color-picker)
-21. Unix Timestamp Converter (ID: epoch-converter)
-22. JWT Debugger & Decoder (ID: jwt-decoder)
-23. UUID & ULID Generator (ID: uuid-generator)
-24. Lorem Ipsum & Mock Data Generator (ID: lorem-generator)
-25. SQL Formatter & Minifier (ID: sql-formatter)
-26. Cron Expression Descriptor (ID: cron-descriptor)
-27. HTML Entity Encoder & Decoder (ID: html-encoder)
-28. ASCII Art Generator (ID: ascii-generator)
-29. User Agent Parser & Client Info (ID: ua-parser)
-30. Text Analyzer & Word Counter (ID: text-analyzer)
-31. AI Sentiment & Emotion Analyzer (ID: ai-sentiment)
-32. AI Language Translator (ID: ai-translator)
-33. AI Object Detector & Image Classifier (ID: ai-detector)
-34. AI Background Remover (ID: bg-remover)
-35. AI Video Background Swap (ID: video-bg-swap)
-36. EV vs Gas Car Cost Calculator (ID: ev-gas-calculator)
-37. AI Text Summarizer (ID: ai-summarizer)
-38. AI Semantic Search & Explorer (ID: ai-semantic-search)
-39. Audio Waveform Editor & Trimmer (ID: audio-trimmer)
-40. PDF Signer & Form Annotator (ID: pdf-signer)
-41. EXIF Metadata Inspector & Stripper (ID: exif-stripper)
-42. Interactive Flexbox & CSS Grid Builder (ID: css-layout-builder)
-43. REST API Client & Request Tester (ID: api-client)
-44. Image-to-PDF & PDF-to-Image Converter (ID: pdf-image-converter)
-45. Home Mortgage & Amortization Dashboard (ID: mortgage-calculator)
-46. Pomodoro Space & Ambient Soundscape (ID: pomodoro-space)
+// Build the tool catalog from the single source of truth (tools.data.js) so the
+// assistant always knows about every tool currently in the registry. We emit only
+// the title (which doubles as a short description) and the ID — not the full
+// description — to keep the system prompt compact and save context length.
+function buildToolCatalog() {
+  return TOOLS
+    .map((tool) => `${tool.title} (ID: ${tool.id})`)
+    .join('\n');
+}
 
-If the user asks for a task, recommend the appropriate tool.
-CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. Keep your responses short, friendly, and structured.`;
+const SYSTEM_PROMPT = `You are ZeroG Assistant, an expert AI advisor helping users find the right client-side utility tool.
+Here are ALL the available tools (the complete catalog). Only ever recommend tools from this list:
+${buildToolCatalog()}
+
+How to respond:
+- If the user describes a task, recommend the single best-matching tool.
+- If a task needs several steps, recommend a combination of tools in order (e.g. first remove the background, then convert to PDF), and explain the workflow briefly.
+- If nothing in the catalog fits, say so honestly instead of inventing a tool.
+CRITICAL: When suggesting a tool, you MUST format its ID inside double square brackets, like [[passport-photo]] or [[image-vectorizer]], so the application can render a direct click-to-open button for the user. When suggesting a combination, include each tool's ID in brackets in the order they should be used. Keep your responses short, friendly, and structured.`;
 
 // --- WORKER VARIABLES ---
 let chatWorker = null;
@@ -62,10 +33,12 @@ let bgWorker = null;
 let rmbgWorker = null;
 let transcribeWorker = null;
 let videoBgWorker = null;
+let upscaleWorker = null;
 
 let isChatModelLoaded = false;
 let isBgModelLoaded = false;
 let isRmbgModelLoaded = false;
+let isUpscaleModelLoaded = false;
 let isTranscribeModelLoaded = false;
 let isVideoBgModelLoaded = false;
 
@@ -119,6 +92,12 @@ function initWorkers() {
         } else if (data === 'ready') {
           isChatModelLoaded = true;
           updateGlobalAiStatus();
+          // Warm the model with the real system prompt in the background so the
+          // user's first question doesn't pay the prefill + kernel-compile cost.
+          chatWorker.postMessage({
+            type: 'warmup',
+            data: { messages: [...chatHistory, { role: 'user', content: 'hello' }] }
+          });
         } else if (data === 'error') {
           const dot = document.getElementById('global-ai-status-dot');
           const text = document.getElementById('global-ai-status-text');
@@ -255,6 +234,76 @@ function initRmbgWorker() {
     };
   } catch (err) {
     console.error('Could not start RMBG worker:', err);
+  }
+}
+
+// Lazy load Swin2SR Super-Resolution worker when the upscaler tool is opened
+function initUpscaleWorker() {
+  if (upscaleWorker) return; // already running
+
+  try {
+    upscaleWorker = new Worker(
+      new URL('./upscale.worker.js', import.meta.url),
+      { type: 'module' }
+    );
+    // Warm the default 2x model in the background so the first run is faster.
+    upscaleWorker.postMessage({ type: 'init', data: { scale: 2 } });
+
+    upscaleWorker.onmessage = (e) => {
+      const { type, data, progress, error, rgba } = e.data;
+      const overlay = document.getElementById('image-upscaler-loading-overlay');
+      const overlayText = document.getElementById('image-upscaler-loading-text');
+      const overlayProgress = document.getElementById('image-upscaler-loading-progress');
+      const btnRun = document.getElementById('btn-run-image-upscaler');
+
+      if (type === 'status') {
+        if (data === 'loading') {
+          overlay.style.display = 'flex';
+          overlayText.innerText = 'Loading Swin2SR model...';
+          overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          btnRun.disabled = true;
+          if (!isUpscaling) btnRun.innerText = 'Loading Model...';
+        } else if (data === 'ready') {
+          isUpscaleModelLoaded = true;
+          if (isUpscaling) {
+            // Model is ready; inference is about to start streaming tile progress.
+            overlayText.innerText = 'Upscaling...';
+            overlayProgress.innerText = '';
+          } else {
+            overlay.style.display = 'none';
+            btnRun.disabled = !upscaleImageElement;
+            btnRun.innerText = '🔬 Upscale Image';
+          }
+        } else if (data === 'error') {
+          overlay.style.display = 'none';
+          isUpscaling = false;
+          btnRun.disabled = false;
+          btnRun.innerText = 'AI Model Error';
+        }
+      }
+
+      else if (type === 'progress') {
+        overlay.style.display = 'flex';
+        const pct = data.total ? Math.round((data.current / data.total) * 100) : 0;
+        overlayText.innerText = `Upscaling… tile ${data.current} / ${data.total}`;
+        overlayProgress.innerText = `${pct}%`;
+      }
+
+      else if (type === 'upscale_result') {
+        handleUpscaleResult(data, rgba);
+      }
+
+      else if (type === 'error') {
+        console.error('Upscale Worker Error:', error);
+        alert('Image upscaling error: ' + error);
+        overlay.style.display = 'none';
+        isUpscaling = false;
+        btnRun.disabled = false;
+        btnRun.innerText = '🔬 Upscale Image';
+      }
+    };
+  } catch (err) {
+    console.error('Could not start upscale worker:', err);
   }
 }
 
@@ -521,9 +570,11 @@ function parseToolSuggestions(element, text) {
   const toolIds = [];
   
   while ((match = regex.exec(text)) !== null) {
-    toolIds.push(match[1]);
+    // Keep first-seen order (matters for multi-tool workflows) but skip repeats
+    // so a tool mentioned twice doesn't render a duplicate launcher button.
+    if (!toolIds.includes(match[1])) toolIds.push(match[1]);
   }
-  
+
   if (toolIds.length === 0) return;
   
   const launcherContainer = document.createElement('div');
@@ -640,6 +691,10 @@ function navigateTo(viewId, opts = {}) {
     document.getElementById('passport-view').classList.add('active');
     resetPassportState();
     initBgWorker();
+  } else if (viewId === 'ai-face-swap') {
+    document.getElementById('ai-face-swap-view').classList.add('active');
+    resetFaceSwapState();
+    initFaceSwapModel();
   } else if (viewId === 'image-vectorizer') {
     document.getElementById('vectorizer-view').classList.add('active');
     resetVectorizerState();
@@ -744,6 +799,10 @@ function navigateTo(viewId, opts = {}) {
     document.getElementById('bg-remover-view').classList.add('active');
     resetBgRemoverState();
     initRmbgWorker();
+  } else if (viewId === 'image-upscaler') {
+    document.getElementById('image-upscaler-view').classList.add('active');
+    resetImageUpscalerState();
+    initUpscaleWorker();
   } else if (viewId === 'video-bg-swap') {
     document.getElementById('video-bg-view').classList.add('active');
     resetVideoBgState();
@@ -843,6 +902,15 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'password-analyzer') {
     document.getElementById('password-analyzer-view').classList.add('active');
     resetPasswordAnalyzerState();
+  } else {
+    const customView = document.getElementById(`${viewId}-view`);
+    if (customView) {
+      customView.classList.add('active');
+      const resetFnName = `reset${viewId.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')}State`;
+      if (typeof window[resetFnName] === 'function') {
+        window[resetFnName]();
+      }
+    }
   }
 
   // Keep the URL + document metadata in sync with the active view.
@@ -895,6 +963,7 @@ document.getElementById('btn-sentiment-back').addEventListener('click', () => na
 document.getElementById('btn-translator-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-detector-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-bg-remover-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-image-upscaler-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-video-bg-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-ev-gas-back').addEventListener('click', () => navigateTo('home'));
 
@@ -915,7 +984,14 @@ const newToolsIds = [
   'svg-converter', 'xml-formatter', 'base-converter', 'css-glassmorphism',
   'case-converter', 'aspect-ratio-calc', 'color-blindness', 'tone-generator',
   'subnet-calculator', 'pixel-tester', 'sketchpad', 'hex-viewer',
-  'tip-calculator', 'life-progress', 'graphing-calc', 'password-analyzer'
+  'tip-calculator', 'life-progress', 'graphing-calc', 'password-analyzer',
+  'luhn-validator', 'binary-translator', 'color-palette-gen', 'lorem-markdown',
+  'user-flowchart', 'metronome-tapper', 'caesar-cipher', 'timezone-converter',
+  'date-calculator', 'compound-interest', 'tdee-calculator', 'sort-list',
+  'json-yaml-converter', 'device-info', 'stopwatch-lap', 'html-wysiwyg',
+  'css-gradient-mesh', 'svg-path-viewer', 'guitar-tuner', 'speed-reader',
+  'mime-inspector', 'sql-playground', 'hash-verifier', 'lorem-pixel',
+  'ratio-solver'
 ];
 newToolsIds.forEach(id => {
   const el = document.getElementById(`btn-${id}-back`);
@@ -5237,6 +5313,227 @@ document.getElementById('btn-download-bg-remover').addEventListener('click', () 
 });
 
 
+// --- AI IMAGE UPSCALER LOGIC (Swin2SR Super-Resolution) ---
+let upscaleImageElement = null;   // <img> holding the loaded source image
+let upscaleScale = 2;             // selected upscale factor (2 or 4)
+let isUpscaling = false;          // true while a run is in flight
+let upscaleResultCanvas = null;   // canvas holding the AI super-resolution output
+
+// Cap the input resolution per factor so peak memory and runtime stay bounded.
+// Larger sources are downscaled (preserving aspect) before upscaling.
+const UPSCALE_MAX_INPUT = { 2: 1280, 4: 768 };
+
+// Effective input size after the max-input clamp, plus the resulting output size.
+function upscaleEffectiveDims() {
+  if (!upscaleImageElement) return null;
+  const w = upscaleImageElement.naturalWidth;
+  const h = upscaleImageElement.naturalHeight;
+  const max = UPSCALE_MAX_INPUT[upscaleScale] || 1024;
+  const longest = Math.max(w, h);
+  const ratio = longest > max ? max / longest : 1;
+  const inW = Math.max(1, Math.round(w * ratio));
+  const inH = Math.max(1, Math.round(h * ratio));
+  return { inW, inH, outW: inW * upscaleScale, outH: inH * upscaleScale, downscaled: ratio < 1 };
+}
+
+function updateUpscaleNote() {
+  const note = document.getElementById('image-upscaler-note');
+  const dims = upscaleEffectiveDims();
+  if (!dims) {
+    note.innerText = upscaleScale === 4
+      ? '4x works best on small images (sources over 768px are downscaled first).'
+      : 'Pick a factor, then upload an image to see the output size.';
+    return;
+  }
+  let txt = `Output: ${dims.outW} × ${dims.outH}px (${upscaleScale}x)`;
+  if (dims.downscaled) {
+    txt += ` — source downscaled to ${dims.inW} × ${dims.inH}px first to keep it fast.`;
+  }
+  note.innerText = txt;
+}
+
+function resetImageUpscalerState() {
+  upscaleImageElement = null;
+  upscaleResultCanvas = null;
+  isUpscaling = false;
+  upscaleScale = 2;
+
+  document.querySelectorAll('.image-upscaler-scale').forEach(b => {
+    b.classList.toggle('active', b.dataset.scale === '2');
+  });
+
+  document.getElementById('image-upscaler-upload-container').style.display = 'flex';
+  document.getElementById('image-upscaler-file-name').style.display = 'none';
+  document.getElementById('image-upscaler-compare').style.display = 'none';
+  document.getElementById('image-upscaler-placeholder').style.display = 'flex';
+  document.getElementById('image-upscaler-dims').innerText = '';
+  document.getElementById('image-upscaler-slider').value = 50;
+
+  const btnRun = document.getElementById('btn-run-image-upscaler');
+  btnRun.disabled = true;
+  btnRun.innerText = isUpscaleModelLoaded ? '🔬 Upscale Image' : 'Loading Model...';
+  document.getElementById('btn-download-image-upscaler').disabled = true;
+
+  updateUpscaleNote();
+}
+
+const upscaleUploadContainer = document.getElementById('image-upscaler-upload-container');
+const upscaleFileInput = document.getElementById('image-upscaler-file-input');
+
+upscaleUploadContainer.addEventListener('click', () => upscaleFileInput.click());
+upscaleUploadContainer.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  upscaleUploadContainer.classList.add('dragover');
+});
+upscaleUploadContainer.addEventListener('dragleave', () => {
+  upscaleUploadContainer.classList.remove('dragover');
+});
+upscaleUploadContainer.addEventListener('drop', (e) => {
+  e.preventDefault();
+  upscaleUploadContainer.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) loadUpscaleFile(e.dataTransfer.files[0]);
+});
+upscaleFileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) loadUpscaleFile(e.target.files[0]);
+});
+
+function loadUpscaleFile(file) {
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file.');
+    return;
+  }
+
+  const nameDiv = document.getElementById('image-upscaler-file-name');
+  nameDiv.innerText = `File: ${file.name}`;
+  nameDiv.style.display = 'block';
+  upscaleUploadContainer.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    upscaleImageElement = new Image();
+    upscaleImageElement.onload = () => {
+      upscaleResultCanvas = null;
+      document.getElementById('image-upscaler-compare').style.display = 'none';
+      document.getElementById('image-upscaler-placeholder').style.display = 'flex';
+      document.getElementById('image-upscaler-dims').innerText = '';
+      document.getElementById('btn-download-image-upscaler').disabled = true;
+
+      const btnRun = document.getElementById('btn-run-image-upscaler');
+      btnRun.disabled = false; // worker loads the model on demand if needed
+      btnRun.innerText = '🔬 Upscale Image';
+      updateUpscaleNote();
+    };
+    upscaleImageElement.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+document.querySelectorAll('.image-upscaler-scale').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (isUpscaling) return;
+    document.querySelectorAll('.image-upscaler-scale').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    upscaleScale = parseInt(btn.dataset.scale, 10);
+    updateUpscaleNote();
+  });
+});
+
+document.getElementById('btn-run-image-upscaler').addEventListener('click', () => {
+  if (!upscaleImageElement || !upscaleWorker || isUpscaling) return;
+
+  const dims = upscaleEffectiveDims();
+  isUpscaling = true;
+
+  const overlay = document.getElementById('image-upscaler-loading-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('image-upscaler-loading-text').innerText = 'Preparing image...';
+  document.getElementById('image-upscaler-loading-progress').innerText = '';
+
+  const btnRun = document.getElementById('btn-run-image-upscaler');
+  btnRun.disabled = true;
+  document.getElementById('btn-download-image-upscaler').disabled = true;
+
+  // Rasterize the source at the (possibly clamped) input resolution.
+  const tmp = document.createElement('canvas');
+  tmp.width = dims.inW;
+  tmp.height = dims.inH;
+  const tctx = tmp.getContext('2d');
+  tctx.imageSmoothingEnabled = true;
+  tctx.imageSmoothingQuality = 'high';
+  tctx.drawImage(upscaleImageElement, 0, 0, dims.inW, dims.inH);
+  const imgData = tctx.getImageData(0, 0, dims.inW, dims.inH);
+
+  upscaleWorker.postMessage(
+    {
+      type: 'upscale',
+      data: { width: dims.inW, height: dims.inH, rgbaData: imgData.data, scale: upscaleScale }
+    },
+    [imgData.data.buffer]
+  );
+});
+
+function handleUpscaleResult(result, rgba) {
+  const { width, height, factor } = result;
+
+  // AI super-resolution output.
+  const out = document.createElement('canvas');
+  out.width = width;
+  out.height = height;
+  out.getContext('2d').putImageData(new ImageData(rgba, width, height), 0, 0);
+  upscaleResultCanvas = out;
+
+  // Naive-resize baseline at the same output size, for the comparison slider.
+  const before = document.createElement('canvas');
+  before.width = width;
+  before.height = height;
+  const bctx = before.getContext('2d');
+  bctx.imageSmoothingEnabled = true;
+  bctx.imageSmoothingQuality = 'medium';
+  bctx.drawImage(upscaleImageElement, 0, 0, width, height);
+
+  document.getElementById('image-upscaler-before-img').src = before.toDataURL('image/png');
+  document.getElementById('image-upscaler-after-img').src = out.toDataURL('image/png');
+
+  document.getElementById('image-upscaler-placeholder').style.display = 'none';
+  document.getElementById('image-upscaler-compare').style.display = 'block';
+  document.getElementById('image-upscaler-dims').innerText = `— ${width} × ${height}px (${factor}x)`;
+  document.getElementById('image-upscaler-slider').value = 50;
+  requestAnimationFrame(applyUpscaleCompare);
+
+  document.getElementById('image-upscaler-loading-overlay').style.display = 'none';
+  document.getElementById('btn-download-image-upscaler').disabled = false;
+  const btnRun = document.getElementById('btn-run-image-upscaler');
+  btnRun.disabled = false;
+  btnRun.innerText = '🔬 Upscale Image';
+  isUpscaling = false;
+}
+
+// Position the clipped "after" layer and divider from the slider value.
+function applyUpscaleCompare() {
+  const compare = document.getElementById('image-upscaler-compare');
+  const slider = document.getElementById('image-upscaler-slider');
+  const pct = +slider.value;
+  // Keep the after image at full container width so its clipped slice aligns
+  // pixel-for-pixel with the before image underneath.
+  document.getElementById('image-upscaler-after-img').style.width = compare.clientWidth + 'px';
+  document.getElementById('image-upscaler-after-wrap').style.width = pct + '%';
+  document.getElementById('image-upscaler-divider').style.left = pct + '%';
+}
+
+document.getElementById('image-upscaler-slider').addEventListener('input', applyUpscaleCompare);
+window.addEventListener('resize', () => {
+  if (document.getElementById('image-upscaler-compare').style.display !== 'none') applyUpscaleCompare();
+});
+
+document.getElementById('btn-download-image-upscaler').addEventListener('click', () => {
+  if (!upscaleResultCanvas) return;
+  const link = document.createElement('a');
+  link.download = `upscaled-${upscaleScale}x.png`;
+  link.href = upscaleResultCanvas.toDataURL('image/png');
+  link.click();
+});
+
+
 // --- AI VIDEO BACKGROUND SWAP LOGIC (MODNet) ---
 let videoBgSwapVideoEl = null;     // <video> element holding the loaded source clip
 let videoBgSwapVideoUrl = null;    // object URL for the source clip (revoked on reset)
@@ -9244,6 +9541,7 @@ if (btnPwdAnalyzerToggle) {
 window.addEventListener('DOMContentLoaded', () => {
   renderToolsGrid(TOOLS);
   initWorkers();
+  initFaceSwapListeners();
 
   // Open the tool requested by the URL: prefer the marker injected into a
   // pre-rendered per-tool page, otherwise parse the current pathname.
@@ -9258,3 +9556,798 @@ window.addEventListener('DOMContentLoaded', () => {
   // Seed history state so the first Back press has somewhere to go.
   history.replaceState({ tool: initial }, '', urlForTool(initial));
 });
+
+// ==========================================
+// --- AI DEEP FACE SWAP TOOL ---
+// ==========================================
+
+let faceSwapSourceImage = null;
+let faceSwapTargetImage = null;
+let faceSwapSourceLandmarks = null;
+let faceSwapTargetLandmarks = null;
+let faceSwapResultImage = null;
+let faceSwapModelStatus = 'unloaded';
+let faceLandmarker = null;
+
+function resetFaceSwapState() {
+  faceSwapSourceImage = null;
+  faceSwapTargetImage = null;
+  faceSwapSourceLandmarks = null;
+  faceSwapTargetLandmarks = null;
+  faceSwapResultImage = null;
+
+  // Reset thumbnails and prompts
+  document.getElementById('face-swap-source-thumb').style.display = 'none';
+  document.getElementById('face-swap-source-thumb').src = '';
+  document.getElementById('face-swap-source-prompt').style.display = 'flex';
+  document.getElementById('face-swap-target-thumb').style.display = 'none';
+  document.getElementById('face-swap-target-thumb').src = '';
+  document.getElementById('face-swap-target-prompt').style.display = 'flex';
+
+  // Clear select options and hide dropdown group
+  document.getElementById('face-swap-selection-group').style.display = 'none';
+  document.getElementById('face-swap-src-select').innerHTML = '';
+  document.getElementById('face-swap-tgt-select').innerHTML = '';
+
+  // Reset canvas display
+  document.getElementById('face-swap-placeholder').style.display = 'flex';
+  document.getElementById('face-swap-editor-container').style.display = 'none';
+  const canvas = document.getElementById('face-swap-canvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Reset sliders
+  document.getElementById('slider-face-feather').value = 12;
+  document.getElementById('val-face-feather').textContent = '12px';
+  document.getElementById('slider-face-mask-scale').value = 85;
+  document.getElementById('val-face-mask-scale').textContent = '85%';
+  document.getElementById('slider-face-shading').value = 30;
+  document.getElementById('val-face-shading').textContent = '30%';
+  document.getElementById('slider-face-brightness').value = 0;
+  document.getElementById('val-face-brightness').textContent = '0%';
+  document.getElementById('slider-face-contrast').value = 0;
+  document.getElementById('val-face-contrast').textContent = '0%';
+  document.getElementById('slider-face-red').value = 0;
+  document.getElementById('val-face-red').textContent = '0%';
+  document.getElementById('slider-face-green').value = 0;
+  document.getElementById('val-face-green').textContent = '0%';
+  document.getElementById('slider-face-blue').value = 0;
+  document.getElementById('val-face-blue').textContent = '0%';
+  document.getElementById('face-swap-auto-color').checked = true;
+
+  // Disable buttons
+  document.getElementById('btn-run-face-swap').setAttribute('disabled', 'true');
+  document.getElementById('btn-download-face-swap').setAttribute('disabled', 'true');
+}
+
+async function initFaceSwapModel() {
+  if (faceLandmarker) return;
+
+  try {
+    faceSwapModelStatus = 'loading';
+    const overlay = document.getElementById('face-swap-loading-overlay');
+    const textEl = document.getElementById('face-swap-loading-text');
+    const progressEl = document.getElementById('face-swap-loading-progress');
+
+    overlay.style.display = 'flex';
+    textEl.textContent = 'Loading AI Face Model...';
+    progressEl.textContent = '0%';
+
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
+    );
+    
+    progressEl.textContent = '50%';
+
+    faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+        delegate: "GPU"
+      },
+      runningMode: "IMAGE",
+      numFaces: 5
+    });
+
+    faceSwapModelStatus = 'ready';
+    overlay.style.display = 'none';
+  } catch (err) {
+    console.error("Failed to load MediaPipe Face Landmarker:", err);
+    faceSwapModelStatus = 'error';
+    const overlay = document.getElementById('face-swap-loading-overlay');
+    const textEl = document.getElementById('face-swap-loading-text');
+    overlay.style.display = 'flex';
+    textEl.textContent = `Model Load Error: ${err.message}`;
+  }
+}
+
+async function handleFaceSwapUpload(file, role) {
+  if (!file) return;
+
+  // Show analyzing status
+  const overlay = document.getElementById('face-swap-loading-overlay');
+  const textEl = document.getElementById('face-swap-loading-text');
+  const progressEl = document.getElementById('face-swap-loading-progress');
+  overlay.style.display = 'flex';
+  textEl.textContent = `Analyzing ${role} image faces...`;
+  progressEl.textContent = '';
+
+  const img = new Image();
+  img.onload = async () => {
+    const thumb = document.getElementById(`face-swap-${role}-thumb`);
+    const prompt = document.getElementById(`face-swap-${role}-prompt`);
+    thumb.src = img.src;
+    thumb.style.display = 'block';
+    prompt.style.display = 'none';
+
+    if (role === 'source') {
+      faceSwapSourceImage = img;
+    } else {
+      faceSwapTargetImage = img;
+    }
+
+    try {
+      // Ensure model is loaded
+      if (faceSwapModelStatus !== 'ready') {
+        await initFaceSwapModel();
+      }
+
+      // Run landmarker directly on the resized canvas
+      const tempCanvas = resizeImageToMax(img, 1024);
+      const result = faceLandmarker.detect(tempCanvas);
+
+      overlay.style.display = 'none';
+      handleDetectResult(role, result.faceLandmarks, tempCanvas.width, tempCanvas.height);
+    } catch (err) {
+      alert(`AI Face Error: ${err.message}`);
+      overlay.style.display = 'none';
+    }
+  };
+  img.onerror = () => {
+    alert("Failed to load image file.");
+    overlay.style.display = 'none';
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+function handleDetectResult(role, faceLandmarks, width, height) {
+  const overlay = document.getElementById('face-swap-loading-overlay');
+  if (!faceLandmarks || faceLandmarks.length === 0) {
+    alert(`No faces detected in the ${role} image. Please try another image with a clear face.`);
+    if (role === 'source') {
+      faceSwapSourceImage = null;
+      faceSwapSourceLandmarks = null;
+      document.getElementById('face-swap-source-thumb').style.display = 'none';
+      document.getElementById('face-swap-source-thumb').src = '';
+      document.getElementById('face-swap-source-prompt').style.display = 'flex';
+    } else {
+      faceSwapTargetImage = null;
+      faceSwapTargetLandmarks = null;
+      document.getElementById('face-swap-target-thumb').style.display = 'none';
+      document.getElementById('face-swap-target-thumb').src = '';
+      document.getElementById('face-swap-target-prompt').style.display = 'flex';
+    }
+    overlay.style.display = 'none';
+    return;
+  }
+
+  // Store landmarks
+  if (role === 'source') {
+    faceSwapSourceLandmarks = faceLandmarks;
+  } else {
+    faceSwapTargetLandmarks = faceLandmarks;
+  }
+
+  // Populate face selectors if multiple faces are detected
+  const srcSelect = document.getElementById('face-swap-src-select');
+  const tgtSelect = document.getElementById('face-swap-tgt-select');
+  const selectGroup = document.getElementById('face-swap-selection-group');
+
+  if (faceSwapSourceLandmarks && faceSwapTargetLandmarks) {
+    document.getElementById('btn-run-face-swap').removeAttribute('disabled');
+
+    // Populate selectors
+    srcSelect.innerHTML = '';
+    faceSwapSourceLandmarks.forEach((face, idx) => {
+      srcSelect.innerHTML += `<option value="${idx}">Face #${idx + 1}</option>`;
+    });
+
+    tgtSelect.innerHTML = '';
+    faceSwapTargetLandmarks.forEach((face, idx) => {
+      tgtSelect.innerHTML += `<option value="${idx}">Face #${idx + 1}</option>`;
+    });
+
+    // Show select group if either has more than 1 face
+    if (faceSwapSourceLandmarks.length > 1 || faceSwapTargetLandmarks.length > 1) {
+      selectGroup.style.display = 'block';
+    } else {
+      selectGroup.style.display = 'none';
+    }
+
+    // Auto run face swap on initial load!
+    runFaceSwap();
+  } else {
+    overlay.style.display = 'none';
+  }
+}
+
+function resizeImageToMax(img, maxDim = 1024) {
+  const canvas = document.createElement('canvas');
+  let w = img.naturalWidth;
+  let h = img.naturalHeight;
+  if (w > maxDim || h > maxDim) {
+    if (w > h) {
+      h = Math.round((h * maxDim) / w);
+      w = maxDim;
+    } else {
+      w = Math.round((w * maxDim) / h);
+      h = maxDim;
+    }
+  }
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas;
+}
+
+// Returns the INVERSE affine transform (target -> source) suitable for ctx.transform() + drawImage.
+// ctx.transform() modifies the canvas coordinate space so that drawImage samples source pixels
+// at the inverse-mapped positions. We compute the forward (source->target) 2x2 affine matrix
+// then invert it to get the target->source mapping.
+function getAffineTransform(s0, s1, s2, t0, t1, t2) {
+  // Source vertices
+  const x0 = s0[0], y0 = s0[1];
+  const x1 = s1[0], y1 = s1[1];
+  const x2 = s2[0], y2 = s2[1];
+
+  // Target vertices
+  const u0 = t0[0], v0 = t0[1];
+  const u1 = t1[0], v1 = t1[1];
+  const u2 = t2[0], v2 = t2[1];
+
+  // Compute FORWARD affine: source (x,y) -> target (u,v)
+  // Solve: [fA fC; fB fD] * [x-x2; y-y2] = [u-u2; v-v2]
+  const dx0 = x0 - x2, dy0 = y0 - y2;
+  const dx1 = x1 - x2, dy1 = y1 - y2;
+  const du0 = u0 - u2, dv0 = v0 - v2;
+  const du1 = u1 - u2, dv1 = v1 - v2;
+
+  const fDet = dx0 * dy1 - dy0 * dx1;
+  if (Math.abs(fDet) < 1e-6) return null;
+
+  // Forward affine via Cramer's rule: source (x,y) -> target (u,v)
+  const A = (du0 * dy1 - dy0 * du1) / fDet;
+  const C = (dx0 * du1 - du0 * dx1) / fDet;
+  const E = u2 - A * x2 - C * y2;
+  const B = (dv0 * dy1 - dy0 * dv1) / fDet;
+  const D = (dx0 * dv1 - dv0 * dx1) / fDet;
+  const F = v2 - B * x2 - D * y2;
+
+  // Invert 2x2 matrix [A C; B D] to get target -> source mapping
+  const invDet = A * D - C * B;
+  if (Math.abs(invDet) < 1e-9) return null;
+
+  const iA =  D / invDet;
+  const iB = -B / invDet;
+  const iC = -C / invDet;
+  const iD =  A / invDet;
+  // Translation: iE, iF such that inverse maps target point to source point
+  const iE = -(iA * E + iC * F);
+  const iF = -(iB * E + iD * F);
+
+  return { a: iA, b: iB, c: iC, d: iD, e: iE, f: iF };
+}
+
+
+
+function getFaceColorStats(ctx, points, width, height) {
+  // Draw the face mask scaled to a fixed 128x128 canvas for high performance calculation
+  const statCanvas = document.createElement('canvas');
+  statCanvas.width = 128;
+  statCanvas.height = 128;
+  const sctx = statCanvas.getContext('2d');
+
+  sctx.drawImage(ctx.canvas, 0, 0, 128, 128);
+  const imgData = sctx.getImageData(0, 0, 128, 128);
+  const data = imgData.data;
+
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = 128;
+  maskCanvas.height = 128;
+  const mctx = maskCanvas.getContext('2d');
+  mctx.fillStyle = 'black';
+  mctx.fillRect(0, 0, 128, 128);
+  mctx.fillStyle = 'white';
+  mctx.beginPath();
+  const hullIndices = getConvexHull(points);
+  
+  if (hullIndices.length > 0) {
+    mctx.moveTo(points[hullIndices[0]][0] * (128 / width), points[hullIndices[0]][1] * (128 / height));
+    for (let i = 1; i < hullIndices.length; i++) {
+      mctx.lineTo(points[hullIndices[i]][0] * (128 / width), points[hullIndices[i]][1] * (128 / height));
+    }
+  }
+  mctx.closePath();
+  mctx.fill();
+  const maskData = mctx.getImageData(0, 0, 128, 128).data;
+
+  let rSum = 0, gSum = 0, bSum = 0;
+  let rSqSum = 0, gSqSum = 0, bSqSum = 0;
+  let count = 0;
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (maskData[i] > 128) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      rSum += r;
+      gSum += g;
+      bSum += b;
+      rSqSum += r * r;
+      gSqSum += g * g;
+      bSqSum += b * b;
+      count++;
+    }
+  }
+
+  if (count === 0) {
+    return {
+      mean: [128, 128, 128],
+      std: [50, 50, 50]
+    };
+  }
+
+  const meanR = rSum / count;
+  const meanG = gSum / count;
+  const meanB = bSum / count;
+
+  const stdR = Math.sqrt(Math.max(0.1, (rSqSum / count) - (meanR * meanR)));
+  const stdG = Math.sqrt(Math.max(0.1, (gSqSum / count) - (meanG * meanG)));
+  const stdB = Math.sqrt(Math.max(0.1, (bSqSum / count) - (meanB * meanB)));
+
+  return {
+    mean: [meanR, meanG, meanB],
+    std: [stdR, stdG, stdB]
+  };
+}
+
+function applyColorTransfer(warpedCanvas, srcStats, tgtStats) {
+  const ctx = warpedCanvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, warpedCanvas.width, warpedCanvas.height);
+  const data = imgData.data;
+
+  const [meanSrcR, meanSrcG, meanSrcB] = srcStats.mean;
+  const [stdSrcR, stdSrcG, stdSrcB] = srcStats.std;
+  const [meanTgtR, meanTgtG, meanTgtB] = tgtStats.mean;
+  const [stdTgtR, stdTgtG, stdTgtB] = tgtStats.std;
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      let r = data[i];
+      let g = data[i + 1];
+      let b = data[i + 2];
+
+      r = (r - meanSrcR) * (stdTgtR / stdSrcR) + meanTgtR;
+      g = (g - meanSrcG) * (stdTgtG / stdSrcG) + meanTgtG;
+      b = (b - meanSrcB) * (stdTgtB / stdSrcB) + meanTgtB;
+
+      data[i] = Math.max(0, Math.min(255, r));
+      data[i + 1] = Math.max(0, Math.min(255, g));
+      data[i + 2] = Math.max(0, Math.min(255, b));
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function applyManualAdjustments(canvas) {
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imgData.data;
+
+  const brightness = parseInt(document.getElementById('slider-face-brightness').value) || 0;
+  const contrast = parseInt(document.getElementById('slider-face-contrast').value) || 0;
+  const redBal = parseInt(document.getElementById('slider-face-red').value) || 0;
+  const greenBal = parseInt(document.getElementById('slider-face-green').value) || 0;
+  const blueBal = parseInt(document.getElementById('slider-face-blue').value) || 0;
+
+  const bOffset = (brightness / 50) * 127;
+  const cVal = (contrast / 50) * 128;
+  const cFactor = (259 * (cVal + 255)) / (255 * (259 - cVal));
+
+  const rOffset = (redBal / 50) * 100;
+  const gOffset = (greenBal / 50) * 100;
+  const bOffsetColor = (blueBal / 50) * 100;
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      let r = data[i];
+      let g = data[i + 1];
+      let b = data[i + 2];
+
+      if (contrast !== 0) {
+        r = cFactor * (r - 128) + 128;
+        g = cFactor * (g - 128) + 128;
+        b = cFactor * (b - 128) + 128;
+      }
+
+      if (brightness !== 0) {
+        r += bOffset;
+        g += bOffset;
+        b += bOffset;
+      }
+
+      r += rOffset;
+      g += gOffset;
+      b += bOffsetColor;
+
+      data[i] = Math.max(0, Math.min(255, r));
+      data[i + 1] = Math.max(0, Math.min(255, g));
+      data[i + 2] = Math.max(0, Math.min(255, b));
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function getConvexHull(points) {
+  const indexedPoints = points.map((p, i) => ({ x: p[0], y: p[1], index: i }));
+  indexedPoints.sort((a, b) => a.x !== b.x ? a.x - b.x : a.y - b.y);
+
+  const lower = [];
+  for (let i = 0; i < indexedPoints.length; i++) {
+    while (lower.length >= 2 && crossProduct(lower[lower.length - 2], lower[lower.length - 1], indexedPoints[i]) <= 0) {
+      lower.pop();
+    }
+    lower.push(indexedPoints[i]);
+  }
+
+  const upper = [];
+  for (let i = indexedPoints.length - 1; i >= 0; i--) {
+    while (upper.length >= 2 && crossProduct(upper[upper.length - 2], upper[upper.length - 1], indexedPoints[i]) <= 0) {
+      upper.pop();
+    }
+    upper.push(indexedPoints[i]);
+  }
+
+  upper.pop();
+  lower.pop();
+  return lower.concat(upper).map(p => p.index);
+}
+
+function crossProduct(a, b, c) {
+  return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+}
+
+function runFaceSwap() {
+  if (!faceSwapSourceImage || !faceSwapTargetImage || !faceSwapSourceLandmarks || !faceSwapTargetLandmarks) {
+    return;
+  }
+
+  const srcIdx = parseInt(document.getElementById('face-swap-src-select').value) || 0;
+  const tgtIdx = parseInt(document.getElementById('face-swap-tgt-select').value) || 0;
+
+  const srcLandmarks = faceSwapSourceLandmarks[srcIdx];
+  const tgtLandmarks = faceSwapTargetLandmarks[tgtIdx];
+
+  if (!srcLandmarks || !tgtLandmarks) {
+    return;
+  }
+
+  const baseCanvas = resizeImageToMax(faceSwapTargetImage, 2048);
+  const targetWidth = baseCanvas.width;
+  const targetHeight = baseCanvas.height;
+
+  const srcCanvas = resizeImageToMax(faceSwapSourceImage, 1024);
+  const sourceWidth = srcCanvas.width;
+  const sourceHeight = srcCanvas.height;
+
+  const sourcePoints = srcLandmarks.map(pt => [pt.x * sourceWidth, pt.y * sourceHeight]);
+  const targetPoints = tgtLandmarks.map(pt => [pt.x * targetWidth, pt.y * targetHeight]);
+
+  const warpCanvas = document.createElement('canvas');
+  warpCanvas.width = targetWidth;
+  warpCanvas.height = targetHeight;
+  const wctx = warpCanvas.getContext('2d');
+
+  for (let i = 0; i < TRIANGULATION.length; i += 3) {
+    const i0 = TRIANGULATION[i];
+    const i1 = TRIANGULATION[i + 1];
+    const i2 = TRIANGULATION[i + 2];
+
+    const s0 = sourcePoints[i0];
+    const s1 = sourcePoints[i1];
+    const s2 = sourcePoints[i2];
+
+    const t0 = targetPoints[i0];
+    const t1 = targetPoints[i1];
+    const t2 = targetPoints[i2];
+
+    if (!s0 || !s1 || !s2 || !t0 || !t1 || !t2) continue;
+
+    const transform = getAffineTransform(s0, s1, s2, t0, t1, t2);
+    if (transform) {
+      wctx.save();
+      wctx.beginPath();
+      wctx.moveTo(t0[0], t0[1]);
+      wctx.lineTo(t1[0], t1[1]);
+      wctx.lineTo(t2[0], t2[1]);
+      wctx.closePath();
+      wctx.clip();
+
+      wctx.transform(transform.a, transform.b, transform.c, transform.d, transform.e, transform.f);
+      wctx.drawImage(srcCanvas, 0, 0);
+      wctx.restore();
+    }
+  }
+
+  const targetCtx = baseCanvas.getContext('2d');
+  const sourceCtx = srcCanvas.getContext('2d');
+  const useAutoColor = document.getElementById('face-swap-auto-color').checked;
+
+  if (useAutoColor) {
+    const srcStats = getFaceColorStats(sourceCtx, sourcePoints, sourceWidth, sourceHeight);
+    const tgtStats = getFaceColorStats(targetCtx, targetPoints, targetWidth, targetHeight);
+    applyColorTransfer(warpCanvas, srcStats, tgtStats);
+  }
+
+  applyManualAdjustments(warpCanvas);
+
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = targetWidth;
+  maskCanvas.height = targetHeight;
+  const mctx = maskCanvas.getContext('2d');
+
+  mctx.fillStyle = 'black';
+  mctx.fillRect(0, 0, targetWidth, targetHeight);
+
+  // Compute centroid of the face hull to shrink coordinates towards
+  const hullIndices = getConvexHull(targetPoints);
+  let cx = 0, cy = 0;
+  if (hullIndices.length > 0) {
+    hullIndices.forEach(idx => {
+      cx += targetPoints[idx][0];
+      cy += targetPoints[idx][1];
+    });
+    cx /= hullIndices.length;
+    cy /= hullIndices.length;
+  } else {
+    cx = targetWidth / 2;
+    cy = targetHeight / 2;
+  }
+  const centerPt = targetPoints[4] || [cx, cy]; // Nose tip (4) is preferred
+
+  const maskScale = (parseInt(document.getElementById('slider-face-mask-scale').value) || 85) / 100;
+
+  mctx.fillStyle = 'white';
+  mctx.beginPath();
+  if (hullIndices.length > 0) {
+    const p0 = targetPoints[hullIndices[0]];
+    const x0 = centerPt[0] + (p0[0] - centerPt[0]) * maskScale;
+    const y0 = centerPt[1] + (p0[1] - centerPt[1]) * maskScale;
+    mctx.moveTo(x0, y0);
+    for (let i = 1; i < hullIndices.length; i++) {
+      const pi = targetPoints[hullIndices[i]];
+      const xi = centerPt[0] + (pi[0] - centerPt[0]) * maskScale;
+      const yi = centerPt[1] + (pi[1] - centerPt[1]) * maskScale;
+      mctx.lineTo(xi, yi);
+    }
+  }
+  mctx.closePath();
+  mctx.fill();
+
+  const featherRadius = parseInt(document.getElementById('slider-face-feather').value) || 12;
+  const blurredMaskCanvas = document.createElement('canvas');
+  blurredMaskCanvas.width = targetWidth;
+  blurredMaskCanvas.height = targetHeight;
+  const bmctx = blurredMaskCanvas.getContext('2d');
+
+  if (featherRadius > 0) {
+    bmctx.filter = `blur(${featherRadius}px)`;
+  }
+  bmctx.drawImage(maskCanvas, 0, 0);
+
+  const finalWarpedCanvas = document.createElement('canvas');
+  finalWarpedCanvas.width = targetWidth;
+  finalWarpedCanvas.height = targetHeight;
+  const fctx = finalWarpedCanvas.getContext('2d');
+
+  fctx.drawImage(warpCanvas, 0, 0);
+  fctx.globalCompositeOperation = 'destination-in';
+  fctx.drawImage(blurredMaskCanvas, 0, 0);
+  fctx.globalCompositeOperation = 'source-over';
+
+  const canvas = document.getElementById('face-swap-canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const ctx = canvas.getContext('2d');
+
+  ctx.drawImage(baseCanvas, 0, 0);
+  ctx.drawImage(finalWarpedCanvas, 0, 0);
+
+  // Shading preservation (blend original target lighting on top of the swapped face)
+  const shadingVal = parseInt(document.getElementById('slider-face-shading').value);
+  const shadingOpacity = isNaN(shadingVal) ? 0.3 : (shadingVal / 100);
+  if (shadingOpacity > 0) {
+    ctx.save();
+    
+    // Set clipping path to the shrunk mask area
+    ctx.beginPath();
+    if (hullIndices.length > 0) {
+      const p0 = targetPoints[hullIndices[0]];
+      const x0 = centerPt[0] + (p0[0] - centerPt[0]) * maskScale;
+      const y0 = centerPt[1] + (p0[1] - centerPt[1]) * maskScale;
+      ctx.moveTo(x0, y0);
+      for (let i = 1; i < hullIndices.length; i++) {
+        const pi = targetPoints[hullIndices[i]];
+        const xi = centerPt[0] + (pi[0] - centerPt[0]) * maskScale;
+        const yi = centerPt[1] + (pi[1] - centerPt[1]) * maskScale;
+        ctx.lineTo(xi, yi);
+      }
+    }
+    ctx.closePath();
+    ctx.clip();
+    
+    // Blend original base image shading using soft-light
+    ctx.globalAlpha = shadingOpacity;
+    ctx.globalCompositeOperation = 'soft-light';
+    ctx.drawImage(baseCanvas, 0, 0);
+    ctx.restore();
+  }
+
+  faceSwapResultImage = finalWarpedCanvas;
+
+  document.getElementById('face-swap-placeholder').style.display = 'none';
+  document.getElementById('face-swap-editor-container').style.display = 'flex';
+  document.getElementById('btn-download-face-swap').removeAttribute('disabled');
+}
+
+function initFaceSwapListeners() {
+  const sourceBox = document.getElementById('face-swap-source-box');
+  const targetBox = document.getElementById('face-swap-target-box');
+
+  if (!sourceBox || !targetBox) return;
+
+  sourceBox.addEventListener('click', () => {
+    document.getElementById('face-swap-source-input').click();
+  });
+  targetBox.addEventListener('click', () => {
+    document.getElementById('face-swap-target-input').click();
+  });
+
+  document.getElementById('face-swap-source-input').addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFaceSwapUpload(e.target.files[0], 'source');
+    }
+  });
+  document.getElementById('face-swap-target-input').addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFaceSwapUpload(e.target.files[0], 'target');
+    }
+  });
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    sourceBox.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      sourceBox.style.borderColor = 'var(--primary)';
+    }, false);
+    targetBox.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      targetBox.style.borderColor = 'var(--primary)';
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    sourceBox.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      sourceBox.style.borderColor = 'var(--border)';
+    }, false);
+    targetBox.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      targetBox.style.borderColor = 'var(--border)';
+    }, false);
+  });
+
+  sourceBox.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleFaceSwapUpload(files[0], 'source');
+    }
+  });
+
+  targetBox.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      handleFaceSwapUpload(files[0], 'target');
+    }
+  });
+
+  // Adjustments listeners
+  document.getElementById('slider-face-feather').addEventListener('input', (e) => {
+    document.getElementById('val-face-feather').textContent = `${e.target.value}px`;
+    runFaceSwap();
+  });
+  document.getElementById('slider-face-mask-scale').addEventListener('input', (e) => {
+    document.getElementById('val-face-mask-scale').textContent = `${e.target.value}%`;
+    runFaceSwap();
+  });
+  document.getElementById('slider-face-shading').addEventListener('input', (e) => {
+    document.getElementById('val-face-shading').textContent = `${e.target.value}%`;
+    runFaceSwap();
+  });
+  document.getElementById('slider-face-brightness').addEventListener('input', (e) => {
+    document.getElementById('val-face-brightness').textContent = `${e.target.value}%`;
+    runFaceSwap();
+  });
+  document.getElementById('slider-face-contrast').addEventListener('input', (e) => {
+    document.getElementById('val-face-contrast').textContent = `${e.target.value}%`;
+    runFaceSwap();
+  });
+  document.getElementById('slider-face-red').addEventListener('input', (e) => {
+    document.getElementById('val-face-red').textContent = `${e.target.value}%`;
+    runFaceSwap();
+  });
+  document.getElementById('slider-face-green').addEventListener('input', (e) => {
+    document.getElementById('val-face-green').textContent = `${e.target.value}%`;
+    runFaceSwap();
+  });
+  document.getElementById('slider-face-blue').addEventListener('input', (e) => {
+    document.getElementById('val-face-blue').textContent = `${e.target.value}%`;
+    runFaceSwap();
+  });
+  document.getElementById('face-swap-auto-color').addEventListener('change', () => {
+    runFaceSwap();
+  });
+  document.getElementById('face-swap-src-select').addEventListener('change', () => {
+    runFaceSwap();
+  });
+  document.getElementById('face-swap-tgt-select').addEventListener('change', () => {
+    runFaceSwap();
+  });
+
+  // Compare hold logic
+  const compareBtn = document.getElementById('btn-compare-face-swap');
+  if (compareBtn) {
+    const showOriginal = () => {
+      if (!faceSwapTargetImage) return;
+      const canvas = document.getElementById('face-swap-canvas');
+      const ctx = canvas.getContext('2d');
+      const baseCanvas = resizeImageToMax(faceSwapTargetImage, 1024);
+      ctx.drawImage(baseCanvas, 0, 0);
+    };
+
+    const showSwapped = () => {
+      if (!faceSwapTargetImage || !faceSwapResultImage) return;
+      const canvas = document.getElementById('face-swap-canvas');
+      const ctx = canvas.getContext('2d');
+      const baseCanvas = resizeImageToMax(faceSwapTargetImage, 1024);
+      ctx.drawImage(baseCanvas, 0, 0);
+      ctx.drawImage(faceSwapResultImage, 0, 0);
+    };
+
+    compareBtn.addEventListener('mousedown', showOriginal);
+    compareBtn.addEventListener('mouseup', showSwapped);
+    compareBtn.addEventListener('mouseleave', showSwapped);
+    compareBtn.addEventListener('touchstart', (e) => { e.preventDefault(); showOriginal(); });
+    compareBtn.addEventListener('touchend', showSwapped);
+  }
+
+  // Navigation
+  document.getElementById('btn-face-swap-back').addEventListener('click', () => navigateTo('home'));
+
+  // Run and download
+  document.getElementById('btn-run-face-swap').addEventListener('click', runFaceSwap);
+  document.getElementById('btn-download-face-swap').addEventListener('click', () => {
+    const canvas = document.getElementById('face-swap-canvas');
+    if (canvas) {
+      const link = document.createElement('a');
+      link.download = `face_swap_${Date.now()}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.click();
+    }
+  });
+}
+
+

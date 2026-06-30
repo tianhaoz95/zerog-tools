@@ -49,6 +49,21 @@ self.onmessage = async (e) => {
     }
   }
 
+  else if (type === 'warmup') {
+    // Pre-pay the expensive one-time costs (shader/kernel compilation + prefill of
+    // the long system prompt) in the background right after load, so the user's
+    // FIRST real question streams back quickly instead of stalling. Runs the real
+    // system prompt through a 1-token generation; tokens are not streamed to the UI.
+    if (!generator) return;
+    try {
+      await generator(data.messages, { max_new_tokens: 1, do_sample: false });
+      self.postMessage({ type: 'warmup-done' });
+    } catch (err) {
+      // Warm-up is best-effort; a failure here must not break normal chat.
+      console.warn('Chat warm-up failed (non-fatal):', err);
+    }
+  }
+
   else if (type === 'generate') {
     if (!generator) {
       self.postMessage({ type: 'error', error: 'Model not initialized' });

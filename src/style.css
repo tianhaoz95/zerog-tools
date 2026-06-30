@@ -2219,8 +2219,168 @@ div[style*="color: var(--danger)"] {
   cursor: pointer;
 }
 
+/* AI Face Swap Styles */
+.face-swap-upload-box {
+  background: var(--bg-input);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+}
 
+.face-swap-upload-box:hover {
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.05); /* subtle primary color glow */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
 
+.face-swap-upload-box-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
 
+.upload-box-icon {
+  font-size: 1.5rem;
+}
 
+.upload-box-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
 
+.face-swap-thumb {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+/* Selected states for selectors */
+.face-swap-selectors .selector-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+}
+
+/* --- AI Image Upscaler: before/after comparison slider --- */
+.upscale-compare {
+  position: relative;
+  width: 100%;
+  max-height: 460px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  user-select: none;
+  line-height: 0;
+  touch-action: none;
+}
+.upscale-compare-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  object-fit: contain;
+  pointer-events: none;
+}
+.upscale-compare-after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+/* The "after" image must keep the full container width so the clipped slice
+   lines up pixel-for-pixel with the "before" image underneath it. */
+.upscale-compare-after .upscale-compare-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--upscale-compare-width, 100%);
+  max-width: none;
+}
+.upscale-compare-divider {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: var(--primary);
+  transform: translateX(-1px);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.7);
+  pointer-events: none;
+}
+.upscale-compare-divider::after {
+  content: '⇆';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 28px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.8);
+}
+.upscale-compare-tag {
+  position: absolute;
+  bottom: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  line-height: 1.2;
+  pointer-events: none;
+}
+.upscale-tag-before { left: 0.5rem; }
+.upscale-tag-after { right: 0.5rem; }
+.upscale-compare-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.upscale-compare-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 100%;
+  cursor: ew-resize;
+}
+.upscale-compare-slider::-moz-range-thumb {
+  width: 36px;
+  height: 100%;
+  border: none;
+  cursor: ew-resize;
+}
+.image-upscaler-scale.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.12);
+}
