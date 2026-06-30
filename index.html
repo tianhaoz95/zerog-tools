@@ -7,6 +7,10 @@
     <meta name="google-site-verification" content="H7uWeedaVz8xhKJnYyVYBAmw-16HZDTHqA-7jxbBdk4" />
     <title>ZeroG Toolbox — Browser-Native AI Utilities</title>
 
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7165098722767614"
+         crossorigin="anonymous"></script>
+
     <!-- TOOL-SEO:START (scripts/postbuild.js swaps this block per tool) -->
     <!-- SEO -->
     <meta name="description" content="35+ free, privacy-first utilities that run 100% in your browser — AI passport photos, audio transcription, OCR, file encryption, JSON/Base64/regex/QR tools and more. No uploads, no servers, fully private." />
@@ -146,9 +150,20 @@
           </div>
           
           <!-- Quick Filter Bar -->
-          <div class="tools-filter-wrapper" style="margin-bottom: 1.5rem; position: relative;">
-            <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none; font-size: 0.95rem;">🔍</span>
-            <input type="text" id="tools-search-input" class="input-custom" placeholder="Quick filter tools by name or keyword..." style="padding-left: 2.5rem; font-size: 0.9rem;" autocomplete="off" />
+          <div class="tools-filter-bar">
+            <div class="tools-filter-wrapper">
+              <span class="tools-filter-icon">🔍</span>
+              <input type="text" id="tools-search-input" class="input-custom" placeholder="Quick filter tools by name or keyword..." autocomplete="off" />
+            </div>
+
+            <!-- Tag Filter w/ autocomplete -->
+            <div class="tag-filter">
+              <span class="tag-filter-icon">🏷️</span>
+              <div class="tag-filter-chips" id="tag-filter-chips"></div>
+              <div class="tag-filter-input-wrap">
+                <input type="text" id="tag-filter-input" class="tag-filter-input" placeholder="Filter by tag…" autocomplete="off" />
+              </div>
+            </div>
           </div>
           
           <div class="tools-grid" id="tools-grid">
@@ -235,9 +250,18 @@
           <!-- Right Panel: Canvas Workspace -->
           <div class="panel-workspace" id="passport-canvas-panel">
             <div class="panel-loading" id="passport-loading-overlay">
-              <div class="spinner"></div>
-              <div class="loading-text" id="passport-loading-text">Loading Model...</div>
-              <div class="loading-progress" id="passport-loading-progress">0%</div>
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🪪</span>
+                </div>
+                <div class="ai-loading-title" id="passport-loading-text">Loading Model…</div>
+                <div class="ai-loading-bar">
+                  <div id="passport-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div class="ai-loading-pct" id="passport-loading-progress">0%</div>
+              </div>
             </div>
 
             <!-- Upload state -->
@@ -433,10 +457,19 @@
 
           <!-- Right Panel: Canvas Workspace -->
           <div class="panel-workspace" id="face-swap-canvas-panel" style="flex: 1;">
-            <div class="panel-loading" id="face-swap-loading-overlay" style="display: none; position: absolute; z-index: 10; top: 0; left: 0; width: 100%; height: 100%; background: rgba(9, 9, 11, 0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
-              <div class="spinner"></div>
-              <div class="loading-text" id="face-swap-loading-text" style="font-weight: 600; color: var(--text-primary);">Loading AI Face Model...</div>
-              <div class="loading-progress" id="face-swap-loading-progress" style="font-size: 0.9rem; color: var(--text-secondary);">0%</div>
+            <div class="ai-loading" id="face-swap-loading-overlay" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🪞</span>
+                </div>
+                <div class="ai-loading-title" id="face-swap-loading-text">Loading AI Face Model…</div>
+                <div class="ai-loading-bar">
+                  <div id="face-swap-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div class="ai-loading-pct" id="face-swap-loading-progress">0%</div>
+              </div>
             </div>
 
             <!-- Upload state placeholders -->
@@ -521,8 +554,17 @@
           <!-- Right Panel: Canvas Workspace -->
           <div class="panel-workspace" id="vectorizer-panel-workspace">
             <div class="panel-loading" id="vectorizer-loading-overlay">
-              <div class="spinner"></div>
-              <div class="loading-text">Tracing image...</div>
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">✒️</span>
+                </div>
+                <div class="ai-loading-title">Tracing image…</div>
+                <div class="ai-loading-bar">
+                  <div class="ai-loading-fill indeterminate"></div>
+                </div>
+              </div>
             </div>
 
             <!-- Upload state -->
@@ -656,9 +698,18 @@
           <!-- Right Panel: Workspace / Output -->
           <div class="panel-workspace" id="transcriber-panel-workspace">
             <div class="panel-loading" id="transcriber-loading-overlay">
-              <div class="spinner"></div>
-              <div class="loading-text" id="transcriber-loading-text">Loading Whisper Model...</div>
-              <div class="loading-progress" id="transcriber-loading-progress">0%</div>
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🎙️</span>
+                </div>
+                <div class="ai-loading-title" id="transcriber-loading-text">Loading Whisper Model…</div>
+                <div class="ai-loading-bar">
+                  <div id="transcriber-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div class="ai-loading-pct" id="transcriber-loading-progress">0%</div>
+              </div>
             </div>
 
             <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
@@ -830,9 +881,18 @@
           <div class="panel-workspace" id="ocr-panel-workspace" style="position: relative;">
             <!-- Custom OCR Progress Overlay -->
             <div class="panel-loading" id="ocr-loading-overlay">
-              <div class="spinner"></div>
-              <div class="loading-text" id="ocr-loading-text">Loading OCR Engine...</div>
-              <div class="loading-progress" id="ocr-loading-progress">0%</div>
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🔤</span>
+                </div>
+                <div class="ai-loading-title" id="ocr-loading-text">Loading OCR Engine…</div>
+                <div class="ai-loading-bar">
+                  <div id="ocr-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div class="ai-loading-pct" id="ocr-loading-progress">0%</div>
+              </div>
             </div>
 
             <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
@@ -2211,10 +2271,19 @@ Supported browsers:
           </div>
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
-            <div id="sentiment-loading-overlay" class="loading-overlay-custom" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-md);">
-              <div class="spinner"></div>
-              <div id="sentiment-loading-text" style="font-weight: 500; font-size: 0.9rem;">Initializing AI model...</div>
-              <div id="sentiment-loading-progress" style="font-size: 0.8rem; color: var(--text-secondary);">0%</div>
+            <div id="sentiment-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🎭</span>
+                </div>
+                <div id="sentiment-loading-text" class="ai-loading-title">Initializing AI model…</div>
+                <div class="ai-loading-bar">
+                  <div id="sentiment-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="sentiment-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
             </div>
 
             <label>Analysis Results</label>
@@ -2291,10 +2360,19 @@ Supported browsers:
           </div>
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
-            <div id="translator-loading-overlay" class="loading-overlay-custom" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-md);">
-              <div class="spinner"></div>
-              <div id="translator-loading-text" style="font-weight: 500; font-size: 0.9rem;">Initializing Translation model...</div>
-              <div id="translator-loading-progress" style="font-size: 0.8rem; color: var(--text-secondary);">0%</div>
+            <div id="translator-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🌐</span>
+                </div>
+                <div id="translator-loading-text" class="ai-loading-title">Initializing Translation model…</div>
+                <div class="ai-loading-bar">
+                  <div id="translator-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="translator-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
             </div>
 
             <div class="control-group" style="height: 100%; display: flex; flex-direction: column;">
@@ -2335,10 +2413,19 @@ Supported browsers:
           </div>
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
-            <div id="detector-loading-overlay" class="loading-overlay-custom" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-md);">
-              <div class="spinner"></div>
-              <div id="detector-loading-text" style="font-weight: 500; font-size: 0.9rem;">Initializing YOLO model...</div>
-              <div id="detector-loading-progress" style="font-size: 0.8rem; color: var(--text-secondary);">0%</div>
+            <div id="detector-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🎯</span>
+                </div>
+                <div id="detector-loading-text" class="ai-loading-title">Initializing YOLO model…</div>
+                <div class="ai-loading-bar">
+                  <div id="detector-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="detector-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
             </div>
 
             <label>Image Preview &amp; Detection Overlay</label>
@@ -2408,10 +2495,19 @@ Supported browsers:
           </div>
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
-            <div id="bg-remover-loading-overlay" class="loading-overlay-custom" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-md);">
-              <div class="spinner"></div>
-              <div id="bg-remover-loading-text" style="font-weight: 500; font-size: 0.9rem;">Loading RMBG-1.4 model...</div>
-              <div id="bg-remover-loading-progress" style="font-size: 0.8rem; color: var(--text-secondary);">0%</div>
+            <div id="bg-remover-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">✂️</span>
+                </div>
+                <div id="bg-remover-loading-text" class="ai-loading-title">Loading RMBG-1.4 model…</div>
+                <div class="ai-loading-bar">
+                  <div id="bg-remover-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="bg-remover-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
             </div>
 
             <label>Preview</label>
@@ -2459,18 +2555,18 @@ Supported browsers:
           </div>
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
-            <div id="image-upscaler-loading-overlay" class="upscale-loading" style="display: none;">
-              <div class="upscale-loading-card">
-                <div class="upscale-loading-orb">
-                  <span class="upscale-loading-ring"></span>
-                  <span class="upscale-loading-ring"></span>
-                  <span class="upscale-loading-icon">🔬</span>
+            <div id="image-upscaler-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🔬</span>
                 </div>
-                <div id="image-upscaler-loading-text" class="upscale-loading-title">Loading Swin2SR model…</div>
-                <div class="upscale-loading-bar">
-                  <div id="image-upscaler-loading-fill" class="upscale-loading-fill"></div>
+                <div id="image-upscaler-loading-text" class="ai-loading-title">Loading Swin2SR model…</div>
+                <div class="ai-loading-bar">
+                  <div id="image-upscaler-loading-fill" class="ai-loading-fill"></div>
                 </div>
-                <div id="image-upscaler-loading-progress" class="upscale-loading-pct">0%</div>
+                <div id="image-upscaler-loading-progress" class="ai-loading-pct">0%</div>
               </div>
             </div>
 
@@ -2569,10 +2665,19 @@ Supported browsers:
           </div>
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; position: relative;">
-            <div id="video-bg-loading-overlay" class="loading-overlay-custom" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; border-radius: var(--radius-md);">
-              <div class="spinner"></div>
-              <div id="video-bg-loading-text" style="font-weight: 500; font-size: 0.9rem;">Loading MODNet model...</div>
-              <div id="video-bg-loading-progress" style="font-size: 0.8rem; color: var(--text-secondary);">0%</div>
+            <div id="video-bg-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🎬</span>
+                </div>
+                <div id="video-bg-loading-text" class="ai-loading-title">Loading MODNet model…</div>
+                <div class="ai-loading-bar">
+                  <div id="video-bg-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="video-bg-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
             </div>
 
             <label>Source Clip</label>
@@ -2760,10 +2865,19 @@ Supported browsers:
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; position: relative;">
             <!-- Loading overlay inside workspace panel -->
-            <div id="ai-summarizer-loading-overlay" class="status-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9); flex-direction: column; align-items: center; justify-content: center; gap: 1rem; z-index: 10; border-radius: var(--radius-md);">
-              <div class="spinner"></div>
-              <p id="ai-summarizer-loading-text" style="font-weight: 500; color: var(--text-primary);">Downloading local model files...</p>
-              <p id="ai-summarizer-loading-progress" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">0%</p>
+            <div id="ai-summarizer-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">📝</span>
+                </div>
+                <div id="ai-summarizer-loading-text" class="ai-loading-title">Downloading local model files…</div>
+                <div class="ai-loading-bar">
+                  <div id="ai-summarizer-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="ai-summarizer-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
             </div>
 
             <label>Summarized Output</label>
@@ -2803,10 +2917,19 @@ Supported browsers:
           </div>
 
           <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; position: relative;">
-            <div id="ai-semantic-search-loading-overlay" class="status-overlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.9); flex-direction: column; align-items: center; justify-content: center; gap: 1rem; z-index: 10; border-radius: var(--radius-md);">
-              <div class="spinner"></div>
-              <p id="ai-semantic-search-loading-text" style="font-weight: 500; color: var(--text-primary);">Downloading embedding model...</p>
-              <p id="ai-semantic-search-loading-progress" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">0%</p>
+            <div id="ai-semantic-search-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🔍</span>
+                </div>
+                <div id="ai-semantic-search-loading-text" class="ai-loading-title">Downloading embedding model…</div>
+                <div class="ai-loading-bar">
+                  <div id="ai-semantic-search-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="ai-semantic-search-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
             </div>
 
             <div class="control-group">

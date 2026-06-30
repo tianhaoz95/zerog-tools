@@ -2,7 +2,7 @@ import './style.css';
 import './firebase.js';
 import './extra-tools.js';
 import { marked } from 'marked';
-import { TOOLS } from './tools.data.js';
+import { TOOLS, TAG_VOCABULARY } from './tools.data.js';
 import { TRIANGULATION } from './triangulation.data.js';
 import { FilesetResolver, FaceLandmarker } from '@mediapipe/tasks-vision';
 
@@ -150,6 +150,7 @@ function initBgWorker() {
           overlay.classList.add('active');
           overlayText.innerText = `Loading Background AI...`;
           overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          setAiLoadingFill('passport', progress || 0);
           btnRemove.disabled = true;
           btnRemove.innerText = 'Loading Model...';
         } else if (data === 'ready') {
@@ -205,6 +206,7 @@ function initRmbgWorker() {
           overlay.style.display = 'flex';
           overlayText.innerText = 'Loading RMBG-1.4 model...';
           overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          setAiLoadingFill('bg-remover', progress || 0);
           btnRun.disabled = true;
           btnRun.innerText = 'Loading Model...';
         } else if (data === 'ready') {
@@ -343,6 +345,7 @@ function initVideoBgWorker() {
           overlay.style.display = 'flex';
           overlayText.innerText = 'Loading MODNet model...';
           overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          setAiLoadingFill('video-bg', progress || 0);
           btnRun.disabled = true;
           btnRun.innerText = 'Loading Model...';
         } else if (data === 'ready') {
@@ -407,6 +410,7 @@ function initTranscribeWorker() {
           overlay.classList.add('active');
           overlayText.innerText = `Loading Whisper Model...`;
           overlayProgress.innerText = `${Math.round(progress || 0)}%`;
+          setAiLoadingFill('transcriber', progress || 0);
           btnRun.disabled = true;
           btnRun.innerText = 'Loading Model...';
         } else if (data === 'ready') {
@@ -622,6 +626,16 @@ function renderToolsGrid(toolsList) {
   const grid = document.getElementById('tools-grid');
   grid.innerHTML = '';
 
+  if (!toolsList.length) {
+    const empty = document.createElement('div');
+    empty.className = 'tools-empty-state';
+    empty.innerHTML = `<span class="tools-empty-icon">🔍</span>
+      <p>No tools match your filters.</p>
+      <span class="tools-empty-hint">Try a different keyword or clear a tag.</span>`;
+    grid.appendChild(empty);
+    return;
+  }
+
   toolsList.forEach(tool => {
     const card = document.createElement('div');
     card.className = `tool-card`;
@@ -629,21 +643,26 @@ function renderToolsGrid(toolsList) {
 
     const badges = document.createElement('div');
     badges.className = 'tool-badges-row';
-    
+
     if (tool.title.startsWith('AI') || tool.id.startsWith('ai-')) {
       badges.innerHTML += `<span class="tool-badge ai">AI Powered</span>`;
     }
-    
+
     if (tool.uiClass === 'ready') {
       badges.innerHTML += `<span class="tool-badge ready">Ready</span>`;
     } else {
       badges.innerHTML += `<span class="tool-badge soon">Soon</span>`;
     }
 
+    const tagsHtml = (tool.tags || [])
+      .map(tag => `<button type="button" class="tool-tag${selectedTags.has(tag) ? ' active' : ''}" data-tag="${tag}">${tag}</button>`)
+      .join('');
+
     card.innerHTML = `
       <div class="tool-icon-wrapper">${tool.icon}</div>
       <h3>${tool.title}</h3>
       <p>${tool.description}</p>
+      <div class="tool-tags-row">${tagsHtml}</div>
     `;
     card.appendChild(badges);
 
@@ -653,6 +672,14 @@ function renderToolsGrid(toolsList) {
       } else {
         alert(`The "${tool.title}" is coming soon!`);
       }
+    });
+
+    // Clicking a tag chip toggles it in the tag filter instead of opening the tool.
+    card.querySelectorAll('.tool-tag').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleTagFilter(chip.dataset.tag);
+      });
     });
 
     grid.appendChild(card);
@@ -1253,7 +1280,8 @@ btnRemoveBg.addEventListener('click', () => {
   const overlayProgress = document.getElementById('passport-loading-progress');
   overlay.classList.add('active');
   overlayText.innerText = 'Analyzing portrait...';
-  overlayProgress.innerText = '0%';
+  overlayProgress.innerText = '';
+  setAiLoadingFill('passport', null);
   btnRemoveBg.disabled = true;
 
   const tempCanvas = document.createElement('canvas');
@@ -1837,7 +1865,8 @@ btnRunTranscribe.addEventListener('click', () => {
   const text = document.getElementById('transcriber-loading-text');
   overlay.classList.add('active');
   text.innerText = 'Transcribing voice input...';
-  
+  setAiLoadingFill('transcriber', null);
+
   btnRunTranscribe.disabled = true;
   btnRecordAudio.disabled = true;
   
@@ -2131,7 +2160,8 @@ btnRunOcr.addEventListener('click', async () => {
   
   overlay.classList.add('active');
   overlayText.innerText = 'Initializing OCR engine...';
-  overlayProgress.innerText = '0%';
+  overlayProgress.innerText = '';
+  setAiLoadingFill('ocr', null);
   btnRunOcr.disabled = true;
 
   try {
@@ -2144,7 +2174,9 @@ btnRunOcr.addEventListener('click', async () => {
       corePath: '/tesseract/tesseract-core.wasm.js',
       logger: (m) => {
         if (m.status === 'recognizing text') {
+          overlayText.innerText = 'Recognizing text...';
           overlayProgress.innerText = `${Math.round(m.progress * 100)}%`;
+          setAiLoadingFill('ocr', m.progress * 100);
         }
       }
     });
@@ -4112,25 +4144,188 @@ function runContrastChecker() {
 }
 
 
-// --- QUICK FILTER LOGIC ---
+// --- QUICK FILTER + TAG FILTER LOGIC ---
 const toolsSearchInput = document.getElementById('tools-search-input');
+const tagFilterInput = document.getElementById('tag-filter-input');
+const tagFilterChips = document.getElementById('tag-filter-chips');
+// Suggestion list — lazily created and appended as a sibling of the input.
+let autocompleteEl = null;
+
+// Currently active tag filters (AND-combined). A tool must carry every
+// selected tag to remain visible.
+const selectedTags = new Set();
+// Highlighted suggestion index for keyboard navigation in the autocomplete.
+let tagActiveIndex = -1;
+
+// Count how many tools carry each tag so the autocomplete can show tallies.
+const TAG_COUNTS = TAG_VOCABULARY.reduce((acc, tag) => {
+  acc[tag] = TOOLS.filter(t => (t.tags || []).includes(tag)).length;
+  return acc;
+}, {});
+
 toolsSearchInput.addEventListener('input', runToolsFilter);
 
 function runToolsFilter() {
   const query = toolsSearchInput.value.trim().toLowerCase();
-  if (!query) {
-    renderToolsGrid(TOOLS);
-    return;
-  }
-  
+
   const filtered = TOOLS.filter(tool => {
-    return tool.title.toLowerCase().includes(query) ||
-           tool.description.toLowerCase().includes(query) ||
-           tool.keywords.some(keyword => keyword.toLowerCase().includes(query));
+    const matchesQuery = !query ||
+      tool.title.toLowerCase().includes(query) ||
+      tool.description.toLowerCase().includes(query) ||
+      tool.keywords.some(keyword => keyword.toLowerCase().includes(query));
+
+    const matchesTags = [...selectedTags].every(tag => (tool.tags || []).includes(tag));
+
+    return matchesQuery && matchesTags;
   });
-  
+
   renderToolsGrid(filtered);
 }
+
+// Add or remove a tag from the active filter set, then re-render everything.
+function toggleTagFilter(tag) {
+  if (!TAG_COUNTS.hasOwnProperty(tag)) return;
+  if (selectedTags.has(tag)) {
+    selectedTags.delete(tag);
+  } else {
+    selectedTags.add(tag);
+  }
+  renderTagFilterChips();
+  renderToolsFilterAndAutocomplete();
+}
+
+function renderToolsFilterAndAutocomplete() {
+  runToolsFilter();
+  renderTagAutocomplete(tagFilterInput.value.trim().toLowerCase());
+}
+
+// Render the removable chips for the currently selected tag filters.
+function renderTagFilterChips() {
+  tagFilterChips.innerHTML = '';
+  selectedTags.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'tag-filter-chip';
+    chip.innerHTML = `${tag}<button type="button" class="tag-filter-chip-x" aria-label="Remove ${tag} filter">×</button>`;
+    chip.querySelector('.tag-filter-chip-x').addEventListener('click', () => toggleTagFilter(tag));
+    tagFilterChips.appendChild(chip);
+  });
+}
+
+// Build the autocomplete dropdown from tags matching the typed prefix that
+// are not already selected.
+function renderTagAutocomplete(query) {
+  const matches = TAG_VOCABULARY
+    .filter(tag => !selectedTags.has(tag) && tag.toLowerCase().includes(query))
+    .sort((a, b) => TAG_COUNTS[b] - TAG_COUNTS[a]);
+
+  tagActiveIndex = -1;
+
+  // Lazily create the suggestion list before the input (as a sibling).
+  if (!autocompleteEl) {
+    autocompleteEl = document.createElement('div');
+    autocompleteEl.className = 'tag-autocomplete';
+    autocompleteEl.setAttribute('data-menu', 'tag-autocomplete');
+    autocompleteEl.setAttribute('hidden', '');
+
+    const wrap = document.getElementById('tag-filter-input')?.parentElement;
+    if (wrap) {
+      wrap.setAttribute('data-tag-menu', 'wrapper');
+      // Insert before the input so it appears above it.
+      wrap.insertBefore(autocompleteEl, tagFilterInput);
+
+      // Attach mousedown delegation ONCE — only on first creation.
+      autocompleteEl.addEventListener('mousedown', (e) => {
+        // Close button — dismiss the menu without altering filters.
+        if (e.target.closest('.tag-menu-close-btn')) {
+          e.preventDefault();
+          autocompleteEl.hidden = true;
+          return;
+        }
+        const btn = e.target.closest('.tag-suggestion');
+        if (!btn) return;
+        e.preventDefault();
+        tagFilterInput.value = '';
+        toggleTagFilter(btn.dataset.tag);
+        tagFilterInput.focus();
+      });
+    }
+  }
+
+  if (!matches.length) {
+    autocompleteEl.hidden = true;
+    autocompleteEl.innerHTML = '';
+    return;
+  }
+
+  autocompleteEl.innerHTML = `<button type="button" class="tag-menu-close-btn" aria-label="Close tag menu">✕</button>`
+    + matches
+    .map((tag, i) => `<button type="button" class="tag-suggestion" data-tag="${tag}" data-index="${i}">
+        <span class="tag-suggestion-name">${tag}</span>
+        <span class="tag-suggestion-count">${TAG_COUNTS[tag]}</span>
+      </button>`)
+    .join('');
+
+  autocompleteEl.hidden = false;
+}
+
+// Close tag menu on click — delegated to document level.
+document.addEventListener('click', function onTagMenuClick(e) {
+  if (!autocompleteEl || autocompleteEl.hidden) return;
+  // Ignore clicks inside the input or suggestions.
+  if (e.target === tagFilterInput) return;
+  if (autocompleteEl.contains(e.target)) return;
+  autocompleteEl.hidden = true;
+});
+
+// Close tag menu on blur when focus leaves the wrapper entirely.
+tagFilterInput.addEventListener('blur', () => {
+  if (!autocompleteEl || autocompleteEl.hidden) return;
+  const wrap = tagFilterInput.parentElement;
+  // Still focused inside wrapper — keep open (e.g., clicking empty space in wrapper doesn't lose focus).
+  if (wrap && wrap.contains(document.activeElement)) return;
+  autocompleteEl.hidden = true;
+});
+
+function highlightTagSuggestion(index) {
+  if (!autocompleteEl || autocompleteEl.hidden) return;
+  const items = [...autocompleteEl.querySelectorAll('.tag-suggestion')];
+  if (!items.length) return;
+  tagActiveIndex = (index + items.length) % items.length;
+  items.forEach((el, i) => el.classList.toggle('active', i === tagActiveIndex));
+  items[tagActiveIndex].scrollIntoView({ block: 'nearest' });
+}
+
+tagFilterInput.addEventListener('input', () => {
+  renderTagAutocomplete(tagFilterInput.value.trim().toLowerCase());
+});
+
+tagFilterInput.addEventListener('focus', () => {
+  renderTagAutocomplete(tagFilterInput.value.trim().toLowerCase());
+});
+
+tagFilterInput.addEventListener('keydown', (e) => {
+  if (!autocompleteEl || autocompleteEl.hidden) return;
+  const items = [...autocompleteEl.querySelectorAll('.tag-suggestion')];
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    highlightTagSuggestion(tagActiveIndex + 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    highlightTagSuggestion(tagActiveIndex - 1);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const target = tagActiveIndex >= 0 ? items[tagActiveIndex] : items[0];
+    if (target) {
+      tagFilterInput.value = '';
+      toggleTagFilter(target.dataset.tag);
+    }
+  } else if (e.key === 'Backspace' && !tagFilterInput.value && selectedTags.size) {
+    // Empty input + Backspace removes the most recently added tag.
+    toggleTagFilter([...selectedTags].pop());
+  } else if (e.key === 'Escape') {
+    if (autocompleteEl) autocompleteEl.hidden = true;
+  }
+});
 
 // --- COLLAPSIBLE CHAT SIDEBAR LOGIC ---
 const btnToggleChat = document.getElementById('btn-toggle-chat');
@@ -4721,6 +4916,21 @@ function initAiToolsWorker(task) {
   aiToolsWorker.postMessage({ type: 'init', task });
 }
 
+// Update an AI loading card's progress bar. Pass a 0-100 number for a
+// determinate fill, or null/undefined to show an indeterminate sweep (used
+// during inference, where there's no measurable percentage).
+function setAiLoadingFill(prefix, progress) {
+  const fill = document.getElementById(`${prefix}-loading-fill`);
+  if (!fill) return;
+  if (progress == null || isNaN(progress)) {
+    fill.classList.add('indeterminate');
+    fill.style.width = '';
+  } else {
+    fill.classList.remove('indeterminate');
+    fill.style.width = `${Math.max(0, Math.min(100, Math.round(progress)))}%`;
+  }
+}
+
 function handleAiToolsStatus(task, status, progress) {
   // Map worker task names to HTML element ID prefixes
   const prefixMap = {
@@ -4745,11 +4955,13 @@ function handleAiToolsStatus(task, status, progress) {
     overlay.style.display = 'flex';
     text.innerText = `Downloading local model files...`;
     progressEl.innerText = `${Math.round(progress || 0)}%`;
+    setAiLoadingFill(prefix, progress || 0);
   } else if (status === 'ready') {
     overlay.style.display = 'none';
   } else if (status === 'error') {
     text.innerText = `Error loading model.`;
     progressEl.innerText = `Check console.`;
+    setAiLoadingFill(prefix, null);
   }
 }
 
@@ -4919,6 +5131,7 @@ document.getElementById('btn-sentiment-run').addEventListener('click', () => {
     overlay.style.display = 'flex';
     document.getElementById('sentiment-loading-text').innerText = 'Analyzing sentiment...';
     document.getElementById('sentiment-loading-progress').innerText = '';
+    setAiLoadingFill('sentiment', null);
   }
   
   aiToolsWorker.postMessage({
@@ -4953,6 +5166,7 @@ document.getElementById('btn-translator-run').addEventListener('click', () => {
     overlay.style.display = 'flex';
     document.getElementById('translator-loading-text').innerText = 'Translating text...';
     document.getElementById('translator-loading-progress').innerText = '';
+    setAiLoadingFill('translator', null);
   }
   
   aiToolsWorker.postMessage({
@@ -5032,6 +5246,7 @@ btnRunDetector.addEventListener('click', () => {
     overlay.style.display = 'flex';
     document.getElementById('detector-loading-text').innerText = 'Detecting objects...';
     document.getElementById('detector-loading-progress').innerText = '';
+    setAiLoadingFill('detector', null);
   }
   
   const canvas = document.getElementById('detector-canvas');
@@ -5188,6 +5403,7 @@ document.getElementById('btn-run-bg-remover').addEventListener('click', () => {
   overlay.style.display = 'flex';
   document.getElementById('bg-remover-loading-text').innerText = 'Removing background...';
   document.getElementById('bg-remover-loading-progress').innerText = '';
+  setAiLoadingFill('bg-remover', null);
 
   const btnRun = document.getElementById('btn-run-bg-remover');
   btnRun.disabled = true;
@@ -9691,12 +9907,14 @@ async function initFaceSwapModel() {
     overlay.style.display = 'flex';
     textEl.textContent = 'Loading AI Face Model...';
     progressEl.textContent = '0%';
+    setAiLoadingFill('face-swap', 0);
 
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
     );
-    
+
     progressEl.textContent = '50%';
+    setAiLoadingFill('face-swap', 50);
 
     faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
       baseOptions: {
@@ -9729,6 +9947,7 @@ async function handleFaceSwapUpload(file, role) {
   overlay.style.display = 'flex';
   textEl.textContent = `Analyzing ${role} image faces...`;
   progressEl.textContent = '';
+  setAiLoadingFill('face-swap', null);
 
   const img = new Image();
   img.onload = async () => {
