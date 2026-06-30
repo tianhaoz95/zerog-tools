@@ -1058,6 +1058,197 @@
         </div>
       </main>
 
+      <!-- VIEW 8.5: JSON DIFF & PATCH GENERATOR -->
+      <main id="json-diff-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-json-diff-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>JSON Diff &amp; Patch Generator</h2>
+            <p>Paste two JSON documents and compare them structurally — unified or inline view with RFC 6902 patch export.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel (Inputs) -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 50%; display: flex; flex-direction: column;">
+            <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 0.75rem; height: 340px;">
+              <div style="display: flex; flex-direction: column;">
+                <label for="json-diff-original" style="margin-bottom: 0.25rem;">Original JSON</label>
+                <textarea id="json-diff-original" class="input-custom" style="flex-grow: 1; font-family: monospace; font-size: 0.78rem; resize: none;" placeholder='{"name": "old"}'>{
+  "name": "ZeroG Toolbox",
+  "version": "1.0.0",
+  "features": ["image-resize", "password-gen"],
+  "settings": {
+    "theme": "light",
+    "language": "en"
+  }
+}</textarea>
+              </div>
+              <div style="display: flex; flex-direction: column;">
+                <label for="json-diff-modified" style="margin-bottom: 0.25rem;">Modified JSON</label>
+                <textarea id="json-diff-modified" class="input-custom" style="flex-grow: 1; font-family: monospace; font-size: 0.78rem; resize: none;" placeholder='{"name": "new"}'>{
+  "name": "ZeroG Toolbox",
+  "version": "2.0.0",
+  "features": ["image-resize", "password-gen", "json-diff"],
+  "settings": {
+    "theme": "dark",
+    "language": "en",
+    "notifications": true
+  }
+}</textarea>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+              <button class="btn-primary" id="btn-run-json-diff" style="flex-grow: 1;">⚡ Compare JSON</button>
+              <button class="btn-secondary" id="btn-swap-json-diff">⇄ Swap</button>
+            </div>
+          </div>
+
+          <!-- Right Panel (Output) -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 50%; display: flex; flex-direction: column;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem; height: 100%;">
+              <!-- View mode toggle -->
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <label>Diff Output</label>
+                <div class="btn-group" id="json-diff-mode-toggle">
+                  <button class="btn-tab active" data-mode="unified">Unified</button>
+                  <button class="btn-tab" data-mode="inline">Inline</button>
+                  <button class="btn-tab" data-mode="patch">Patch (RFC 6902)</button>
+                </div>
+              </div>
+
+              <!-- Stats bar -->
+              <div id="json-diff-stats" style="display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-muted);">
+                <span><span class="stat-added">0</span> added</span>
+                <span><span class="stat-removed">0</span> removed</span>
+                <span><span class="stat-modified">0</span> modified</span>
+              </div>
+
+              <!-- Diff output area -->
+              <div id="json-diff-output" style="flex-grow: 1; overflow-y: auto; background: var(--bg-card); border-radius: var(--radius-sm); padding: 1rem; font-family: monospace; font-size: 0.78rem; line-height: 1.6;">
+                <div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Compare JSON" to see differences</div>
+              </div>
+
+              <!-- Copy patch button (hidden by default) -->
+              <button class="btn-secondary" id="btn-copy-json-patch" style="display: none;">📋 Copy Patch as JSON</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 8.75: JSON TO SCHEMA GENERATOR -->
+      <main id="json-schema-gen-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-json-schema-gen-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>JSON to Schema Generator</h2>
+            <p>Paste sample JSON data and generate a valid JSON Schema (Draft-07) with inferred types, array items, and nested object definitions.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel (Input) -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 45%; display: flex; flex-direction: column;">
+            <label for="json-schema-input">Sample JSON Data</label>
+            <textarea id="json-schema-input" class="input-custom" style="flex-grow: 1; font-family: monospace; font-size: 0.78rem; resize: none;" placeholder='{"name": "example"}'>{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@example.com",
+      "active": true,
+      "scores": [95, 87, 92],
+      "address": {
+        "street": "123 Main St",
+        "city": "Springfield",
+        "zip": "62701"
+      },
+      "tags": ["admin", "user"]
+    }
+  ],
+  "meta": {
+    "total": 1,
+    "page": 1
+  }
+}</textarea>
+
+            <button class="btn-primary" id="btn-generate-schema" style="margin-top: 0.75rem; width: 100%;">⚡ Generate Schema</button>
+          </div>
+
+          <!-- Right Panel (Output) -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 55%; display: flex; flex-direction: column;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem; height: 100%;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <label>Generated JSON Schema (Draft-07)</label>
+                <button class="btn-secondary" id="btn-copy-schema">📋 Copy Schema</button>
+              </div>
+
+              <div id="json-schema-output" style="flex-grow: 1; overflow-y: auto; background: var(--bg-card); border-radius: var(--radius-sm); padding: 1rem; font-family: monospace; font-size: 0.78rem; line-height: 1.6;">
+                <div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Generate Schema" to create schema from JSON</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 8.875: JSON TO TYPESCRIPT GENERATOR -->
+      <main id="json-to-ts-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-json-to-ts-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>JSON to TypeScript Interface Generator</h2>
+            <p>Paste JSON data and generate TypeScript interfaces, types, and union types with proper type inference.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel (Input) -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 45%; display: flex; flex-direction: column;">
+            <label for="json-to-ts-input">JSON Input</label>
+            <textarea id="json-to-ts-input" class="input-custom" style="flex-grow: 1; font-family: monospace; font-size: 0.78rem; resize: none;" placeholder='{"name": "example"}'>{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "email": "alice@example.com",
+      "isActive": true,
+      "age": 28,
+      "address": {
+        "street": "123 Main St",
+        "city": "Springfield",
+        "zip": "62701"
+      },
+      "roles": ["admin", "user"],
+      "score": 95.5
+    }
+  ],
+  "totalCount": 1,
+  "status": "success"
+}</textarea>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+              <button class="btn-primary" id="btn-generate-ts" style="flex-grow: 1;">⚡ Generate TypeScript</button>
+              <button class="btn-secondary" id="btn-swap-json-to-ts">⇄ Swap JSON</button>
+            </div>
+          </div>
+
+          <!-- Right Panel (Output) -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 55%; display: flex; flex-direction: column;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem; height: 100%;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <label>Generated TypeScript Code</label>
+                <button class="btn-secondary" id="btn-copy-ts">📋 Copy Code</button>
+              </div>
+
+              <div id="json-to-ts-output" style="flex-grow: 1; overflow-y: auto; background: var(--bg-card); border-radius: var(--radius-sm); padding: 1rem; font-family: monospace; font-size: 0.78rem; line-height: 1.6;">
+                <div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Generate TypeScript" to create types from JSON</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <!-- VIEW 9: QR CODE GENERATOR & SCANNER -->
       <main id="qr-view" class="view">
         <div class="tool-view-header">
@@ -1612,6 +1803,47 @@ Supported browsers:
                 <!-- Rendered diff elements -->
                 <div style="color: var(--text-muted); font-size: 0.85rem; padding: 1rem; text-align: center;">Click "Compare Versions" to run comparison</div>
               </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 17.5: MULTI-HASH CALCULATOR -->
+      <main id="multi-hash-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-multi-hash-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Multi-Hash Calculator (All Algorithms)</h2>
+            <p>Calculate every supported cryptographic hash simultaneously — MD5, SHA family, RipeMD, CRC32, Adler32 — for text or uploaded files.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel (Input) -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 40%; display: flex; flex-direction: column;">
+            <label for="multi-hash-input-text">Plain Text Input</label>
+            <textarea id="multi-hash-input-text" class="input-custom" style="height: 120px; font-family: monospace; font-size: 0.8rem; resize: none;" placeholder="Enter text to hash...">ZeroG Toolbox</textarea>
+
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin: 0.75rem 0;">— OR UPLOAD A FILE —</div>
+
+            <div class="control-group">
+              <label>Select File</label>
+              <input type="file" id="multi-hash-file-input" class="input-custom" style="font-size: 0.8rem;" />
+            </div>
+
+            <button class="btn-primary" id="btn-calculate-all-hashes" style="margin-top: 0.75rem; width: 100%;">⚡ Calculate All Hashes</button>
+          </div>
+
+          <!-- Right Panel (Output) -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 60%; display: flex; flex-direction: column;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 0.75rem; height: 100%;">
+              <label>Hash Results (all algorithms)</label>
+
+              <div id="multi-hash-output" style="flex-grow: 1; overflow-y: auto; background: var(--bg-card); border-radius: var(--radius-sm); padding: 1rem; font-family: monospace; font-size: 0.78rem; line-height: 1.8;">
+                <div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Calculate All Hashes" to compute all digests</div>
+              </div>
+
+              <button class="btn-secondary" id="btn-copy-all-hashes">📋 Copy All Hashes</button>
             </div>
           </div>
         </div>
@@ -5719,6 +5951,121 @@ Supported browsers:
               <div id="ratio-steps" style="width: 100%; font-size: 0.85rem; font-family: monospace; line-height: 1.6; color: var(--text-secondary); margin-top: 0.5rem; text-align: center;">
                 Equation: 2 / 3 = 4 / X<br/>Cross multiply: 2 * X = 3 * 4<br/>X = 12 / 2 = 6
               </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: AI LIVE POSE ESTIMATOR -->
+      <main id="ai-pose-estimator-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ai-pose-estimator-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Live Pose Estimator</h2>
+            <p>Enable your webcam to see 17 COCO body keypoints detected in real-time by the VitPose-Base AI model — side-by-side with the live feed. Runs 100% locally in your browser.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left: Controls -->
+          <div class="panel-controls">
+            <div class="control-group">
+              <label>Camera</label>
+              <select id="pose-camera-select" class="input-custom"></select>
+            </div>
+
+            <div class="control-group">
+              <label for="pose-confidence-slider">Keypoint Confidence Threshold</label>
+              <input type="range" id="pose-confidence-slider" min="0" max="100" value="25" style="width:100%;" />
+              <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-secondary);margin-top:0.25rem;">
+                <span>Low (more dots)</span>
+                <span id="pose-confidence-val">0.25</span>
+                <span>High (fewer dots)</span>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label>Display Options</label>
+              <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;">
+                <input type="checkbox" id="pose-show-skeleton" checked style="accent-color:var(--primary);width:16px;height:16px;" />
+                Draw skeleton limbs
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;margin-top:0.4rem;">
+                <input type="checkbox" id="pose-show-dots" checked style="accent-color:var(--primary);width:16px;height:16px;" />
+                Draw keypoint dots
+              </label>
+              <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;margin-top:0.4rem;">
+                <input type="checkbox" id="pose-mirror" checked style="accent-color:var(--primary);width:16px;height:16px;" />
+                Mirror webcam feed
+              </label>
+            </div>
+
+            <div class="control-group" id="pose-model-status-group">
+              <label>Model Status</label>
+              <div id="pose-status-badge" style="padding:0.5rem 0.75rem;border-radius:var(--radius-sm);font-size:0.82rem;font-weight:600;background:var(--bg-preview);border:1px solid var(--border);color:var(--text-secondary);">
+                ⏳ Model not loaded
+              </div>
+              <div id="pose-loading-bar-wrap" style="display:none;margin-top:0.5rem;">
+                <div style="height:6px;width:100%;background:var(--border);border-radius:3px;overflow:hidden;">
+                  <div id="pose-loading-bar-fill" style="height:100%;width:0%;background:var(--primary);transition:width 0.2s ease;"></div>
+                </div>
+                <div id="pose-loading-bar-label" style="font-size:0.75rem;color:var(--text-secondary);margin-top:0.3rem;">Initializing…</div>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <button class="btn-primary" id="btn-pose-start" style="width:100%;" disabled>
+                📷 Start Camera &amp; Pose
+              </button>
+              <button class="btn-secondary" id="btn-pose-stop" style="width:100%;display:none;margin-top:0.5rem;">
+                ⏹ Stop
+              </button>
+            </div>
+
+            <div class="control-group" id="pose-fps-group" style="display:none;">
+              <label>Live FPS</label>
+              <div id="pose-fps-display" style="font-size:1.4rem;font-weight:700;color:var(--primary);text-align:center;">—</div>
+              <div id="pose-inference-ms" style="font-size:0.75rem;color:var(--text-secondary);text-align:center;">inference: — ms</div>
+            </div>
+          </div>
+
+          <!-- Right: Video panels side-by-side -->
+          <div class="panel-workspace" style="display:flex;flex-direction:column;gap:1rem;overflow-y:auto;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+              <!-- Webcam feed -->
+              <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);letter-spacing:0.05em;text-transform:uppercase;">📷 Webcam Feed</label>
+                <div style="position:relative;border-radius:var(--radius-md);overflow:hidden;background:#000;aspect-ratio:4/3;border:1px solid var(--border);">
+                  <video id="pose-webcam-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+                  <div id="pose-webcam-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.75rem;color:#888;background:#111;">
+                    <span style="font-size:2.5rem;">📷</span>
+                    <span style="font-size:0.85rem;">Camera not started</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pose canvas -->
+              <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);letter-spacing:0.05em;text-transform:uppercase;">🏃 Pose Estimation</label>
+                <div style="position:relative;border-radius:var(--radius-md);overflow:hidden;background:#0a0a0f;aspect-ratio:4/3;border:1px solid var(--border);">
+                  <canvas id="pose-output-canvas" style="width:100%;height:100%;object-fit:cover;display:block;"></canvas>
+                  <div id="pose-canvas-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.75rem;color:#888;background:#0a0a0f;">
+                    <span style="font-size:2.5rem;">🦴</span>
+                    <span style="font-size:0.85rem;">Pose skeleton will appear here</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Keypoint legend -->
+            <div id="pose-legend" style="display:none;padding:0.75rem;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-input);">
+              <div style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">COCO-17 Keypoints</div>
+              <div id="pose-legend-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.3rem;font-size:0.75rem;"></div>
+            </div>
+
+            <!-- Info note -->
+            <div style="padding:0.75rem 1rem;border-radius:var(--radius-md);background:var(--bg-preview);border:1px solid var(--border);font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">
+              ℹ️ <strong>VitPose-Base</strong> is a top-down Vision Transformer model for single-person pose estimation trained on the COCO dataset. The model downloads once (~100 MB) and is cached for subsequent visits. Works best when one person is clearly visible.
             </div>
           </div>
         </div>

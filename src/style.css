@@ -2982,3 +2982,165 @@ div[style*="color: var(--danger)"] {
   color: var(--primary);
   background: rgba(99, 102, 241, 0.12);
 }
+
+/* --- JSON Diff & Patch Generator --- */
+.btn-group {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.btn-tab {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.78rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.btn-tab + .btn-tab {
+  border-left: 1px solid var(--border);
+}
+.btn-tab:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--text-secondary);
+}
+.btn-tab.active {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary);
+  font-weight: 600;
+}
+.json-diff-output {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.json-diff-line {
+  display: flex;
+  padding: 0 0.25rem;
+  border-radius: 2px;
+  transition: background 0.1s ease;
+}
+.json-diff-line:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+.json-diff-path {
+  color: var(--text-muted);
+  min-width: 3.5rem;
+  text-align: right;
+  padding-right: 0.75rem;
+  user-select: none;
+}
+.json-diff-key {
+  color: #67e8f9;
+}
+.json-diff-string {
+  color: #a5f3fc;
+}
+.json-diff-number {
+  color: #fbbf24;
+}
+.json-diff-bool {
+  color: #c084fc;
+}
+.json-diff-null {
+  color: #94a3b8;
+  font-style: italic;
+}
+.json-diff-add .json-diff-path,
+.json-diff-add .json-diff-key,
+.json-diff-add .json-diff-string,
+.json-diff-add .json-diff-number,
+.json-diff-add .json-diff-bool {
+  color: #34d399;
+}
+.json-diff-add {
+  background: rgba(16, 185, 129, 0.08);
+}
+.json-diff-remove .json-diff-path,
+.json-diff-remove .json-diff-key,
+.json-diff-remove .json-diff-string,
+.json-diff-remove .json-diff-number,
+.json-diff-remove .json-diff-bool {
+  color: #f87171;
+}
+.json-diff-remove {
+  background: rgba(239, 68, 68, 0.08);
+}
+.json-diff-modify .json-diff-path {
+  color: var(--text-muted);
+}
+.json-diff-modify .old-value {
+  color: #f87171;
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.json-diff-modify .arrow-indicator {
+  color: #fbbf24;
+  margin: 0 0.5rem;
+}
+.json-diff-modify .new-value {
+  color: #34d399;
+}
+.json-diff-context {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.json-patch-output {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: #fbbf24;
+}
+.json-diff-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* --- JSON Schema Generator --- */
+.schema-keyword { color: #c084fc; font-weight: 600; }
+.schema-type { color: #67e8f9; }
+.schema-string { color: #a5f3fc; }
+.schema-number { color: #fbbf24; }
+.schema-bool { color: #f472b6; }
+.schema-null { color: #94a3b8; font-style: italic; }
+.schema-comment { color: var(--text-muted); opacity: 0.5; font-style: italic; }
+
+/* --- JSON to TypeScript Generator --- */
+.ts-keyword { color: #c084fc; font-weight: 600; }
+.ts-type { color: #67e8f9; }
+.ts-string { color: #a5f3fc; }
+.ts-number { color: #fbbf24; }
+.ts-bool { color: #f472b6; }
+.ts-null { color: #94a3b8; font-style: italic; }
+
+/* --- Multi-Hash Calculator --- */
+.hash-result-row {
+  display: flex;
+  align-items: baseline;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+}
+.hash-result-row:last-child {
+  border-bottom: none;
+}
+.hash-algo-name {
+  min-width: 7rem;
+  font-weight: 600;
+  color: var(--primary);
+  padding-right: 0.75rem;
+}
+.hash-value {
+  color: #fbbf24;
+  word-break: break-all;
+  flex-grow: 1;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+}

@@ -854,6 +854,18 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'diff-checker') {
     document.getElementById('diff-view').classList.add('active');
     resetDiffState();
+  } else if (viewId === 'json-diff') {
+    document.getElementById('json-diff-view').classList.add('active');
+    resetJsonDiffState();
+  } else if (viewId === 'json-schema-gen') {
+    document.getElementById('json-schema-gen-view').classList.add('active');
+    resetSchemaGenState();
+  } else if (viewId === 'json-to-ts') {
+    document.getElementById('json-to-ts-view').classList.add('active');
+    resetJsonToTsState();
+  } else if (viewId === 'multi-hash-calculator') {
+    document.getElementById('multi-hash-view').classList.add('active');
+    resetMultiHashState();
   } else if (viewId === 'hash-generator') {
     document.getElementById('hash-view').classList.add('active');
     resetHashState();
@@ -1015,6 +1027,10 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'password-analyzer') {
     document.getElementById('password-analyzer-view').classList.add('active');
     resetPasswordAnalyzerState();
+  } else if (viewId === 'ai-pose-estimator') {
+    document.getElementById('ai-pose-estimator-view').classList.add('active');
+    resetPoseEstimatorState();
+    initPoseWorker();
   } else {
     const customView = document.getElementById(`${viewId}-view`);
     if (customView) {
@@ -1061,6 +1077,10 @@ document.getElementById('btn-image-resizer-back').addEventListener('click', () =
 document.getElementById('btn-pdf-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-regex-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-diff-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-json-diff-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-json-schema-gen-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-json-to-ts-back').addEventListener('click', () => navigateTo('home'));
+document.getElementById('btn-multi-hash-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-hash-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-svg-editor-back').addEventListener('click', () => navigateTo('home'));
 document.getElementById('btn-unit-back').addEventListener('click', () => navigateTo('home'));
@@ -1107,7 +1127,7 @@ const newToolsIds = [
   'json-yaml-converter', 'device-info', 'stopwatch-lap', 'html-wysiwyg',
   'css-gradient-mesh', 'svg-path-viewer', 'guitar-tuner', 'speed-reader',
   'mime-inspector', 'sql-playground', 'hash-verifier', 'lorem-pixel',
-  'ratio-solver'
+  'ratio-solver', 'ai-pose-estimator'
 ];
 newToolsIds.forEach(id => {
   const el = document.getElementById(`btn-${id}-back`);
@@ -3667,6 +3687,740 @@ function computeMD5(buffer) {
   }
   function md5rot(x, s) {
     return (x << s) | (x >>> (32 - s));
+  }
+}
+
+
+// --- JSON DIFF & PATCH GENERATOR LOGIC ---
+const jsonDiffOriginal = document.getElementById('json-diff-original');
+const jsonDiffModified = document.getElementById('json-diff-modified');
+const btnRunJsonDiff = document.getElementById('btn-run-json-diff');
+const btnSwapJsonDiff = document.getElementById('btn-swap-json-diff');
+const btnCopyJsonPatch = document.getElementById('btn-copy-json-patch');
+const jsonDiffOutput = document.getElementById('json-diff-output');
+const jsonDiffStats = document.getElementById('json-diff-stats');
+let currentJsonDiffMode = 'unified';
+let currentPatchOps = [];
+
+function resetJsonDiffState() {
+  jsonDiffOriginal.value = '{"name": "ZeroG Toolbox","version": "1.0.0","features": ["image-resize", "password-gen"],"settings": {"theme": "light", "language": "en"}}';
+  jsonDiffModified.value = '{"name": "ZeroG Toolbox","version": "2.0.0","features": ["image-resize", "password-gen", "json-diff"],"settings": {"theme": "dark", "language": "en", "notifications": true}}';
+  jsonDiffOutput.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Compare JSON" to see differences</div>';
+  btnCopyJsonPatch.style.display = 'none';
+  currentPatchOps = [];
+  // Reset stats
+  jsonDiffStats.innerHTML = '<span><span class="stat-added">0</span> added</span><span><span class="stat-removed">0</span> removed</span><span><span class="stat-modified">0</span> modified</span>';
+}
+
+btnRunJsonDiff.addEventListener('click', runJsonDiff);
+btnSwapJsonDiff.addEventListener('click', () => {
+  const tmp = jsonDiffOriginal.value;
+  jsonDiffOriginal.value = jsonDiffModified.value;
+  jsonDiffModified.value = tmp;
+});
+btnCopyJsonPatch.addEventListener('click', copyJsonPatch);
+
+// Mode toggle
+document.getElementById('json-diff-mode-toggle').addEventListener('click', (e) => {
+  const tab = e.target.closest('.btn-tab');
+  if (!tab) return;
+  document.querySelectorAll('#json-diff-mode-toggle .btn-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  currentJsonDiffMode = tab.dataset.mode;
+  if (window._lastJsonDiffChanges) {
+    renderJsonDiff(window._lastJsonDiffChanges, window._lastJsonDiffOld, window._lastJsonDiffNew);
+  }
+});
+
+function jsonPathColor(val) {
+  if (typeof val === 'string') return '<span class="json-diff-string">"' + escapeHtml(val) + '"</span>';
+  if (typeof val === 'number') return '<span class="json-diff-number">' + escapeHtml(String(val)) + '</span>';
+  if (typeof val === 'boolean') return '<span class="json-diff-bool">' + escapeHtml(String(val)) + '</span>';
+  if (val === null) return '<span class="json-diff-null">null</span>';
+  return escapeHtml(String(val));
+}
+
+function formatJsonPath(path) {
+  if (!path || path === '$') return '<span style="color: var(--text-muted);">$</span>';
+  const parts = path.replace(/^\$/, '').split('.');
+  let result = '<span style="color: var(--text-muted);">$</span>';
+  for (const part of parts) {
+    if (/^\d+$/.test(part)) {
+      result += '.' + '<span class="json-diff-number">' + escapeHtml(part) + '</span>';
+    } else {
+      result += '."<span class="json-diff-key">' + escapeHtml(part) + '</span>"';
+    }
+  }
+  return result;
+}
+
+function computeJsonDiff(oldObj, newObj, path) {
+  const changes = [];
+  path = path || '$';
+
+  if (oldObj === null && newObj === null) return changes;
+  if (typeof oldObj !== typeof newObj) {
+    changes.push({ op: 'modify', path, oldValue: oldObj, newValue: newObj });
+    return changes;
+  }
+
+  if (Array.isArray(oldObj) || Array.isArray(newObj)) {
+    const arr1 = Array.isArray(oldObj) ? oldObj : [];
+    const arr2 = Array.isArray(newObj) ? newObj : [];
+    const maxLen = Math.max(arr1.length, arr2.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i >= arr1.length) {
+        changes.push({ op: 'add', path: path + '.' + i, newValue: arr2[i] });
+      } else if (i >= arr2.length) {
+        changes.push({ op: 'remove', path: path + '.' + i, oldValue: arr1[i] });
+      } else if (JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])) {
+        const sub = computeJsonDiff(arr1[i], arr2[i], path + '.' + i);
+        changes.push(...sub);
+      }
+    }
+    return changes;
+  }
+
+  if (typeof oldObj === 'object') {
+    const keysOld = Object.keys(oldObj);
+    const keysNew = Object.keys(newObj);
+    const allKeys = new Set([...keysOld, ...keysNew]);
+
+    for (const key of allKeys) {
+      const childPath = path + '.' + key;
+      if (!(key in oldObj)) {
+        changes.push({ op: 'add', path: childPath, newValue: newObj[key] });
+      } else if (!(key in newObj)) {
+        changes.push({ op: 'remove', path: childPath, oldValue: oldObj[key] });
+      } else {
+        const sub = computeJsonDiff(oldObj[key], newObj[key], childPath);
+        changes.push(...sub);
+      }
+    }
+  } else {
+    if (JSON.stringify(oldObj) !== JSON.stringify(newObj)) {
+      changes.push({ op: 'modify', path, oldValue: oldObj, newValue: newObj });
+    }
+  }
+
+  return changes;
+}
+
+function generateRfc6902Patch(changes) {
+  const ops = [];
+  for (const c of changes) {
+    if (c.op === 'add') {
+      ops.push({ op: 'add', path: c.path.replace(/^\$/, ''), value: c.newValue });
+    } else if (c.op === 'remove') {
+      ops.push({ op: 'remove', path: c.path.replace(/^\$/, '') });
+    } else if (c.op === 'modify') {
+      // RFC 6902 doesn't have "replace" — use remove + add for nested, or just output as-is
+      ops.push({ op: 'replace', path: c.path.replace(/^\$/, ''), value: c.newValue });
+    }
+  }
+  return JSON.stringify(ops, null, 2);
+}
+
+function renderJsonDiff(changes, oldObj, newObj) {
+  const addedCount = changes.filter(c => c.op === 'add').length;
+  const removedCount = changes.filter(c => c.op === 'remove').length;
+  const modifiedCount = changes.filter(c => c.op === 'modify').length;
+
+  jsonDiffStats.innerHTML =
+    '<span class="json-diff-stat"><span style="color: #34d399;">' + addedCount + '</span> added</span>' +
+    '<span class="json-diff-stat"><span style="color: #f87171;">' + removedCount + '</span> removed</span>' +
+    '<span class="json-diff-stat"><span style="color: #fbbf24;">' + modifiedCount + '</span> modified</span>';
+
+  if (changes.length === 0) {
+    jsonDiffOutput.innerHTML = '<div style="color: var(--success); text-align: center; padding-top: 2rem;">✓ Both JSON documents are identical!</div>';
+    btnCopyJsonPatch.style.display = 'none';
+    currentPatchOps = [];
+    return;
+  }
+
+  currentPatchOps = changes;
+  const patchStr = generateRfc6902Patch(changes);
+  btnCopyJsonPatch.style.display = 'block';
+
+  if (currentJsonDiffMode === 'patch') {
+    renderPatchView(patchStr);
+  } else if (currentJsonDiffMode === 'inline') {
+    renderInlineView(changes, oldObj, newObj);
+  } else {
+    renderUnifiedView(changes, oldObj, newObj);
+  }
+}
+
+function renderUnifiedView(changes, oldObj, newObj) {
+  jsonDiffOutput.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'json-diff-output';
+
+  // Show side-by-side: left = original keys with changes, right = modified keys with changes
+  const leftPanel = document.createElement('div');
+  leftPanel.style.cssText = 'display: inline-block; vertical-align: top; width: 48%;';
+  leftPanel.innerHTML = '<div style="font-size: 0.75rem; color: var(--text-muted); padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem;">Original Structure</div>';
+
+  const rightPanel = document.createElement('div');
+  rightPanel.style.cssText = 'display: inline-block; vertical-align: top; width: 48%;';
+  rightPanel.innerHTML = '<div style="font-size: 0.75rem; color: var(--text-muted); padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem;">Modified Structure</div>';
+
+  // Group changes by path prefix for readable display
+  const addByPath = {};
+  const removeByPath = {};
+  const modifyByPath = {};
+
+  changes.forEach(c => {
+    if (c.op === 'add') addByPath[c.path] = c;
+    else if (c.op === 'remove') removeByPath[c.path] = c;
+    else modifyByPath[c.path] = c;
+  });
+
+  // Left panel: show removed + modified-old values
+  const allLeftPaths = [...Object.keys(removeByPath), ...Object.keys(modifyByPath)].sort();
+  if (allLeftPaths.length === 0) {
+    leftPanel.innerHTML += '<div style="color: var(--text-muted); font-size: 0.75rem; padding: 1rem;">No removals or modifications</div>';
+  } else {
+    allLeftPaths.forEach(p => {
+      if (removeByPath[p]) {
+        const line = document.createElement('div');
+        line.className = 'json-diff-line json-diff-remove';
+        line.innerHTML = '<span class="json-diff-path">−</span><span>' + formatJsonPath(p) + '</span>';
+        leftPanel.appendChild(line);
+      }
+      if (modifyByPath[p]) {
+        const c = modifyByPath[p];
+        const line = document.createElement('div');
+        line.className = 'json-diff-line json-diff-modify';
+        line.innerHTML = '<span class="json-diff-path">~</span><span>' + formatJsonPath(p) + '</span> <span class="old-value">' + jsonPathColor(c.oldValue) + '</span>';
+        leftPanel.appendChild(line);
+      }
+    });
+  }
+
+  // Right panel: show added + modified-new values
+  const allRightPaths = [...Object.keys(addByPath), ...Object.keys(modifyByPath)].sort();
+  if (allRightPaths.length === 0) {
+    rightPanel.innerHTML += '<div style="color: var(--text-muted); font-size: 0.75rem; padding: 1rem;">No additions or modifications</div>';
+  } else {
+    allRightPaths.forEach(p => {
+      if (addByPath[p]) {
+        const line = document.createElement('div');
+        line.className = 'json-diff-line json-diff-add';
+        line.innerHTML = '<span class="json-diff-path">+</span><span>' + formatJsonPath(p) + '</span>';
+        rightPanel.appendChild(line);
+      }
+      if (modifyByPath[p]) {
+        const c = modifyByPath[p];
+        const line = document.createElement('div');
+        line.className = 'json-diff-line json-diff-modify';
+        line.innerHTML = '<span class="json-diff-path">~</span><span>' + formatJsonPath(p) + '</span> <span class="new-value">' + jsonPathColor(c.newValue) + '</span>';
+        rightPanel.appendChild(line);
+      }
+    });
+  }
+
+  container.appendChild(leftPanel);
+  container.appendChild(rightPanel);
+  jsonDiffOutput.appendChild(container);
+}
+
+function renderInlineView(changes, oldObj, newObj) {
+  jsonDiffOutput.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'json-diff-output';
+
+  changes.forEach(c => {
+    let line;
+    if (c.op === 'add') {
+      line = document.createElement('div');
+      line.className = 'json-diff-line json-diff-add';
+      line.innerHTML = '<span class="json-diff-path">+</span><span>' + formatJsonPath(c.path) + '</span> <span style="color: #34d399;">=</span> ' + jsonPathColor(c.newValue);
+    } else if (c.op === 'remove') {
+      line = document.createElement('div');
+      line.className = 'json-diff-line json-diff-remove';
+      line.innerHTML = '<span class="json-diff-path">−</span><span>' + formatJsonPath(c.path) + '</span> <span style="color: #f87171;">=</span> ' + jsonPathColor(c.oldValue);
+    } else {
+      line = document.createElement('div');
+      line.className = 'json-diff-line json-diff-modify';
+      line.innerHTML = '<span class="json-diff-path">~</span><span>' + formatJsonPath(c.path) + '</span> <span class="old-value">' + jsonPathColor(c.oldValue) + '</span> <span class="arrow-indicator">→</span> <span class="new-value">' + jsonPathColor(c.newValue) + '</span>';
+    }
+    container.appendChild(line);
+  });
+
+  jsonDiffOutput.appendChild(container);
+}
+
+function renderPatchView(patchStr) {
+  jsonDiffOutput.innerHTML = '';
+  const pre = document.createElement('pre');
+  pre.className = 'json-patch-output';
+  pre.textContent = patchStr;
+  jsonDiffOutput.appendChild(pre);
+}
+
+async function copyJsonPatch() {
+  if (!currentPatchOps.length) return;
+  const patchStr = generateRfc6902Patch(currentPatchOps);
+  try {
+    await navigator.clipboard.writeText(patchStr);
+    btnCopyJsonPatch.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopyJsonPatch.textContent = '📋 Copy Patch as JSON'; }, 2000);
+  } catch (err) {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = patchStr;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btnCopyJsonPatch.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopyJsonPatch.textContent = '📋 Copy Patch as JSON'; }, 2000);
+  }
+}
+
+function runJsonDiff() {
+  let oldText, newText;
+  try {
+    oldText = jsonDiffOriginal.value.trim();
+    newText = jsonDiffModified.value.trim();
+    if (!oldText || !newText) {
+      jsonDiffOutput.innerHTML = '<div style="color: #fbbf24; text-align: center;">Please paste both JSON documents above.</div>';
+      return;
+    }
+  } catch (e) {
+    jsonDiffOutput.innerHTML = '<div style="color: var(--danger);">Input error. Please check your JSON.</div>';
+    return;
+  }
+
+  let oldObj, newObj;
+  try {
+    oldObj = JSON.parse(oldText);
+  } catch (e) {
+    jsonDiffOutput.innerHTML = '<div style="color: var(--danger);">Invalid JSON in Original: ' + escapeHtml(e.message) + '</div>';
+    return;
+  }
+  try {
+    newObj = JSON.parse(newText);
+  } catch (e) {
+    jsonDiffOutput.innerHTML = '<div style="color: var(--danger);">Invalid JSON in Modified: ' + escapeHtml(e.message) + '</div>';
+    return;
+  }
+
+  const changes = computeJsonDiff(oldObj, newObj);
+  window._lastJsonDiffChanges = changes;
+  window._lastJsonDiffOld = oldObj;
+  window._lastJsonDiffNew = newObj;
+  renderJsonDiff(changes, oldObj, newObj);
+}
+
+
+// --- JSON SCHEMA GENERATOR LOGIC ---
+const jsonSchemaInput = document.getElementById('json-schema-input');
+const btnGenerateSchema = document.getElementById('btn-generate-schema');
+const btnCopySchema = document.getElementById('btn-copy-schema');
+const jsonSchemaOutput = document.getElementById('json-schema-output');
+
+function resetSchemaGenState() {
+  jsonSchemaInput.value = '{"users": [{"id": 1, "name": "Alice", "email": "alice@example.com", "active": true, "scores": [95, 87, 92], "address": {"street": "123 Main St", "city": "Springfield", "zip": "62701"}, "tags": ["admin", "user"]}], "meta": {"total": 1, "page": 1}}';
+  jsonSchemaOutput.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Generate Schema" to create schema from JSON</div>';
+}
+
+btnGenerateSchema.addEventListener('click', generateJsonSchema);
+btnCopySchema.addEventListener('click', copyGeneratedSchema);
+
+function inferSchemaFromValue(value) {
+  if (value === null) return { type: 'null' };
+  if (Array.isArray(value)) {
+    const items = value.length > 0 ? inferSchemaFromValue(value[0]) : {};
+    // If array has mixed types, use anyOf
+    if (value.length > 1) {
+      const itemTypes = new Set(value.map(v => typeof v === 'object' && v !== null ? JSON.stringify(inferSchemaFromValue(v)) : typeof v));
+      if (itemTypes.size > 1) {
+        return { type: 'array', items: { anyOf: value.map(v => inferSchemaFromValue(v)) } };
+      }
+    }
+    return { type: 'array', items };
+  }
+  if (typeof value === 'object') {
+    const schema = { type: 'object', properties: {} };
+    for (const [key, val] of Object.entries(value)) {
+      schema.properties[key] = inferSchemaFromValue(val);
+    }
+    return schema;
+  }
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? { type: 'integer' } : { type: 'number' };
+  }
+  return { type: typeof value };
+}
+
+function generateJsonSchema() {
+  const input = jsonSchemaInput.value.trim();
+  if (!input) {
+    jsonSchemaOutput.innerHTML = '<div style="color: #fbbf24; text-align: center;">Please paste JSON data above.</div>';
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(input);
+  } catch (e) {
+    jsonSchemaOutput.innerHTML = '<div style="color: var(--danger);">Invalid JSON: ' + escapeHtml(e.message) + '</div>';
+    return;
+  }
+
+  const schema = {
+    '$schema': 'https://json-schema.org/draft-07/schema#',
+    ...inferSchemaFromValue(parsed)
+  };
+
+  // Add required fields for objects
+  function addRequired(obj, props) {
+    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+      const required = Object.keys(props || obj).filter(k => obj[k] !== null);
+      if (required.length > 0) obj.required = required;
+      for (const key of Object.keys(obj)) {
+        if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+          addRequired(obj[key], obj[key]);
+        }
+      }
+    }
+  }
+
+  // Extract the inner schema (remove root type wrapper)
+  const innerSchema = schema.type === 'object' ? { ...schema, '$schema': schema.$schema } : schema;
+  if (innerSchema.type === 'object') {
+    addRequired(innerSchema.properties || {}, innerSchema.properties);
+  }
+
+  const output = JSON.stringify(innerSchema, null, 2);
+  window._lastGeneratedSchema = output;
+
+  // Render with syntax highlighting
+  jsonSchemaOutput.innerHTML = highlightJsonSchema(output);
+}
+
+function highlightJsonSchema(jsonStr) {
+  return jsonStr
+    .replace(/"([^"]+)"(\s*:)/g, '<span class="schema-key">$1</span>$2')
+    .replace(/: "([^"]*)"/g, ': <span class="schema-string">"$1"</span>')
+    .replace(/: (true|false)/g, ': <span class="schema-bool">$1</span>')
+    .replace(/: (null)/g, ': <span class="schema-null">$1</span>')
+    .replace(/: (\d+)/g, ': <span class="schema-number">$1</span>')
+    .replace(/"type": "([^"]+)"/g, '"type": <span class="schema-type">"$1"</span>');
+}
+
+async function copyGeneratedSchema() {
+  if (!window._lastGeneratedSchema) return;
+  try {
+    await navigator.clipboard.writeText(window._lastGeneratedSchema);
+    btnCopySchema.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopySchema.textContent = '📋 Copy Schema'; }, 2000);
+  } catch (err) {
+    const ta = document.createElement('textarea');
+    ta.value = window._lastGeneratedSchema;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btnCopySchema.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopySchema.textContent = '📋 Copy Schema'; }, 2000);
+  }
+}
+
+
+// --- JSON TO TYPESCRIPT GENERATOR LOGIC ---
+const jsonToTsInput = document.getElementById('json-to-ts-input');
+const btnGenerateTs = document.getElementById('btn-generate-ts');
+const btnSwapJsonToTs = document.getElementById('btn-swap-json-to-ts');
+const btnCopyTs = document.getElementById('btn-copy-ts');
+const jsonToTsOutput = document.getElementById('json-to-ts-output');
+
+function resetJsonToTsState() {
+  jsonToTsInput.value = '{"users": [{"id": 1, "name": "Alice", "email": "alice@example.com", "isActive": true, "age": 28, "address": {"street": "123 Main St", "city": "Springfield", "zip": "62701"}, "roles": ["admin", "user"], "score": 95.5}], "totalCount": 1, "status": "success"}';
+  jsonToTsOutput.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Generate TypeScript" to create types from JSON</div>';
+}
+
+btnGenerateTs.addEventListener('click', generateTypescript);
+btnSwapJsonToTs.addEventListener('click', () => {
+  const tmp = jsonToTsInput.value;
+  jsonToTsInput.value = '{"name": "example", "value": 123, "active": true}';
+});
+btnCopyTs.addEventListener('click', copyGeneratedTs);
+
+function inferTsType(value) {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) {
+    if (value.length === 0) return 'unknown[]';
+    const itemType = inferTsType(value[0]);
+    // If all items are same type, use simple array; otherwise use union
+    const allSame = value.every(v => JSON.stringify(inferTsType(v)) === itemType);
+    if (allSame) return `${itemType}[]`;
+    const uniqueTypes = [...new Set(value.map(v => inferTsType(v)))];
+    return `(${uniqueTypes.join(' | ')})[]`;
+  }
+  if (typeof value === 'object') {
+    // For objects, we'll generate an interface name
+    return '__Object';
+  }
+  if (typeof value === 'number') {
+    return Number.isInteger(value) ? 'number' : 'number';
+  }
+  if (typeof value === 'boolean') return 'boolean';
+  if (typeof value === 'string') return 'string';
+  return 'unknown';
+}
+
+function generateInterfaceName(prefix, index) {
+  const name = prefix + (index > 0 ? index : '');
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function generateTypescriptFromJson(data) {
+  const interfaces = [];
+  let objectCounter = 0;
+
+  function processValue(value, propName, depth) {
+    if (value === null) return 'null';
+    if (Array.isArray(value)) {
+      if (value.length === 0) return 'unknown[]';
+      const itemType = processValue(value[0], propName + 'Item', depth + 1);
+      const allSame = value.every(v => JSON.stringify(processValue(v, propName + 'Item', depth + 1)) === itemType);
+      if (allSame) return `${itemType}[]`;
+      const uniqueTypes = [...new Set(value.map(v => processValue(v, propName + 'Item', depth + 1)))];
+      return `(${uniqueTypes.join(' | ')})[]`;
+    }
+    if (typeof value === 'object') {
+      const interfaceName = generateInterfaceName(propName || 'Object', objectCounter++);
+      interfaces.push({ name: interfaceName, properties: {}, raw: value });
+
+      for (const [key, val] of Object.entries(value)) {
+        interfaces[interfaces.length - 1].properties[key] = processValue(val, key, depth + 1);
+      }
+      return interfaceName;
+    }
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'boolean') return 'boolean';
+    if (typeof value === 'string') return 'string';
+    return 'unknown';
+  }
+
+  // Process root data
+  const rootType = processValue(data, 'Root', 0);
+
+  // If root is object, make it an interface too
+  let result = '';
+  if (rootType === '__Object' || typeof data === 'object') {
+    const rootName = generateInterfaceName('Root', 0);
+    interfaces.unshift({ name: rootName, properties: {}, raw: data });
+    for (const [key, val] of Object.entries(data)) {
+      interfaces[0].properties[key] = processValue(val, key, 1);
+    }
+    result += `export interface ${rootName} {\n`;
+    for (const [key, type] of Object.entries(interfaces[0].properties)) {
+      const optional = data[key] === null ? '?:' : ':';
+      result += `  ${key}${optional} ${type};\n`;
+    }
+    result += `}\n\n`;
+  }
+
+  // Generate remaining interfaces
+  for (const iface of interfaces.slice(1)) {
+    if (Object.keys(iface.properties).length === 0) continue;
+    result += `export interface ${iface.name} {\n`;
+    for (const [key, type] of Object.entries(iface.properties)) {
+      const optional = iface.raw[key] === null ? '?:' : ':';
+      result += `  ${key}${optional} ${type};\n`;
+    }
+    result += `}\n\n`;
+  }
+
+  return result.trim();
+}
+
+function highlightTs(code) {
+  let result = code;
+
+  // Highlight 'interface' keyword and type names
+  result = result.replace(/\b(interface)\s+(\w+)/g, '<span class="ts-keyword">$1</span> <span class="ts-type">$2</span>');
+
+  // Highlight TypeScript built-in types
+  result = result.replace(/\b(string|number|boolean|null|undefined|any|void|never|unknown)\b/g, '<span class="ts-string">$1</span>');
+
+  return result;
+}
+
+async function copyGeneratedTs() {
+  if (!window._lastGeneratedTs) return;
+  try {
+    await navigator.clipboard.writeText(window._lastGeneratedTs);
+    btnCopyTs.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopyTs.textContent = '📋 Copy Code'; }, 2000);
+  } catch (err) {
+    const ta = document.createElement('textarea');
+    ta.value = window._lastGeneratedTs;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btnCopyTs.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopyTs.textContent = '📋 Copy Code'; }, 2000);
+  }
+}
+
+function generateTypescript() {
+  const input = jsonToTsInput.value.trim();
+  if (!input) {
+    jsonToTsOutput.innerHTML = '<div style="color: #fbbf24; text-align: center;">Please paste JSON data above.</div>';
+    return;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(input);
+  } catch (e) {
+    jsonToTsOutput.innerHTML = '<div style="color: var(--danger);">Invalid JSON: ' + escapeHtml(e.message) + '</div>';
+    return;
+  }
+
+  const tsCode = generateTypescriptFromJson(parsed);
+  window._lastGeneratedTs = tsCode;
+
+  // Render with syntax highlighting
+  jsonToTsOutput.innerHTML = highlightTs(tsCode);
+}
+
+
+// --- MULTI-HASH CALCULATOR LOGIC ---
+const multiHashInputText = document.getElementById('multi-hash-input-text');
+const multiHashFileInput = document.getElementById('multi-hash-file-input');
+const btnCalculateAllHashes = document.getElementById('btn-calculate-all-hashes');
+const btnCopyAllHashes = document.getElementById('btn-copy-all-hashes');
+const multiHashOutput = document.getElementById('multi-hash-output');
+
+function resetMultiHashState() {
+  multiHashInputText.value = 'ZeroG Toolbox';
+  multiHashFileInput.value = '';
+  multiHashOutput.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding-top: 2rem;">Click "Calculate All Hashes" to compute all digests</div>';
+}
+
+btnCalculateAllHashes.addEventListener('click', calculateAllHashes);
+btnCopyAllHashes.addEventListener('click', copyAllHashes);
+
+async function calculateAllHashes() {
+  let buffer;
+  const file = multiHashFileInput.files[0];
+
+  if (file) {
+    buffer = await file.arrayBuffer();
+  } else {
+    const text = multiHashInputText.value;
+    buffer = new TextEncoder().encode(text);
+  }
+
+  multiHashOutput.innerHTML = '<div style="text-align: center; color: var(--text-secondary);">Computing all hashes...</div>';
+
+  try {
+    // Web Crypto API supports: SHA-1, SHA-256, SHA-384, SHA-512
+    const webCryptoAlgos = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
+    const results = {};
+
+    // Calculate Web Crypto hashes in parallel
+    const cryptoPromises = webCryptoAlgos.map(async (algo) => {
+      try {
+        const hashBuf = await crypto.subtle.digest(algo, buffer);
+        results[algo] = bufToHex(hashBuf);
+      } catch (err) {
+        results[algo] = 'Error: ' + err.message;
+      }
+    });
+
+    // Calculate MD5 (pure JS)
+    const md5Promise = Promise.resolve(computeMD5(buffer));
+
+    // Calculate CRC32 (pure JS)
+    const crc32Promise = Promise.resolve(computeCRC32(buffer));
+
+    // Calculate Adler32 (pure JS)
+    const adlerPromise = Promise.resolve(computeAdler32(buffer));
+
+    await Promise.all([cryptoPromises, md5Promise, crc32Promise, adlerPromise]);
+
+    // Render results
+    renderHashResults(results);
+  } catch (err) {
+    console.error('Hash calculation failed:', err);
+    multiHashOutput.innerHTML = '<span style="color: var(--danger)">Hash calculation error: ' + escapeHtml(err.message) + '</span>';
+  }
+}
+
+function computeCRC32(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) {
+    crc ^= bytes[i];
+    for (let j = 0; j < 8; j++) {
+      if (crc & 1) {
+        crc = (crc >>> 1) ^ 0xEDB88320;
+      } else {
+        crc = crc >>> 1;
+      }
+    }
+  }
+  return ((crc ^ 0xFFFFFFFF).toString(16).padStart(8, '0'));
+}
+
+function computeAdler32(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let a = 1, b = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    a = (a + bytes[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a).toString(16).padStart(8, '0');
+}
+
+function renderHashResults(results) {
+  const algoOrder = ['MD5', 'SHA-1', 'CRC32', 'Adler32', 'SHA-256', 'SHA-384', 'SHA-512'];
+  let html = '';
+
+  for (const algo of algoOrder) {
+    if (results[algo]) {
+      html += `<div class="hash-result-row">
+        <span class="hash-algo-name">${algo}:</span>
+        <span class="hash-value">${escapeHtml(results[algo])}</span>
+      </div>`;
+    }
+  }
+
+  multiHashOutput.innerHTML = html || '<div style="color: var(--text-muted);">No results computed</div>';
+}
+
+async function copyAllHashes() {
+  const rows = multiHashOutput.querySelectorAll('.hash-result-row');
+  if (rows.length === 0) return;
+
+  let text = '';
+  rows.forEach(row => {
+    const algo = row.querySelector('.hash-algo-name')?.textContent || '';
+    const value = row.querySelector('.hash-value')?.textContent || '';
+    text += `${algo.replace(':', '')}: ${value}\n`;
+  });
+
+  try {
+    await navigator.clipboard.writeText(text.trim());
+    btnCopyAllHashes.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopyAllHashes.textContent = '📋 Copy All Hashes'; }, 2000);
+  } catch (err) {
+    const ta = document.createElement('textarea');
+    ta.value = text.trim();
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btnCopyAllHashes.textContent = '✓ Copied!';
+    setTimeout(() => { btnCopyAllHashes.textContent = '📋 Copy All Hashes'; }, 2000);
   }
 }
 
@@ -10704,3 +11458,481 @@ function initFaceSwapListeners() {
 }
 
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI LIVE POSE ESTIMATOR — VitPose-Base (COCO-17 keypoints)
+// ─────────────────────────────────────────────────────────────────────────────
+
+let poseWorker = null;
+let poseWorkerReady = false;
+let poseStream = null;
+let poseAnimFrame = null;
+let poseIsRunning = false;
+let poseFrameCount = 0;
+let poseFpsUpdateTime = 0;
+let poseConfidenceThreshold = 0.25;
+let poseInferenceActive = false;
+
+const POSE_KEYPOINT_NAMES = [
+  'Nose', 'Left Eye', 'Right Eye', 'Left Ear', 'Right Ear',
+  'Left Shoulder', 'Right Shoulder', 'Left Elbow', 'Right Elbow',
+  'Left Wrist', 'Right Wrist', 'Left Hip', 'Right Hip',
+  'Left Knee', 'Right Knee', 'Left Ankle', 'Right Ankle',
+];
+
+const POSE_KEYPOINT_COLORS = [
+  '#FF3366','#FF6633','#FF9933','#FFCC33','#FFFF33',
+  '#33FF66','#33FFCC','#33CCFF','#3366FF','#6633FF',
+  '#CC33FF','#FF33CC','#FF3399','#FF6699','#FF99CC',
+  '#FFCCFF','#FFFFFF',
+];
+
+const POSE_SKELETON = [
+  [15,13],[13,11],[16,14],[14,12],[11,12],
+  [5,11],[6,12],[5,6],[5,7],[6,8],[7,9],[8,10],
+  [1,2],[0,1],[0,2],[1,3],[2,4],[3,5],[4,6],
+];
+
+let poseFrameCanvas = null;
+let poseFrameCtx = null;
+
+function resetPoseEstimatorState() {
+  stopPoseEstimator();
+
+  const statusBadge = document.getElementById('pose-status-badge');
+  if (statusBadge) {
+    if (poseWorkerReady) {
+      statusBadge.textContent = '✅ Model ready — tap Start!';
+      statusBadge.style.color = 'var(--success, #22c55e)';
+    } else {
+      statusBadge.textContent = '⏳ Model not loaded';
+      statusBadge.style.color = 'var(--text-secondary)';
+    }
+  }
+
+  const btnStart = document.getElementById('btn-pose-start');
+  const btnStop  = document.getElementById('btn-pose-stop');
+  if (btnStart) { btnStart.style.display = ''; btnStart.disabled = !poseWorkerReady; }
+  if (btnStop)  { btnStop.style.display = 'none'; }
+
+  const fpsGroup = document.getElementById('pose-fps-group');
+  if (fpsGroup) fpsGroup.style.display = 'none';
+
+  const webcamPH = document.getElementById('pose-webcam-placeholder');
+  if (webcamPH) webcamPH.style.display = 'flex';
+
+  const canvasPH = document.getElementById('pose-canvas-placeholder');
+  if (canvasPH) canvasPH.style.display = 'flex';
+
+  const legend = document.getElementById('pose-legend');
+  if (legend) legend.style.display = 'none';
+
+  const canvas = document.getElementById('pose-output-canvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function initPoseWorker() {
+  if (poseWorker) {
+    // Worker already exists — if camera isn't streaming yet, request it now
+    updatePoseStatusBadge(poseWorkerReady ? 'ready' : 'loading');
+    if (!poseIsRunning) requestPoseCameraEarly();
+    return;
+  }
+
+  poseWorkerReady = false;
+  poseWorker = new Worker(new URL('./pose.worker.js', import.meta.url), { type: 'module' });
+
+  poseWorker.onmessage = (e) => {
+    const { type, data, progress, file, error } = e.data;
+    if (type === 'status') {
+      if (data === 'loading') {
+        updatePoseStatusBadge('loading', progress, file);
+      } else if (data === 'ready') {
+        poseWorkerReady = true;
+        updatePoseStatusBadge('ready');
+        const btnStart = document.getElementById('btn-pose-start');
+        if (btnStart) btnStart.disabled = false;
+        buildPoseLegend();
+        // Auto-start pose loop if camera stream is already live
+        if (poseStream && !poseIsRunning) {
+          poseIsRunning = true;
+          poseFrameCount = 0;
+          poseFpsUpdateTime = performance.now();
+          document.getElementById('btn-pose-start').style.display = 'none';
+          document.getElementById('btn-pose-stop').style.display = '';
+          const fpsGroup = document.getElementById('pose-fps-group');
+          if (fpsGroup) fpsGroup.style.display = '';
+          posePipelineLoop();
+        }
+      } else if (data === 'error') {
+        updatePoseStatusBadge('error', 0, error);
+      }
+    } else if (type === 'pose_result') {
+      poseInferenceActive = false;
+      renderPoseSkeleton(e.data.data);
+    } else if (type === 'error') {
+      poseInferenceActive = false;
+      console.error('Pose worker error:', error);
+    }
+  };
+
+  poseWorker.onerror = (err) => {
+    console.error('Pose worker fatal error:', err);
+    updatePoseStatusBadge('error', 0, err.message);
+    poseInferenceActive = false;
+  };
+
+  updatePoseStatusBadge('loading', 0);
+  poseWorker.postMessage({ type: 'init' });
+
+  // Request camera immediately in parallel — don't wait for the model
+  requestPoseCameraEarly();
+}
+
+function updatePoseStatusBadge(state, progress = 0, detail = '') {
+  const badge    = document.getElementById('pose-status-badge');
+  const loadWrap = document.getElementById('pose-loading-bar-wrap');
+  const fill     = document.getElementById('pose-loading-bar-fill');
+  const label    = document.getElementById('pose-loading-bar-label');
+  if (!badge) return;
+
+  if (state === 'loading') {
+    badge.textContent = '⬇️ Downloading model…';
+    badge.style.color = 'var(--primary)';
+    if (loadWrap) loadWrap.style.display = 'block';
+    if (fill)  fill.style.width = `${Math.round(progress ?? 0)}%`;
+    if (label) label.textContent = detail ? `Fetching ${String(detail).split('/').pop()}` : 'Initializing…';
+  } else if (state === 'ready') {
+    badge.textContent = '✅ Model ready — tap Start!';
+    badge.style.color = 'var(--success, #22c55e)';
+    if (loadWrap) loadWrap.style.display = 'none';
+  } else if (state === 'error') {
+    badge.textContent = `❌ Error: ${detail || 'failed to load'}`;
+    badge.style.color = 'var(--danger, #ef4444)';
+    if (loadWrap) loadWrap.style.display = 'none';
+  }
+}
+
+function buildPoseLegend() {
+  const legend = document.getElementById('pose-legend');
+  const grid   = document.getElementById('pose-legend-grid');
+  if (!legend || !grid) return;
+  grid.innerHTML = '';
+  POSE_KEYPOINT_NAMES.forEach((name, i) => {
+    const dot = document.createElement('div');
+    dot.style.cssText = 'display:flex;align-items:center;gap:0.4rem;';
+    dot.innerHTML = `<span style="width:10px;height:10px;border-radius:50%;background:${POSE_KEYPOINT_COLORS[i]};flex-shrink:0;display:inline-block;box-shadow:0 0 4px ${POSE_KEYPOINT_COLORS[i]}80;"></span><span style="color:var(--text-secondary);">${name}</span>`;
+    grid.appendChild(dot);
+  });
+  legend.style.display = '';
+}
+
+// Request camera access immediately when the tool opens, in parallel with model loading.
+// Shows the live feed right away; the pose loop starts automatically once the model is ready.
+async function requestPoseCameraEarly() {
+  if (poseStream) return; // already have a stream
+  try {
+    const cameraSelect = document.getElementById('pose-camera-select');
+    const deviceId = cameraSelect ? cameraSelect.value : undefined;
+    const constraints = {
+      video: {
+        width:  { ideal: 640 },
+        height: { ideal: 480 },
+        deviceId: deviceId ? { exact: deviceId } : undefined,
+        facingMode: deviceId ? undefined : 'user',
+      },
+      audio: false,
+    };
+
+    poseStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video = document.getElementById('pose-webcam-video');
+    if (!video) return;
+    video.srcObject = poseStream;
+    await video.play();
+
+    // Hide webcam placeholder — feed is live
+    const webcamPH = document.getElementById('pose-webcam-placeholder');
+    if (webcamPH) webcamPH.style.display = 'none';
+
+    // Mirror the video element
+    const mirrorCb = document.getElementById('pose-mirror');
+    if (mirrorCb) video.style.transform = mirrorCb.checked ? 'scaleX(-1)' : '';
+
+    // Init off-screen capture canvas
+    poseFrameCanvas = document.createElement('canvas');
+    poseFrameCtx    = poseFrameCanvas.getContext('2d', { willReadFrequently: true });
+
+    // Populate the camera list now that we have permission
+    await populatePoseCameraList();
+
+    // If model is already ready, start the pipeline immediately
+    if (poseWorkerReady && !poseIsRunning) {
+      poseIsRunning = true;
+      poseFrameCount = 0;
+      poseFpsUpdateTime = performance.now();
+      const webcamPlaceholder = document.getElementById('pose-webcam-placeholder');
+      if (webcamPlaceholder) webcamPlaceholder.style.display = 'none';
+      const canvasPlaceholder = document.getElementById('pose-canvas-placeholder');
+      if (canvasPlaceholder) canvasPlaceholder.style.display = 'none';
+      const btnStart = document.getElementById('btn-pose-start');
+      const btnStop  = document.getElementById('btn-pose-stop');
+      if (btnStart) btnStart.style.display = 'none';
+      if (btnStop)  btnStop.style.display  = '';
+      const fpsGroup = document.getElementById('pose-fps-group');
+      if (fpsGroup) fpsGroup.style.display = '';
+      buildPoseLegend();
+      posePipelineLoop();
+    }
+    // Otherwise: the worker's 'ready' handler will start the loop once the model is done loading
+  } catch (err) {
+    console.warn('Pose camera early-request failed:', err.message);
+    // Non-fatal — user can still click "Start Camera & Pose" manually
+  }
+}
+
+async function startPoseEstimator() {
+  if (!poseWorkerReady) return;
+  try {
+    const cameraSelect = document.getElementById('pose-camera-select');
+    const deviceId = cameraSelect ? cameraSelect.value : undefined;
+    const constraints = {
+      video: {
+        width:  { ideal: 640 },
+        height: { ideal: 480 },
+        deviceId: deviceId ? { exact: deviceId } : undefined,
+        facingMode: deviceId ? undefined : 'user',
+      },
+      audio: false,
+    };
+
+    poseStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video = document.getElementById('pose-webcam-video');
+    if (!video) return;
+    video.srcObject = poseStream;
+    await video.play();
+
+    const webcamPH = document.getElementById('pose-webcam-placeholder');
+    if (webcamPH) webcamPH.style.display = 'none';
+    const canvasPH = document.getElementById('pose-canvas-placeholder');
+    if (canvasPH) canvasPH.style.display = 'none';
+
+    const fpsGroup = document.getElementById('pose-fps-group');
+    if (fpsGroup) fpsGroup.style.display = '';
+
+    await populatePoseCameraList();
+
+    const mirrorCb = document.getElementById('pose-mirror');
+    if (mirrorCb) video.style.transform = mirrorCb.checked ? 'scaleX(-1)' : '';
+
+    poseFrameCanvas = document.createElement('canvas');
+    poseFrameCtx    = poseFrameCanvas.getContext('2d', { willReadFrequently: true });
+
+    poseIsRunning = true;
+    poseFrameCount = 0;
+    poseFpsUpdateTime = performance.now();
+
+    document.getElementById('btn-pose-start').style.display = 'none';
+    document.getElementById('btn-pose-stop').style.display  = '';
+    buildPoseLegend();
+    posePipelineLoop();
+  } catch (err) {
+    console.error('Pose camera error:', err);
+    alert(`Could not access camera: ${err.message}`);
+  }
+}
+
+function stopPoseEstimator() {
+  poseIsRunning = false;
+  if (poseAnimFrame) { cancelAnimationFrame(poseAnimFrame); poseAnimFrame = null; }
+  if (poseStream) { poseStream.getTracks().forEach(t => t.stop()); poseStream = null; }
+  const video = document.getElementById('pose-webcam-video');
+  if (video) video.srcObject = null;
+
+  const btnStart = document.getElementById('btn-pose-start');
+  const btnStop  = document.getElementById('btn-pose-stop');
+  if (btnStart) { btnStart.style.display = ''; btnStart.disabled = !poseWorkerReady; }
+  if (btnStop)  { btnStop.style.display = 'none'; }
+
+  const fpsGroup = document.getElementById('pose-fps-group');
+  if (fpsGroup) fpsGroup.style.display = 'none';
+
+  const webcamPH = document.getElementById('pose-webcam-placeholder');
+  if (webcamPH) webcamPH.style.display = 'flex';
+  const canvasPH = document.getElementById('pose-canvas-placeholder');
+  if (canvasPH) canvasPH.style.display = 'flex';
+}
+
+function posePipelineLoop() {
+  if (!poseIsRunning) return;
+  poseAnimFrame = requestAnimationFrame(() => {
+    const video = document.getElementById('pose-webcam-video');
+    if (!video || video.readyState < 2) { posePipelineLoop(); return; }
+
+    const W = video.videoWidth;
+    const H = video.videoHeight;
+    if (W === 0 || H === 0) { posePipelineLoop(); return; }
+
+    const now = performance.now();
+    poseFrameCount++;
+    if (now - poseFpsUpdateTime >= 1000) {
+      const fps = (poseFrameCount / ((now - poseFpsUpdateTime) / 1000)).toFixed(1);
+      const fpsDom = document.getElementById('pose-fps-display');
+      if (fpsDom) fpsDom.textContent = `${fps} fps`;
+      poseFrameCount = 0;
+      poseFpsUpdateTime = now;
+    }
+
+    if (!poseInferenceActive && poseWorkerReady) {
+      if (poseFrameCanvas.width !== W || poseFrameCanvas.height !== H) {
+        poseFrameCanvas.width  = W;
+        poseFrameCanvas.height = H;
+      }
+
+      const mirrorCb = document.getElementById('pose-mirror');
+      const doMirror = mirrorCb ? mirrorCb.checked : true;
+
+      poseFrameCtx.save();
+      if (doMirror) {
+        poseFrameCtx.scale(-1, 1);
+        poseFrameCtx.drawImage(video, -W, 0, W, H);
+      } else {
+        poseFrameCtx.drawImage(video, 0, 0, W, H);
+      }
+      poseFrameCtx.restore();
+
+      const imageData = poseFrameCtx.getImageData(0, 0, W, H);
+      poseInferenceActive = true;
+      poseWorker._inferStart = performance.now();
+
+      poseWorker.postMessage({
+        type: 'estimate_pose',
+        data: { width: W, height: H, rgbaData: imageData.data.buffer },
+      }, [imageData.data.buffer]);
+    }
+
+    posePipelineLoop();
+  });
+}
+
+function renderPoseSkeleton({ keypoints, scores, skeleton, frameWidth, frameHeight }) {
+  const canvas = document.getElementById('pose-output-canvas');
+  if (!canvas) return;
+
+  if (canvas.width !== frameWidth || canvas.height !== frameHeight) {
+    canvas.width  = frameWidth;
+    canvas.height = frameHeight;
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0a0a0f';
+  ctx.fillRect(0, 0, frameWidth, frameHeight);
+
+  if (!keypoints || keypoints.length === 0) return;
+
+  const threshold    = poseConfidenceThreshold;
+  const showSkeleton = document.getElementById('pose-show-skeleton')?.checked ?? true;
+  const showDots     = document.getElementById('pose-show-dots')?.checked ?? true;
+
+  if (showSkeleton) {
+    (skeleton || POSE_SKELETON).forEach(([i, j]) => {
+      if (!keypoints[i] || !keypoints[j]) return;
+      if ((scores[i] ?? 0) < threshold || (scores[j] ?? 0) < threshold) return;
+      const [x1, y1] = keypoints[i];
+      const [x2, y2] = keypoints[j];
+      const col1 = POSE_KEYPOINT_COLORS[i] || '#ffffff';
+      const col2 = POSE_KEYPOINT_COLORS[j] || '#ffffff';
+      const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+      grad.addColorStop(0, col1 + 'cc');
+      grad.addColorStop(1, col2 + 'cc');
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth   = 3;
+      ctx.lineCap     = 'round';
+      ctx.shadowColor = col1;
+      ctx.shadowBlur  = 8;
+      ctx.stroke();
+      ctx.shadowBlur  = 0;
+    });
+  }
+
+  if (showDots) {
+    keypoints.forEach(([x, y], i) => {
+      if ((scores[i] ?? 0) < threshold) return;
+      const color = POSE_KEYPOINT_COLORS[i] || '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle   = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 12;
+      ctx.fill();
+      ctx.shadowBlur  = 0;
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    });
+  }
+
+  if (poseWorker && poseWorker._inferStart) {
+    const ms = Math.round(performance.now() - poseWorker._inferStart);
+    const dom = document.getElementById('pose-inference-ms');
+    if (dom) dom.textContent = `inference: ${ms} ms`;
+    poseWorker._inferStart = null;
+  }
+}
+
+async function populatePoseCameraList() {
+  const select = document.getElementById('pose-camera-select');
+  if (!select) return;
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cameras = devices.filter(d => d.kind === 'videoinput');
+    const current = select.value;
+    select.innerHTML = '';
+    cameras.forEach((cam, i) => {
+      const opt = document.createElement('option');
+      opt.value = cam.deviceId;
+      opt.textContent = cam.label || `Camera ${i + 1}`;
+      if (cam.deviceId === current) opt.selected = true;
+      select.appendChild(opt);
+    });
+  } catch (_) { /* ignore */ }
+}
+
+(function initPoseEstimatorEvents() {
+  const slider  = document.getElementById('pose-confidence-slider');
+  const valSpan = document.getElementById('pose-confidence-val');
+  if (slider) {
+    slider.addEventListener('input', () => {
+      poseConfidenceThreshold = slider.value / 100;
+      if (valSpan) valSpan.textContent = poseConfidenceThreshold.toFixed(2);
+    });
+  }
+
+  const mirrorCb = document.getElementById('pose-mirror');
+  if (mirrorCb) {
+    mirrorCb.addEventListener('change', () => {
+      const video = document.getElementById('pose-webcam-video');
+      if (video) video.style.transform = mirrorCb.checked ? 'scaleX(-1)' : '';
+    });
+  }
+
+  const cameraSelect = document.getElementById('pose-camera-select');
+  if (cameraSelect) {
+    cameraSelect.addEventListener('change', async () => {
+      if (poseIsRunning) { stopPoseEstimator(); await startPoseEstimator(); }
+    });
+  }
+
+  const btnStart = document.getElementById('btn-pose-start');
+  if (btnStart) btnStart.addEventListener('click', () => startPoseEstimator());
+
+  const btnStop = document.getElementById('btn-pose-stop');
+  if (btnStop) btnStop.addEventListener('click', () => stopPoseEstimator());
+})();

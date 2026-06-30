@@ -247,7 +247,86 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     await expect(diffContainer.locator('.diff-row')).toHaveCount(10);
   });
 
-  test('Tool 17: Hash & Checksum Generator functional test', async ({ page }) => {
+  test('Tool 17: JSON Diff & Patch Generator functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="json-diff"]').click();
+    await expect(page.locator('#json-diff-view')).toHaveClass(/active/);
+
+    // Click Compare to run the diff with default sample data
+    await page.locator('#btn-run-json-diff').click();
+
+    // Check that stats show changes (the default samples differ)
+    const stats = page.locator('#json-diff-stats');
+    await expect(stats).toBeVisible();
+
+    // Switch to Inline mode and verify output renders
+    await page.locator('[data-mode="inline"]').click();
+    const inlineOutput = page.locator('#json-diff-output');
+    await expect(inlineOutput).toBeVisible();
+
+    // Switch to Patch mode
+    await page.locator('[data-mode="patch"]').click();
+    const patchOutput = page.locator('.json-patch-output');
+    await expect(patchOutput).toBeVisible();
+  });
+
+  test('Tool 18: JSON Schema Generator functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="json-schema-gen"]').click();
+    await expect(page.locator('#json-schema-gen-view')).toHaveClass(/active/);
+
+    // Click Generate to create schema from default sample data
+    await page.locator('#btn-generate-schema').click();
+
+    // Check that output is rendered
+    const output = page.locator('#json-schema-output');
+    await expect(output).toBeVisible();
+
+    // Verify schema has draft-07 marker (the generated schema should include $schema)
+    await expect(output).toContainText('draft-07');
+
+    // Test copy button exists and is visible
+    const copyBtn = page.locator('#btn-copy-schema');
+    await expect(copyBtn).toBeVisible();
+  });
+
+  test('Tool 19: JSON to TypeScript Generator functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="json-to-ts"]').click();
+    await expect(page.locator('#json-to-ts-view')).toHaveClass(/active/);
+
+    // Click Generate to create TypeScript from default sample data
+    await page.locator('#btn-generate-ts').click();
+
+    // Check that output is rendered
+    const output = page.locator('#json-to-ts-output');
+    await expect(output).toBeVisible();
+
+    // Verify generated code contains interface keyword
+    await expect(output).toContainText('interface');
+
+    // Test copy button exists and is visible
+    const copyBtn = page.locator('#btn-copy-ts');
+    await expect(copyBtn).toBeVisible();
+  });
+
+  test('Tool 20: Multi-Hash Calculator functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="multi-hash-calculator"]').click();
+    await expect(page.locator('#multi-hash-view')).toHaveClass(/active/);
+
+    // Click Calculate to compute all hashes with default text
+    await page.locator('#btn-calculate-all-hashes').click();
+
+    // Check that output is rendered with hash results
+    const output = page.locator('#multi-hash-output');
+    await expect(output).toBeVisible();
+
+    // Verify at least one hash algorithm result is shown (SHA-256 should be present)
+    await expect(output).toContainText('SHA-256:');
+
+    // Test copy button exists and is visible
+    const copyBtn = page.locator('#btn-copy-all-hashes');
+    await expect(copyBtn).toBeVisible();
+  });
+
+  test('Tool 21: Hash & Checksum Generator functional test', async ({ page }) => {
     await page.locator('.tool-card[data-id="hash-generator"]').click();
     await expect(page.locator('#hash-view')).toHaveClass(/active/);
     

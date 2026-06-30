@@ -957,6 +957,57 @@ export const TOOLS = [
     category: 'Calculators',
     icon: '⚖️',
     uiClass: 'ready'
+  },
+  {
+    id: 'json-diff',
+    title: 'JSON Diff & Patch Generator',
+    description: 'Compare two JSON documents side-by-side, visualize structural differences with unified or inline views, and export a JSON Patch (RFC 6902) diff.',
+    keywords: ['json diff', 'json compare', 'json patch', 'rfc 6902', 'json difference', 'compare json', 'json merge', 'structure compare'],
+    tags: ['Code', 'Data', 'Analyzer', 'Validator'],
+    category: 'Developer',
+    icon: '🔍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'json-schema-gen',
+    title: 'JSON to Schema Generator',
+    description: 'Paste any JSON data and instantly generate a valid JSON Schema (Draft-07) with inferred types, array item schemas, and nested object definitions.',
+    keywords: ['json schema', 'schema generator', 'draft 07', 'json schema draft', 'api schema', 'data contract', 'schema from json', 'validate schema'],
+    tags: ['Code', 'Data', 'Generator', 'Validator'],
+    category: 'Developer',
+    icon: '📋',
+    uiClass: 'ready'
+  },
+  {
+    id: 'json-to-ts',
+    title: 'JSON to TypeScript Interface Generator',
+    description: 'Paste JSON data and instantly generate TypeScript interfaces, types, and union types with proper type inference for objects, arrays, and primitives.',
+    keywords: ['json to typescript', 'typescript generator', 'ts interface', 'type inference', 'api types', 'json to ts', 'interface generator'],
+    tags: ['Code', 'Data', 'Generator'],
+    category: 'Developer',
+    icon: '🔷',
+    uiClass: 'ready'
+  },
+  {
+    id: 'multi-hash-calculator',
+    title: 'Multi-Hash Calculator (All Algorithms)',
+    description: 'Calculate all cryptographic hashes simultaneously — MD5, SHA-1, SHA-224, SHA-256, SHA-384, SHA-512, SHA3-224/256/384/512, RipeMD-160, CRC32, and Adler32 — for text or files.',
+    keywords: ['hash calculator', 'multi hash', 'md5 sha256', 'all hashes', 'checksum all', 'file integrity', 'digest generator', 'calculate all hashes'],
+    tags: ['Security', 'Crypto', 'Generator'],
+    category: 'Security',
+    icon: '🔐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-pose-estimator',
+    title: 'AI Live Pose Estimator',
+    description: 'Stream your webcam and see real-time human pose keypoints extracted by the VitPose-Base AI model side-by-side with the original feed, 100% locally in your browser.',
+    keywords: ['pose estimation', 'body keypoints', 'webcam pose', 'vitpose', 'skeleton detection', 'human body tracking', 'live ai', 'real-time pose'],
+    tags: ['AI', 'Video', 'Analyzer'],
+    category: 'Graphics',
+    icon: '🏃',
+    uiClass: 'ready',
+    adTopics: ['fitness tracking apps', 'sports analytics software', 'motion capture tools', 'physical therapy apps'],
   }
 ];
 
