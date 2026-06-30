@@ -10068,10 +10068,9 @@ function resizeImageToMax(img, maxDim = 1024) {
   return canvas;
 }
 
-// Returns the INVERSE affine transform (target -> source) suitable for ctx.transform() + drawImage.
-// ctx.transform() modifies the canvas coordinate space so that drawImage samples source pixels
-// at the inverse-mapped positions. We compute the forward (source->target) 2x2 affine matrix
-// then invert it to get the target->source mapping.
+// Returns the FORWARD affine transform (source -> target) for ctx.transform() + drawImage.
+// drawImage(srcCanvas, 0, 0) paints source pixel (x,y) at CTM*(x,y), so to land a source-face
+// landmark on its matching target landmark the CTM must map source coords -> target coords.
 function getAffineTransform(s0, s1, s2, t0, t1, t2) {
   // Source vertices
   const x0 = s0[0], y0 = s0[1];
@@ -10101,19 +10100,7 @@ function getAffineTransform(s0, s1, s2, t0, t1, t2) {
   const D = (dx0 * dv1 - dv0 * dx1) / fDet;
   const F = v2 - B * x2 - D * y2;
 
-  // Invert 2x2 matrix [A C; B D] to get target -> source mapping
-  const invDet = A * D - C * B;
-  if (Math.abs(invDet) < 1e-9) return null;
-
-  const iA =  D / invDet;
-  const iB = -B / invDet;
-  const iC = -C / invDet;
-  const iD =  A / invDet;
-  // Translation: iE, iF such that inverse maps target point to source point
-  const iE = -(iA * E + iC * F);
-  const iF = -(iB * E + iD * F);
-
-  return { a: iA, b: iB, c: iC, d: iD, e: iE, f: iF };
+  return { a: A, b: B, c: C, d: D, e: E, f: F };
 }
 
 
@@ -10316,7 +10303,7 @@ function runFaceSwap() {
   const targetWidth = baseCanvas.width;
   const targetHeight = baseCanvas.height;
 
-  const srcCanvas = resizeImageToMax(faceSwapSourceImage, 1024);
+  const srcCanvas = resizeImageToMax(faceSwapSourceImage, 2048);
   const sourceWidth = srcCanvas.width;
   const sourceHeight = srcCanvas.height;
 
@@ -10345,11 +10332,24 @@ function runFaceSwap() {
 
     const transform = getAffineTransform(s0, s1, s2, t0, t1, t2);
     if (transform) {
+      // Expand the clip triangle slightly outward from its centroid so neighbouring
+      // triangles overlap by a fraction of a pixel. This hides the hairline seams that
+      // anti-aliased clip edges would otherwise leave between adjacent triangles.
+      const ctxd = (t0[0] + t1[0] + t2[0]) / 3;
+      const ctyd = (t0[1] + t1[1] + t2[1]) / 3;
+      const expand = (p) => {
+        const dx = p[0] - ctxd, dy = p[1] - ctyd;
+        const len = Math.hypot(dx, dy) || 1;
+        const grow = 0.6; // px of outward growth
+        return [p[0] + (dx / len) * grow, p[1] + (dy / len) * grow];
+      };
+      const e0 = expand(t0), e1 = expand(t1), e2 = expand(t2);
+
       wctx.save();
       wctx.beginPath();
-      wctx.moveTo(t0[0], t0[1]);
-      wctx.lineTo(t1[0], t1[1]);
-      wctx.lineTo(t2[0], t2[1]);
+      wctx.moveTo(e0[0], e0[1]);
+      wctx.lineTo(e1[0], e1[1]);
+      wctx.lineTo(e2[0], e2[1]);
       wctx.closePath();
       wctx.clip();
 
