@@ -13,21 +13,21 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     // Check title
     await expect(page.locator('.logo-text')).toContainText('ZeroG Toolbox');
     
-    // Check that there are 102 tool cards rendered
+    // Check that there are 103 tool cards rendered
     const cards = page.locator('.tool-card');
-    await expect(cards).toHaveCount(102);
+    await expect(cards).toHaveCount(103);
 
     // Check Search Filtering
     const searchInput = page.locator('#tools-search-input');
     await searchInput.fill('password');
     // It should filter down to relevant tools
     const filteredCount = await cards.count();
-    expect(filteredCount).toBeLessThan(102);
+    expect(filteredCount).toBeLessThan(103);
     expect(filteredCount).toBeGreaterThan(0);
 
     // Clear search
     await searchInput.fill('');
-    await expect(cards).toHaveCount(102);
+    await expect(cards).toHaveCount(103);
   });
 
   test('Tool 1: Passport Photo Generator view navigation', async ({ page }) => {
@@ -512,6 +512,7 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       { id: 'xml-formatter', view: '#xml-formatter-view', backBtn: '#btn-xml-formatter-back' },
       { id: 'base-converter', view: '#base-converter-view', backBtn: '#btn-base-converter-back' },
       { id: 'css-glassmorphism', view: '#css-glassmorphism-view', backBtn: '#btn-css-glassmorphism-back' },
+      { id: 'css-box-shadow', view: '#css-box-shadow-view', backBtn: '#btn-css-box-shadow-back' },
       { id: 'case-converter', view: '#case-converter-view', backBtn: '#btn-case-converter-back' },
       { id: 'aspect-ratio-calc', view: '#aspect-ratio-calc-view', backBtn: '#btn-aspect-ratio-calc-back' },
       { id: 'color-blindness', view: '#color-blindness-view', backBtn: '#btn-color-blindness-back' },
@@ -551,7 +552,8 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       { id: 'ratio-solver', view: '#ratio-solver-view', backBtn: '#btn-ratio-solver-back' },
       { id: 'fire-retirement-calc', view: '#fire-retirement-calc-view', backBtn: '#btn-fire-retirement-calc-back' },
       { id: 'code-to-image', view: '#code-to-image-view', backBtn: '#btn-code-to-image-back' },
-      { id: 'ai-resume-injector', view: '#ai-resume-injector-view', backBtn: '#btn-ai-resume-injector-back' }
+      { id: 'ai-resume-injector', view: '#ai-resume-injector-view', backBtn: '#btn-ai-resume-injector-back' },
+      { id: 'code-typing-video', view: '#code-typing-video-view', backBtn: '#btn-code-typing-video-back' }
     ];
 
     for (const tool of newTools) {
@@ -615,6 +617,110 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
 
     await promptSelect.selectOption('endorse');
     await expect(promptText).toHaveValue(/flagged this candidate as a 'Must Hire'/);
+  });
+
+  test('Tool: Code Typing Animation Video Renderer UI test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="code-typing-video"]').click();
+    await expect(page.locator('#code-typing-video-view')).toHaveClass(/active/);
+
+    const codeInput = page.locator('#code-typing-video-input');
+    await expect(codeInput).toHaveValue(/Quick Sort/);
+
+    // Canvas preview should render something (non-blank) for the default snippet.
+    const canvas = page.locator('#code-typing-video-canvas');
+    await expect(canvas).toBeVisible();
+    const hasContent = await canvas.evaluate((el) => {
+      const ctx = el.getContext('2d');
+      const data = ctx.getImageData(0, 0, el.width, el.height).data;
+      return data.some((v, i) => i % 4 !== 3 && v !== 0);
+    });
+    expect(hasContent).toBe(true);
+
+    // Switching language swaps the sample code.
+    await page.locator('#code-typing-video-lang').selectOption('python');
+    await expect(codeInput).toHaveValue(/def fibonacci/);
+
+    // Estimate text should reflect frame/duration math and update live.
+    const estimate = page.locator('#code-typing-video-estimate');
+    await expect(estimate).toContainText('frames');
+
+    // Backdrop type toggling shows/hides the matching control group.
+    await page.locator('#code-typing-video-bg-type').selectOption('solid');
+    await expect(page.locator('#group-code-typing-video-solid-bg')).toBeVisible();
+    await expect(page.locator('#group-code-typing-video-preset-bg')).toBeHidden();
+
+    await page.locator('#btn-code-typing-video-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool: Code Typing Animation Video Renderer end-to-end render', async ({ page }) => {
+    test.setTimeout(120000);
+    await page.locator('.tool-card[data-id="code-typing-video"]').click();
+    await expect(page.locator('#code-typing-video-view')).toHaveClass(/active/);
+
+    // Keep this render trivially small (single char, no holds, max typing
+    // speed) so the full worker-render + ffmpeg.wasm-encode pipeline runs
+    // end-to-end quickly and deterministically in CI.
+    await page.locator('#code-typing-video-input').fill('x');
+    const setSlider = async (id, value) => {
+      await page.locator(`#${id}`).evaluate((el, v) => {
+        el.value = v;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }, value);
+    };
+    await setSlider('slider-code-typing-video-hold-start', '0');
+    await setSlider('slider-code-typing-video-hold-end', '0');
+    await setSlider('slider-code-typing-video-speed', '60');
+
+    await page.locator('#btn-render-code-typing-video').click();
+
+    const resultVideo = page.locator('#code-typing-video-result');
+    await expect(resultVideo).toBeVisible({ timeout: 100000 });
+    await expect(resultVideo).toHaveAttribute('src', /^blob:/);
+    await expect(page.locator('#btn-download-code-typing-video')).toBeVisible();
+  });
+
+  test('Tool: CSS Box Shadow Generator functional test', async ({ page }) => {
+    await page.locator('.tool-card[data-id="css-box-shadow"]').click();
+    await expect(page.locator('#css-box-shadow-view')).toHaveClass(/active/);
+
+    // Verify initial state has one layer
+    const layers = page.locator('[id^="shadow-layer-"]');
+    await expect(layers).toHaveCount(1);
+
+    // Test adding a new layer
+    const btnAddLayer = page.locator('#btn-add-shadow-layer');
+    await btnAddLayer.click();
+    await expect(layers).toHaveCount(2);
+
+    // Test adjusting slider values
+    const blurSlider = page.locator('#shadow-blur-1');
+    await blurSlider.fill('50');
+    
+    // Verify preview updates (check that the element has box-shadow style)
+    const previewCard = page.locator('#shadow-preview-card');
+    const boxShadow = await previewCard.evaluate(el => el.style.boxShadow);
+    expect(boxShadow).toBeTruthy();
+
+    // Test preset application
+    const btnSoftPreset = page.locator('#btn-preset-soft');
+    await btnSoftPreset.click();
+    await expect(layers).toHaveCount(1);
+
+    // Verify CSS output is populated
+    const cssOutput = page.locator('#shadow-css-output');
+    const outputValue = await cssOutput.inputValue();
+    expect(outputValue).toContain('box-shadow:');
+
+    // Test copy button (verify it doesn't throw)
+    const btnCopyCss = page.locator('#btn-copy-css');
+    await btnCopyCss.click();
+
+    // Navigate back
+    const btnBack = page.locator('#btn-css-box-shadow-back');
+    await btnBack.click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
   });
 
   test('Routing: deep link, URL sync, and back navigation', async ({ page }) => {

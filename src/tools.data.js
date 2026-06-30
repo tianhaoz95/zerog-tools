@@ -589,6 +589,16 @@ export const TOOLS = [
     uiClass: 'ready'
   },
   {
+    id: 'css-box-shadow',
+    title: 'CSS Box Shadow Generator',
+    description: 'Design multi-layer box shadows with live preview. Add layers, adjust blur/spread/offset/color/inset, apply presets, and copy the complete CSS output.',
+    keywords: ['box shadow', 'shadow generator', 'css shadow', 'multi layer shadow', 'drop shadow', 'neumorphism', 'shadow preset'],
+    tags: ['Code', 'Design', 'Generator'],
+    category: 'Developer',
+    icon: '🌑',
+    uiClass: 'ready'
+  },
+  {
     id: 'case-converter',
     title: 'Text Case & List Converter',
     description: 'Convert text casing (camelCase, snake_case, PascalCase, kebab-case, title case) or format lists into JSON arrays, CSV, or bullet points.',
@@ -1052,6 +1062,17 @@ export const TOOLS = [
     icon: '📄',
     uiClass: 'ready',
     adTopics: ['resume writing services', 'job search platforms', 'interview preparation', 'career counseling']
+  },
+  {
+    id: 'code-typing-video',
+    title: 'Code Typing Animation Video Renderer',
+    description: 'Turn a code snippet into a typewriter-style typing animation and export it as an MP4 or WebM video — rendered and encoded 100% locally with WebAssembly FFmpeg.',
+    keywords: ['code typing animation', 'code video', 'typing effect video', 'coding tutorial video', 'code screen recording', 'programming animation', 'ffmpeg wasm', 'code to video', 'developer video export'],
+    tags: ['Code', 'Video', 'Generator', 'Design'],
+    category: 'Graphics',
+    icon: '🎞️',
+    uiClass: 'ready',
+    adTopics: ['screen recording software', 'video editing tools', 'coding tutorial platforms', 'youtube channel growth']
   }
 ];
 

@@ -4,7 +4,16 @@ import './extra-tools.js';
 import { marked } from 'marked';
 import { TOOLS, TAG_VOCABULARY, resolveAdContext } from './tools.data.js';
 import { TRIANGULATION } from './triangulation.data.js';
+import { CODE_HIGHLIGHT_PATTERNS, CODE_SNIPPET_DEFAULTS } from './code-highlight.data.js';
+import { renderCodeFrame, totalFramesForTyping } from './codevideo.render.js';
 import { FilesetResolver, FaceLandmarker } from '@mediapipe/tasks-vision';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { toBlobURL } from '@ffmpeg/util';
+
+// Vendored locally (see public/ffmpeg/) so the FFmpeg core/wasm never has to
+// be fetched from a CDN — keeps the tool 100% client-side/offline-capable.
+const ffmpegCoreURL = '/ffmpeg/ffmpeg-core.js';
+const ffmpegWasmURL = '/ffmpeg/ffmpeg-core.wasm';
 
 // System Prompt describing the tools to the LLM
 // Build the tool catalog from the single source of truth (tools.data.js) so the
@@ -991,6 +1000,9 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'css-glassmorphism') {
     document.getElementById('css-glassmorphism-view').classList.add('active');
     resetCssGlassmorphicState();
+  } else if (viewId === 'css-box-shadow') {
+    document.getElementById('css-box-shadow-view').classList.add('active');
+    resetCssBoxShadowState();
   } else if (viewId === 'case-converter') {
     document.getElementById('case-converter-view').classList.add('active');
     resetCaseConverterState();
@@ -1124,6 +1136,7 @@ document.getElementById('btn-pomodoro-space-back').addEventListener('click', () 
 const newToolsIds = [
   'morse-code', 'text-to-speech', 'media-recorder', 'keyboard-tester',
   'svg-converter', 'xml-formatter', 'base-converter', 'css-glassmorphism',
+  'css-box-shadow',
   'case-converter', 'aspect-ratio-calc', 'color-blindness', 'tone-generator',
   'subnet-calculator', 'pixel-tester', 'sketchpad', 'hex-viewer',
   'tip-calculator', 'life-progress', 'graphing-calc', 'password-analyzer',
@@ -1133,7 +1146,8 @@ const newToolsIds = [
   'json-yaml-converter', 'device-info', 'stopwatch-lap', 'html-wysiwyg',
   'css-gradient-mesh', 'svg-path-viewer', 'guitar-tuner', 'speed-reader',
   'mime-inspector', 'sql-playground', 'hash-verifier', 'lorem-pixel',
-  'ratio-solver', 'ai-pose-estimator', 'fire-retirement-calc', 'str-cost-segregation', 'code-to-image', 'ai-resume-injector'
+  'ratio-solver', 'ai-pose-estimator', 'fire-retirement-calc', 'str-cost-segregation', 'code-to-image', 'ai-resume-injector',
+  'code-typing-video'
 ];
 newToolsIds.forEach(id => {
   const el = document.getElementById(`btn-${id}-back`);
@@ -9472,6 +9486,258 @@ if (btnGlassCopy) {
 }
 
 // ============================================================================
+// --- CSS BOX SHADOW GENERATOR LOGIC ---
+// ============================================================================
+const btnAddShadowLayer = document.getElementById('btn-add-shadow-layer');
+const shadowLayersContainer = document.getElementById('shadow-layers-container');
+const shadowPreviewCard = document.getElementById('shadow-preview-card');
+const shadowCssOutput = document.getElementById('shadow-css-output');
+const btnCopyCss = document.getElementById('btn-copy-css');
+const btnCopyFullRule = document.getElementById('btn-copy-full-rule');
+
+// State management for shadow layers
+let shadowLayers = [];
+let layerIdCounter = 0;
+
+function resetCssBoxShadowState() {
+  // Reset to single default soft shadow
+  shadowLayersContainer.innerHTML = '';
+  shadowLayers = [];
+  layerIdCounter = 0;
+  
+  // Add initial layer with default values
+  addShadowLayer({
+    blur: 40,
+    spread: 5,
+    offsetX: -2,
+    offsetY: 8,
+    color: '#000000',
+    opacity: 0.3,
+    inset: false
+  });
+  
+  updateShadowPreview();
+}
+
+function addShadowLayer(initialState = null) {
+  const layerId = ++layerIdCounter;
+  const defaults = initialState || {
+    blur: 40,
+    spread: 5,
+    offsetX: -2,
+    offsetY: 8,
+    color: '#000000',
+    opacity: 0.3,
+    inset: false
+  };
+  
+  shadowLayers.push({ id: layerId, ...defaults });
+  renderLayerUI(layerId, defaults);
+}
+
+function removeShadowLayer(layerId) {
+  shadowLayers = shadowLayers.filter(l => l.id !== layerId);
+  const layerEl = document.getElementById(`shadow-layer-${layerId}`);
+  if (layerEl) layerEl.remove();
+  updateShadowPreview();
+}
+
+function renderLayerUI(layerId, state) {
+  const layerDiv = document.createElement('div');
+  layerDiv.id = `shadow-layer-${layerId}`;
+  layerDiv.className = 'control-group';
+  layerDiv.style.cssText = 'border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; margin-top: 0.75rem; background: rgba(255,255,255,0.02);';
+  
+  layerDiv.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+      <label style="font-weight: 600; font-size: 0.9rem; color: var(--primary);">Layer ${shadowLayers.length}</label>
+      <button class="btn-secondary" id="btn-remove-layer-${layerId}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Remove</button>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+      <div class="control-group">
+        <label for="shadow-blur-${layerId}">Blur (<span id="val-shadow-blur-${layerId}">${state.blur}</span>px)</label>
+        <input type="range" id="shadow-blur-${layerId}" min="0" max="100" value="${state.blur}" class="slider-range" />
+      </div>
+      
+      <div class="control-group">
+        <label for="shadow-spread-${layerId}">Spread (<span id="val-shadow-spread-${layerId}">${state.spread}</span>px)</label>
+        <input type="range" id="shadow-spread-${layerId}" min="-50" max="50" value="${state.spread}" class="slider-range" />
+      </div>
+      
+      <div class="control-group">
+        <label for="shadow-offset-x-${layerId}">X (<span id="val-shadow-offset-x-${layerId}">${state.offsetX}</span>px)</label>
+        <input type="range" id="shadow-offset-x-${layerId}" min="-100" max="100" value="${state.offsetX}" class="slider-range" />
+      </div>
+      
+      <div class="control-group">
+        <label for="shadow-offset-y-${layerId}">Y (<span id="val-shadow-offset-y-${layerId}">${state.offsetY}</span>px)</label>
+        <input type="range" id="shadow-offset-y-${layerId}" min="-100" max="100" value="${state.offsetY}" class="slider-range" />
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+      <div class="control-group">
+        <label for="shadow-color-${layerId}">Color</label>
+        <input type="color" id="shadow-color-${layerId}" value="${state.color}" style="height: 38px; padding: 0.25rem; cursor: pointer;" />
+      </div>
+      
+      <div class="control-group">
+        <label for="shadow-opacity-${layerId}">Opacity (<span id="val-shadow-opacity-${layerId}">${state.opacity}</span>)</label>
+        <input type="range" id="shadow-opacity-${layerId}" min="0" max="1" step="0.05" value="${state.opacity}" class="slider-range" />
+      </div>
+    </div>
+    
+    <div style="margin-top: 0.5rem;">
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; cursor: pointer;">
+        <input type="checkbox" id="shadow-inset-${layerId}" ${state.inset ? 'checked' : ''} /> Inset Shadow
+      </label>
+    </div>
+  `;
+  
+  shadowLayersContainer.appendChild(layerDiv);
+}
+
+function updateShadowPreview() {
+  if (!shadowLayers.length) return;
+  
+  const shadows = shadowLayers.map(layer => {
+    const rgba = hexToRgba(layer.color, layer.opacity);
+    const insetStr = layer.inset ? 'inset ' : '';
+    return `${insetStr}${layer.offsetX}px ${layer.offsetY}px ${layer.blur}px ${layer.spread}px ${rgba}`;
+  });
+  
+  const boxShadowValue = shadows.join(', ');
+  
+  if (shadowPreviewCard) {
+    shadowPreviewCard.style.boxShadow = boxShadowValue;
+  }
+  
+  shadowCssOutput.value = `box-shadow: ${boxShadowValue};`;
+}
+
+function hexToRgba(hex, alpha) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? 
+    `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})` :
+    hex;
+}
+
+function applyPreset(preset) {
+  const presets = {
+    soft: [
+      { blur: 40, spread: 5, offsetX: -2, offsetY: 8, color: '#000000', opacity: 0.3, inset: false }
+    ],
+    hard: [
+      { blur: 10, spread: 2, offsetX: 4, offsetY: 6, color: '#000000', opacity: 0.5, inset: false }
+    ],
+    glow: [
+      { blur: 30, spread: 10, offsetX: 0, offsetY: 0, color: '#7c3aed', opacity: 0.6, inset: false },
+      { blur: 60, spread: 20, offsetX: 0, offsetY: 0, color: '#a78bfa', opacity: 0.4, inset: false }
+    ],
+    raised: [
+      { blur: 15, spread: -3, offsetX: 0, offsetY: 4, color: '#000000', opacity: 0.25, inset: false },
+      { blur: 10, spread: -2, offsetX: 0, offsetY: -2, color: '#ffffff', opacity: 0.15, inset: true }
+    ],
+    inset: [
+      { blur: 20, spread: 5, offsetX: 0, offsetY: 4, color: '#000000', opacity: 0.4, inset: true }
+    ],
+    neon: [
+      { blur: 20, spread: 8, offsetX: 0, offsetY: 0, color: '#10b981', opacity: 0.7, inset: false },
+      { blur: 40, spread: 15, offsetX: 0, offsetY: 0, color: '#34d399', opacity: 0.5, inset: false }
+    ]
+  };
+  
+  const presetLayers = presets[preset] || [];
+  shadowLayersContainer.innerHTML = '';
+  shadowLayers = [];
+  layerIdCounter = 0;
+  
+  presetLayers.forEach(layer => addShadowLayer(layer));
+  updateShadowPreview();
+}
+
+if (btnAddShadowLayer) {
+  btnAddShadowLayer.addEventListener('click', () => addShadowLayer());
+}
+
+// Bind input events for all shadow controls
+document.addEventListener('input', (e) => {
+  if (e.target.id.startsWith('shadow-')) {
+    const layerId = parseInt(e.target.id.split('-').pop());
+    const layer = shadowLayers.find(l => l.id === layerId);
+    if (!layer) return;
+    
+    // Update state based on which input changed
+    if (e.target.type === 'range') {
+      const propMap = {
+        'shadow-blur': 'blur',
+        'shadow-spread': 'spread',
+        'shadow-offset-x': 'offsetX',
+        'shadow-offset-y': 'offsetY',
+        'shadow-opacity': 'opacity'
+      };
+      
+      if (propMap[e.target.id]) {
+        layer[propMap[e.target.id]] = parseFloat(e.target.value);
+        
+        // Update value display
+        const valSpan = document.getElementById(`val-${e.target.id}`);
+        if (valSpan) valSpan.textContent = e.target.value;
+      }
+    } else if (e.target.type === 'color') {
+      layer.color = e.target.value;
+    } else if (e.target.type === 'checkbox') {
+      layer.inset = e.target.checked;
+    }
+    
+    updateShadowPreview();
+  }
+});
+
+// Remove layer button handlers
+document.addEventListener('click', (e) => {
+  if (e.target.id && e.target.id.startsWith('btn-remove-layer-')) {
+    const layerId = parseInt(e.target.id.split('-').pop());
+    removeShadowLayer(layerId);
+  }
+});
+
+// Preset buttons
+const presetButtons = {
+  'btn-preset-soft': 'soft',
+  'btn-preset-hard': 'hard',
+  'btn-preset-glow': 'glow',
+  'btn-preset-raised': 'raised',
+  'btn-preset-inset': 'inset',
+  'btn-preset-neon': 'neon'
+};
+
+Object.entries(presetButtons).forEach(([btnId, preset]) => {
+  const btn = document.getElementById(btnId);
+  if (btn) {
+    btn.addEventListener('click', () => applyPreset(preset));
+  }
+});
+
+// Copy buttons
+if (btnCopyCss) {
+  btnCopyCss.addEventListener('click', () => {
+    navigator.clipboard.writeText(shadowCssOutput.value);
+    alert('CSS copied to clipboard!');
+  });
+}
+
+if (btnCopyFullRule) {
+  btnCopyFullRule.addEventListener('click', () => {
+    const cssValue = shadowCssOutput.value;
+    const fullRule = `${cssValue}\n-webkit-box-shadow: ${shadowCssOutput.value};`;
+    navigator.clipboard.writeText(fullRule);
+    alert('CSS rule (with vendor prefix) copied to clipboard!');
+  });
+}
+
+// ============================================================================
 // --- TEXT CASE & LIST CONVERTER LOGIC ---
 // ============================================================================
 const caseInput = document.getElementById('case-input');
@@ -12776,235 +13042,6 @@ window.calculateStrCostSegregation = calculateStrCostSegregation;
 
 
 // --- CODE SNIPPET TO IMAGE GENERATOR LOGIC ---
-const CODE_HIGHLIGHT_PATTERNS = {
-  javascript: [
-    { name: 'comment', regex: /\/\/[^\n]*|\/\*[\s\S]*?\*\// },
-    { name: 'string', regex: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/ },
-    { name: 'number', regex: /\b\d+(?:\.\d+)?\b/ },
-    { name: 'keyword', regex: /\b(?:const|let|var|function|return|class|import|export|from|if|else|for|while|do|switch|case|break|continue|default|try|catch|finally|throw|new|this|typeof|instanceof|yield|await|async|debugger|arguments|true|false|null|undefined)\b/ },
-    { name: 'builtin', regex: /\b(?:console|log|window|document|process|global|require|module|exports|Math|Object|Array|String|Number|Boolean|Date|RegExp|Error|Promise|Map|Set|JSON)\b/ },
-    { name: 'function', regex: /[a-zA-Z_]\w*(?=\s*\()/ },
-    { name: 'operator', regex: /=>|={1,3}|!={1,2}|&lt;={1,2}|&gt;={1,2}|[+\-*\/%&|^~<>!?:;.,[\]{}()]/ }
-  ],
-  python: [
-    { name: 'comment', regex: /#[^\n]*/ },
-    { name: 'string', regex: /"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/ },
-    { name: 'number', regex: /\b\d+(?:\.\d+)?\b/ },
-    { name: 'keyword', regex: /\b(?:def|class|return|if|elif|else|for|while|try|except|finally|import|from|as|global|nonlocal|lambda|pass|break|continue|in|is|and|or|not|with|yield|assert|del|raise|True|False|None)\b/ },
-    { name: 'builtin', regex: /\b(?:print|len|range|str|int|float|list|dict|set|tuple|open|max|min|sum|abs|type|id|map|filter|zip|enumerate)\b/ },
-    { name: 'function', regex: /[a-zA-Z_]\w*(?=\s*\()/ },
-    { name: 'operator', regex: /[+\-*\/%&|^~=<>!?:;.,[\]{}()]/ }
-  ],
-  html: [
-    { name: 'comment', regex: /&lt;!--[\s\S]*?--&gt;/ },
-    { name: 'keyword', regex: /&lt;\/?[a-zA-Z0-9:\-]+|&gt;/ },
-    { name: 'string', regex: /"[^"]*"|'[^']*'/ },
-    { name: 'builtin', regex: /\b[a-zA-Z0-9\-]+(?=\s*=)/ },
-    { name: 'operator', regex: /=/ }
-  ],
-  css: [
-    { name: 'comment', regex: /\/\*[\s\S]*?\*\// },
-    { name: 'keyword', regex: /@\w+|!important/ },
-    { name: 'builtin', regex: /\b[a-zA-Z\-]+(?=\s*:)/ },
-    { name: 'string', regex: /url\([^)]+\)|"[^"]*"|'[^']*'/ },
-    { name: 'number', regex: /\b\d+(?:px|em|rem|%|vh|vw|ms|s|deg)?\b/ },
-    { name: 'function', regex: /[a-zA-Z_]\w*(?=\s*\()/ },
-    { name: 'operator', regex: /[{}:;,]/ }
-  ],
-  rust: [
-    { name: 'comment', regex: /\/\/[^\n]*|\/\*[\s\S]*?\*\// },
-    { name: 'string', regex: /r?"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])'/ },
-    { name: 'number', regex: /\b\d+(?:\.\d+)?(?:u8|u16|u32|u64|u128|i8|i16|i32|i64|i128|f32|f64|usize|isize)?\b/ },
-    { name: 'keyword', regex: /\b(?:fn|let|mut|pub|use|mod|struct|enum|impl|trait|for|while|loop|if|else|match|return|break|continue|as|ref|self|Self|const|static|unsafe|where|type|dyn|async|await|move|true|false)\b/ },
-    { name: 'builtin', regex: /\b(?:println|print|format|panic|vec|Result|Option|Some|None|Ok|Err|Box|Rc|Arc|String|str|bool|char|u8|u16|u32|u64|u128|i8|i16|i32|i64|i128|f32|f64|usize|isize)\b/ },
-    { name: 'function', regex: /[a-zA-Z_]\w*(?=\s*\()/ },
-    { name: 'operator', regex: /[-+*\/%&|^=<>!?:;.,[\]{}()]/ }
-  ],
-  cpp: [
-    { name: 'comment', regex: /\/\/[^\n]*|\/\*[\s\S]*?\*\// },
-    { name: 'string', regex: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/ },
-    { name: 'number', regex: /\b\d+(?:\.\d+)?\b/ },
-    { name: 'keyword', regex: /\b(?:int|double|float|char|void|bool|class|struct|public|private|protected|virtual|override|return|if|else|for|while|do|switch|case|break|continue|default|try|catch|throw|new|delete|namespace|using|std|cout|cin|endl|include|define|ifdef|ifndef|endif|true|false|nullptr)\b/ },
-    { name: 'function', regex: /[a-zA-Z_]\w*(?=\s*\()/ },
-    { name: 'operator', regex: /[+\-*\/%&|^~=<>!?:;.,[\]{}()]/ }
-  ],
-  java: [
-    { name: 'comment', regex: /\/\/[^\n]*|\/\*[\s\S]*?\*\// },
-    { name: 'string', regex: /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/ },
-    { name: 'number', regex: /\b\d+(?:\.\d+)?\b/ },
-    { name: 'keyword', regex: /\b(?:public|private|protected|class|interface|extends|implements|static|final|void|int|double|float|char|boolean|return|if|else|for|while|do|switch|case|break|continue|default|try|catch|finally|throw|throws|new|this|super|package|import|null|true|false)\b/ },
-    { name: 'function', regex: /[a-zA-Z_]\w*(?=\s*\()/ },
-    { name: 'operator', regex: /[+\-*\/%&|^~=<>!?:;.,[\]{}()]/ }
-  ],
-  sql: [
-    { name: 'comment', regex: /\-\-[^\n]*|\/\*[\s\S]*?\*\// },
-    { name: 'string', regex: /'(?:''|[^'])*'/ },
-    { name: 'number', regex: /\b\d+(?:\.\d+)?\b/ },
-    { name: 'keyword', regex: /\b(?:select|from|where|insert|into|values|update|set|delete|create|table|drop|alter|add|column|join|left|right|inner|outer|on|group|by|order|having|limit|offset|and|or|not|in|exists|like|is|null|as|union|all|primary|key|foreign|index|unique|default|check)\b/ },
-    { name: 'operator', regex: /[+\-*\/%=<>!?:;.,()]/ }
-  ],
-  json: [
-    { name: 'string', regex: /"(?:\\.|[^"\\])*"/ },
-    { name: 'number', regex: /\b-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/ },
-    { name: 'keyword', regex: /\b(?:true|false|null)\b/ },
-    { name: 'operator', regex: /[{}[\]:,]/ }
-  ]
-};
-
-const CODE_SNIPPET_DEFAULTS = {
-  javascript: `// Quick Sort Algorithm
-function quickSort(arr) {
-  if (arr.length <= 1) return arr;
-  
-  const pivot = arr[arr.length - 1];
-  const left = [];
-  const right = [];
-  
-  for (let i = 0; i < arr.length - 1; i++) {
-    if (arr[i] < pivot) {
-      left.push(arr[i]);
-    } else {
-      right.push(arr[i]);
-    }
-  }
-  
-  return [...quickSort(left), pivot, ...quickSort(right)];
-}
-
-const numbers = [8, 3, 5, 1, 4, 2];
-console.log("Sorted:", quickSort(numbers));`,
-
-  python: `# Fibonacci Sequence Generator
-def fibonacci(n: int) -> list[int]:
-    if n <= 0:
-        return []
-    elif n == 1:
-        return [0]
-        
-    sequence = [0, 1]
-    while len(sequence) < n:
-        next_val = sequence[-1] + sequence[-2]
-        sequence.append(next_val)
-    return sequence
-
-# Print first 10 numbers
-print("Fibonacci:", fibonacci(10))`,
-
-  html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ZeroG Toolbox</title>
-  <style>
-    body {
-      background: #09090b;
-      color: #f4f4f5;
-      font-family: sans-serif;
-    }
-  </style>
-</head>
-<body>
-  <h1>Hello, World!</h1>
-  <p>In-browser, secure utilities.</p>
-</body>
-</html>`,
-
-  css: `/* Glassmorphism Card Style */
-.glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-.glass-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.4);
-}`,
-
-  rust: `// Standard Rust Struct and Implementation
-#[derive(Debug)]
-struct Player {
-    name: String,
-    score: u32,
-    active: bool,
-}
-
-impl Player {
-    fn new(name: &str) -> Self {
-        Player {
-            name: name.to_string(),
-            score: 0,
-            active: true,
-        }
-    }
-
-    fn increment_score(&mut self, points: u32) {
-        self.score += points;
-    }
-}`,
-
-  cpp: `#include <iostream>
-#include <vector>
-
-// C++ Vector Summation
-int sumElements(const std::vector<int>& vec) {
-    int total = 0;
-    for (int num : vec) {
-        total += num;
-    }
-    return total;
-}
-
-int main() {
-    std::vector<int> data = {1, 2, 3, 4, 5};
-    std::cout << "Sum: " << sumElements(data) << std::endl;
-    return 0;
-}`,
-
-  java: `import java.util.List;
-
-// Java Summation Example
-public class Main {
-    public static void main(String[] args) {
-        List<Integer> list = List.of(1, 2, 3, 4, 5);
-        int sum = list.stream().mapToInt(Integer::intValue).sum();
-        System.out.println("Sum: " + sum);
-    }
-}`,
-
-  sql: `-- Get top spending customers
-SELECT 
-    c.customer_id,
-    c.first_name,
-    c.last_name,
-    SUM(o.total_amount) AS total_spent
-FROM customers c
-INNER JOIN orders o ON c.customer_id = o.customer_id
-WHERE o.order_date >= '2026-01-01'
-GROUP BY c.customer_id, c.first_name, c.last_name
-HAVING SUM(o.total_amount) > 1000
-ORDER BY total_spent DESC
-LIMIT 5;`,
-
-  json: `{
-  "appName": "ZeroG Toolbox",
-  "version": "1.0.0",
-  "features": {
-    "clientSide": true,
-    "webAssembly": true,
-    "webGPU": true
-  },
-  "keywords": [
-    "utility",
-    "privacy",
-    "developer"
-  ]
-}`
-};
 
 const codeInput = document.getElementById('code-to-image-input');
 const codeLang = document.getElementById('code-to-image-lang');
@@ -13472,6 +13509,393 @@ if (btnExportJpg) {
 window.resetCodeToImageState = resetCodeToImageState;
 window.updateCodePreview = updateCodePreview;
 window.exportCodeSnippetImage = exportCodeSnippetImage;
+
+// ==========================================
+// --- CODE TYPING ANIMATION VIDEO RENDERER LOGIC ---
+// ==========================================
+
+let ctvLastSelectedLang = 'javascript';
+let ctvWorker = null;
+let ctvFfmpeg = null;
+let ctvFfmpegLoadingPromise = null;
+let ctvRendering = false;
+let ctvResultBlobUrl = null;
+let ctvResultFormat = 'mp4';
+
+const CTV_MAX_RAW_BYTES = 700 * 1024 * 1024;
+
+function getCodeTypingVideoConfig() {
+  const [width, height] = document.getElementById('code-typing-video-resolution').value.split('x').map(Number);
+  const bgType = document.getElementById('code-typing-video-bg-type').value;
+  const backdrop = bgType === 'solid'
+    ? { type: 'solid', solid: document.getElementById('code-typing-video-solid-color').value }
+    : bgType === 'custom'
+      ? {
+          type: 'custom',
+          color1: document.getElementById('code-typing-video-color1').value,
+          color2: document.getElementById('code-typing-video-color2').value,
+          angle: Number(document.getElementById('slider-code-typing-video-bg-angle').value)
+        }
+      : { type: 'preset', preset: document.getElementById('code-typing-video-preset').value };
+
+  return {
+    code: document.getElementById('code-typing-video-input').value,
+    lang: document.getElementById('code-typing-video-lang').value,
+    theme: document.getElementById('code-typing-video-theme').value,
+    font: document.getElementById('code-typing-video-font').value,
+    fontSize: Number(document.getElementById('slider-code-typing-video-font-size').value),
+    showLineNumbers: document.getElementById('check-code-typing-video-lines').checked,
+    showControls: document.getElementById('check-code-typing-video-controls').checked,
+    title: document.getElementById('code-typing-video-title').value.trim(),
+    backdrop,
+    outerPadding: Number(document.getElementById('slider-code-typing-video-padding').value),
+    radius: Number(document.getElementById('slider-code-typing-video-radius').value),
+    shadow: Number(document.getElementById('slider-code-typing-video-shadow').value),
+    width, height,
+    fps: Number(document.getElementById('code-typing-video-fps').value),
+    charsPerSecond: Number(document.getElementById('slider-code-typing-video-speed').value),
+    holdStartSec: Number(document.getElementById('slider-code-typing-video-hold-start').value),
+    holdEndSec: Number(document.getElementById('slider-code-typing-video-hold-end').value)
+  };
+}
+
+function setCodeTypingVideoProgress(pct, label) {
+  const bar = document.getElementById('code-typing-video-progress-bar');
+  const lbl = document.getElementById('code-typing-video-progress-label');
+  if (bar) bar.style.width = `${pct}%`;
+  if (lbl && label) lbl.innerText = label;
+}
+
+function setCodeTypingVideoLoadingOverlay(show, text) {
+  const overlay = document.getElementById('code-typing-video-loading-overlay');
+  if (!overlay) return;
+  overlay.style.display = show ? 'flex' : 'none';
+  if (show && text) document.getElementById('code-typing-video-loading-text').innerText = text;
+}
+
+function updateCodeTypingVideoPreview() {
+  const canvas = document.getElementById('code-typing-video-canvas');
+  if (!canvas) return;
+  const config = getCodeTypingVideoConfig();
+
+  const bgType = document.getElementById('code-typing-video-bg-type').value;
+  document.getElementById('group-code-typing-video-preset-bg').style.display = bgType === 'preset' ? 'block' : 'none';
+  document.getElementById('group-code-typing-video-custom-bg').style.display = bgType === 'custom' ? 'flex' : 'none';
+  document.getElementById('group-code-typing-video-solid-bg').style.display = bgType === 'solid' ? 'block' : 'none';
+
+  document.getElementById('val-code-typing-video-font-size').innerText = `${config.fontSize}px`;
+  document.getElementById('val-code-typing-video-bg-angle').innerText = `${document.getElementById('slider-code-typing-video-bg-angle').value}°`;
+  document.getElementById('val-code-typing-video-padding').innerText = `${config.outerPadding}px`;
+  document.getElementById('val-code-typing-video-radius').innerText = `${config.radius}px`;
+  document.getElementById('val-code-typing-video-shadow').innerText = `${config.shadow}px`;
+  document.getElementById('val-code-typing-video-speed').innerText = `${config.charsPerSecond} chars/sec`;
+  document.getElementById('val-code-typing-video-hold-start').innerText = `${config.holdStartSec.toFixed(1)}s`;
+  document.getElementById('val-code-typing-video-hold-end').innerText = `${config.holdEndSec.toFixed(1)}s`;
+
+  canvas.width = config.width;
+  canvas.height = config.height;
+  renderCodeFrame(canvas.getContext('2d'), {
+    width: config.width, height: config.height,
+    code: config.code, lang: config.lang, theme: config.theme,
+    font: config.font, fontSize: config.fontSize,
+    showLineNumbers: config.showLineNumbers, showControls: config.showControls, title: config.title,
+    backdrop: config.backdrop, outerPadding: config.outerPadding, radius: config.radius, shadow: config.shadow,
+    charsVisible: config.code.length, cursorOn: true
+  });
+
+  const frameCount = totalFramesForTyping({
+    codeLength: config.code.length, fps: config.fps,
+    charsPerSecond: config.charsPerSecond, holdStartSec: config.holdStartSec, holdEndSec: config.holdEndSec
+  });
+  const durationSec = frameCount / config.fps;
+  const estMB = (config.width * config.height * 4 * frameCount) / 1e6;
+  const tooLarge = (estMB * 1e6) > CTV_MAX_RAW_BYTES;
+
+  const estimateEl = document.getElementById('code-typing-video-estimate');
+  estimateEl.innerHTML = `~${durationSec.toFixed(1)}s · ${frameCount} frames · ~${estMB.toFixed(0)}MB raw buffer` +
+    (tooLarge ? `<br><span style="color: var(--danger);">⚠️ Too large to render in-browser — lower resolution, fps, or duration.</span>` : '');
+
+  const renderBtn = document.getElementById('btn-render-code-typing-video');
+  if (renderBtn) renderBtn.disabled = tooLarge;
+}
+
+function initCodeVideoWorker() {
+  if (ctvWorker) return;
+  try {
+    ctvWorker = new Worker(new URL('./codevideo.worker.js', import.meta.url), { type: 'module' });
+    ctvWorker.onmessage = (e) => handleCodeVideoWorkerMessage(e.data);
+    ctvWorker.onerror = (err) => {
+      console.error('Code video worker error:', err);
+      failCodeTypingVideoRender(err.message || 'Worker error');
+    };
+  } catch (err) {
+    console.error('Could not start code video worker:', err);
+  }
+}
+
+function ensureCodeVideoFfmpegLoaded(onProgress) {
+  if (ctvFfmpeg && ctvFfmpeg.loaded) return Promise.resolve(ctvFfmpeg);
+  if (!ctvFfmpegLoadingPromise) {
+    ctvFfmpegLoadingPromise = (async () => {
+      const ffmpeg = new FFmpeg();
+      const coreURL = await toBlobURL(ffmpegCoreURL, 'text/javascript');
+      const wasmURL = await toBlobURL(ffmpegWasmURL, 'application/wasm', true, (e) => {
+        if (onProgress && e.total > 0) onProgress(Math.round((e.received / e.total) * 100));
+      });
+      await ffmpeg.load({ coreURL, wasmURL });
+      ctvFfmpeg = ffmpeg;
+      return ffmpeg;
+    })().catch((err) => {
+      ctvFfmpegLoadingPromise = null;
+      throw err;
+    });
+  }
+  return ctvFfmpegLoadingPromise;
+}
+
+function handleCodeVideoWorkerMessage(msg) {
+  if (msg.type === 'progress' && msg.phase === 'rendering') {
+    setCodeTypingVideoProgress(msg.percent, `Rendering frames… ${msg.percent}%`);
+  } else if (msg.type === 'frames') {
+    setCodeTypingVideoProgress(100, 'Frames rendered — encoding video…');
+    encodeCodeTypingVideo(msg).catch((err) => {
+      console.error('Code video encode error:', err);
+      failCodeTypingVideoRender(err.message || String(err));
+    });
+  } else if (msg.type === 'cancelled') {
+    failCodeTypingVideoRender('Render cancelled.');
+  } else if (msg.type === 'error') {
+    failCodeTypingVideoRender(msg.error);
+  }
+}
+
+async function encodeCodeTypingVideo({ buffer, width, height, fps }) {
+  const format = document.getElementById('code-typing-video-format').value;
+
+  setCodeTypingVideoLoadingOverlay(true, 'Loading FFmpeg WebAssembly…');
+  document.getElementById('code-typing-video-loading-progress').innerText = '0%';
+  setAiLoadingFill('code-typing-video', 0);
+
+  const ffmpeg = await ensureCodeVideoFfmpegLoaded((pct) => {
+    document.getElementById('code-typing-video-loading-progress').innerText = `${pct}%`;
+    setAiLoadingFill('code-typing-video', pct);
+  });
+  setCodeTypingVideoLoadingOverlay(false);
+
+  const onEncodeProgress = ({ progress }) => {
+    const pct = Math.round(Math.min(1, Math.max(0, progress)) * 100);
+    setCodeTypingVideoProgress(pct, `Encoding video… ${pct}%`);
+  };
+  ffmpeg.on('progress', onEncodeProgress);
+
+  try {
+    await ffmpeg.writeFile('frames.raw', new Uint8Array(buffer));
+    const outFile = format === 'webm' ? 'output.webm' : 'output.mp4';
+    const args = [
+      '-f', 'rawvideo', '-pixel_format', 'rgba',
+      '-video_size', `${width}x${height}`, '-framerate', String(fps),
+      '-i', 'frames.raw'
+    ];
+    if (format === 'webm') {
+      args.push('-c:v', 'libvpx-vp9', '-crf', '32', '-b:v', '0', '-pix_fmt', 'yuv420p', outFile);
+    } else {
+      args.push('-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', outFile);
+    }
+    await ffmpeg.exec(args);
+
+    const data = await ffmpeg.readFile(outFile);
+    await ffmpeg.deleteFile('frames.raw');
+    await ffmpeg.deleteFile(outFile);
+
+    const mime = format === 'webm' ? 'video/webm' : 'video/mp4';
+    finishCodeTypingVideoRender(new Blob([data.buffer], { type: mime }), format);
+  } finally {
+    ffmpeg.off('progress', onEncodeProgress);
+  }
+}
+
+function finishCodeTypingVideoRender(blob, format) {
+  if (ctvResultBlobUrl) URL.revokeObjectURL(ctvResultBlobUrl);
+  ctvResultBlobUrl = URL.createObjectURL(blob);
+  ctvResultFormat = format;
+
+  const videoEl = document.getElementById('code-typing-video-result');
+  videoEl.src = ctvResultBlobUrl;
+  videoEl.style.display = 'block';
+
+  document.getElementById('code-typing-video-result-group').style.display = 'flex';
+  document.getElementById('code-typing-video-progress-wrap').style.display = 'none';
+
+  const btn = document.getElementById('btn-render-code-typing-video');
+  btn.disabled = false;
+  btn.innerText = '🎬 Render Video';
+  ctvRendering = false;
+}
+
+function failCodeTypingVideoRender(message) {
+  alert('Video rendering failed: ' + message);
+  setCodeTypingVideoLoadingOverlay(false);
+  document.getElementById('code-typing-video-progress-wrap').style.display = 'none';
+  const btn = document.getElementById('btn-render-code-typing-video');
+  if (btn) { btn.disabled = false; btn.innerText = '🎬 Render Video'; }
+  ctvRendering = false;
+}
+
+function startCodeTypingVideoRender() {
+  if (ctvRendering) return;
+  const config = getCodeTypingVideoConfig();
+
+  if (!config.code.trim()) {
+    alert('Please enter some code to animate.');
+    return;
+  }
+
+  const frameCount = totalFramesForTyping({
+    codeLength: config.code.length, fps: config.fps,
+    charsPerSecond: config.charsPerSecond, holdStartSec: config.holdStartSec, holdEndSec: config.holdEndSec
+  });
+  const estBytes = config.width * config.height * 4 * frameCount;
+  if (estBytes > CTV_MAX_RAW_BYTES) {
+    alert(`This combination of resolution/duration is too large to render in-browser (~${Math.round(estBytes / 1e6)}MB of raw frames). Lower the resolution, frame rate, or typing duration and try again.`);
+    return;
+  }
+
+  ctvRendering = true;
+  initCodeVideoWorker();
+  if (!ctvWorker) {
+    ctvRendering = false;
+    alert('This browser does not support the Web Worker required to render video.');
+    return;
+  }
+
+  const videoEl = document.getElementById('code-typing-video-result');
+  videoEl.pause();
+  videoEl.style.display = 'none';
+  document.getElementById('code-typing-video-result-group').style.display = 'none';
+
+  const btn = document.getElementById('btn-render-code-typing-video');
+  btn.disabled = true;
+  btn.innerText = 'Rendering…';
+
+  document.getElementById('code-typing-video-progress-wrap').style.display = 'block';
+  setCodeTypingVideoProgress(0, 'Rendering frames… 0%');
+
+  ctvWorker.postMessage({ type: 'render', payload: config });
+}
+
+function downloadCodeTypingVideoResult() {
+  if (!ctvResultBlobUrl) return;
+  const ext = ctvResultFormat === 'webm' ? 'webm' : 'mp4';
+  const titleInput = (document.getElementById('code-typing-video-title').value || 'code-typing').trim();
+  const base = (titleInput.replace(/\.[^/.]+$/, '') || 'code-typing');
+  const link = document.createElement('a');
+  link.href = ctvResultBlobUrl;
+  link.download = `${base}.${ext}`;
+  link.click();
+}
+
+function resetCodeTypingVideoState() {
+  const input = document.getElementById('code-typing-video-input');
+  if (input) input.value = CODE_SNIPPET_DEFAULTS.javascript;
+
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  const setChecked = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
+
+  setVal('code-typing-video-lang', 'javascript');
+  setVal('code-typing-video-theme', 'onedark');
+  setVal('code-typing-video-font', 'Fira Code, SFMono-Regular, Consolas, Monaco, monospace');
+  setVal('slider-code-typing-video-font-size', 18);
+  setChecked('check-code-typing-video-lines', true);
+  setChecked('check-code-typing-video-controls', true);
+  setVal('code-typing-video-title', 'snippet.js');
+  setVal('code-typing-video-bg-type', 'preset');
+  setVal('code-typing-video-preset', 'sunset');
+  setVal('code-typing-video-color1', '#6366f1');
+  setVal('code-typing-video-color2', '#06b6d4');
+  setVal('slider-code-typing-video-bg-angle', 135);
+  setVal('code-typing-video-solid-color', '#1e1e24');
+  setVal('slider-code-typing-video-padding', 32);
+  setVal('slider-code-typing-video-radius', 12);
+  setVal('slider-code-typing-video-shadow', 24);
+  setVal('slider-code-typing-video-speed', 30);
+  setVal('slider-code-typing-video-hold-start', 1);
+  setVal('slider-code-typing-video-hold-end', 1.5);
+  setVal('code-typing-video-resolution', '640x360');
+  setVal('code-typing-video-fps', '30');
+  setVal('code-typing-video-format', 'mp4');
+
+  ctvLastSelectedLang = 'javascript';
+  ctvRendering = false;
+
+  const videoEl = document.getElementById('code-typing-video-result');
+  if (videoEl) {
+    videoEl.pause();
+    videoEl.removeAttribute('src');
+    videoEl.style.display = 'none';
+  }
+  if (ctvResultBlobUrl) {
+    URL.revokeObjectURL(ctvResultBlobUrl);
+    ctvResultBlobUrl = null;
+  }
+
+  const resultGroup = document.getElementById('code-typing-video-result-group');
+  if (resultGroup) resultGroup.style.display = 'none';
+  const progressWrap = document.getElementById('code-typing-video-progress-wrap');
+  if (progressWrap) progressWrap.style.display = 'none';
+  setCodeTypingVideoLoadingOverlay(false);
+
+  const btn = document.getElementById('btn-render-code-typing-video');
+  if (btn) { btn.disabled = false; btn.innerText = '🎬 Render Video'; }
+
+  updateCodeTypingVideoPreview();
+  initCodeVideoWorker();
+}
+
+const codeTypingVideoInputs = [
+  'code-typing-video-input', 'code-typing-video-lang', 'code-typing-video-theme', 'code-typing-video-font',
+  'slider-code-typing-video-font-size', 'check-code-typing-video-lines', 'check-code-typing-video-controls',
+  'code-typing-video-title', 'code-typing-video-bg-type', 'code-typing-video-preset',
+  'code-typing-video-color1', 'code-typing-video-color2', 'slider-code-typing-video-bg-angle',
+  'code-typing-video-solid-color', 'slider-code-typing-video-padding', 'slider-code-typing-video-radius',
+  'slider-code-typing-video-shadow', 'slider-code-typing-video-speed', 'slider-code-typing-video-hold-start',
+  'slider-code-typing-video-hold-end', 'code-typing-video-resolution', 'code-typing-video-fps',
+  'code-typing-video-format'
+];
+codeTypingVideoInputs.forEach((id) => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', updateCodeTypingVideoPreview);
+    el.addEventListener('change', updateCodeTypingVideoPreview);
+  }
+});
+
+const ctvLangSelect = document.getElementById('code-typing-video-lang');
+if (ctvLangSelect) {
+  ctvLangSelect.addEventListener('change', () => {
+    const codeEl = document.getElementById('code-typing-video-input');
+    const currentVal = codeEl.value;
+    const prevDefault = CODE_SNIPPET_DEFAULTS[ctvLastSelectedLang];
+
+    if (currentVal.trim() === '' || currentVal === prevDefault) {
+      codeEl.value = CODE_SNIPPET_DEFAULTS[ctvLangSelect.value];
+      const langExts = {
+        javascript: 'snippet.js', python: 'main.py', html: 'index.html', css: 'styles.css',
+        rust: 'main.rs', cpp: 'main.cpp', java: 'Main.java', sql: 'query.sql', json: 'data.json'
+      };
+      document.getElementById('code-typing-video-title').value = langExts[ctvLangSelect.value] || 'snippet.txt';
+    }
+    ctvLastSelectedLang = ctvLangSelect.value;
+    updateCodeTypingVideoPreview();
+  });
+}
+
+const btnRenderCodeTypingVideo = document.getElementById('btn-render-code-typing-video');
+if (btnRenderCodeTypingVideo) btnRenderCodeTypingVideo.addEventListener('click', startCodeTypingVideoRender);
+
+const btnDownloadCodeTypingVideo = document.getElementById('btn-download-code-typing-video');
+if (btnDownloadCodeTypingVideo) btnDownloadCodeTypingVideo.addEventListener('click', downloadCodeTypingVideoResult);
+
+window.resetCodeTypingVideoState = resetCodeTypingVideoState;
 
 // ==========================================
 // --- AI RESUME PROMPT INJECTOR LOGIC ---

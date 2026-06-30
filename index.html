@@ -4209,6 +4209,60 @@ Supported browsers:
         </div>
       </main>
 
+      <!-- VIEW 54: CSS BOX SHADOW GENERATOR -->
+      <main id="css-box-shadow-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-css-box-shadow-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>CSS Box Shadow Generator</h2>
+            <p>Design multi-layer box shadows with live preview. Add layers, adjust blur/spread/offset/color/inset, apply presets, and copy the complete CSS output.</p>
+          </div>
+        </div>
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto;">
+            <button id="btn-add-shadow-layer" class="btn-secondary" style="width: 100%;">+ Add Shadow Layer</button>
+
+            <!-- Layer Container (populated dynamically) -->
+            <div id="shadow-layers-container"></div>
+
+            <!-- Presets Section -->
+            <div class="control-group" style="margin-top: 1rem;">
+              <label>Preset Shadows</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                <button id="btn-preset-soft" class="btn-secondary">Soft</button>
+                <button id="btn-preset-hard" class="btn-secondary">Hard</button>
+                <button id="btn-preset-glow" class="btn-secondary">Glow</button>
+                <button id="btn-preset-raised" class="btn-secondary">Raised</button>
+                <button id="btn-preset-inset" class="btn-secondary">Inset</button>
+                <button id="btn-preset-neon" class="btn-secondary">Neon</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Panel: Preview + Output -->
+          <div class="panel-workspace" style="flex-direction: column; gap: 1rem;">
+            <!-- Live Preview Card -->
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6); border-radius: var(--radius-md); padding: 2rem; min-height: 200px;">
+              <div id="shadow-preview-card" style="width: 100%; max-width: 280px; background: rgba(255,255,255,0.95); border-radius: var(--radius-md); padding: 2rem; text-align: center;">
+                <h3 style="margin-bottom: 0.5rem;">Preview Card</h3>
+                <p style="font-size: 0.85rem; color: #64748b;">This card displays your box shadow in real-time.</p>
+              </div>
+            </div>
+
+            <!-- CSS Output Section -->
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; background: var(--bg-input); display: flex; flex-direction: column; gap: 0.5rem;">
+              <h4>Export CSS Code</h4>
+              <textarea id="shadow-css-output" class="input-custom" readonly style="font-family: monospace; font-size: 0.8rem; height: 120px; resize: none;" placeholder="box-shadow: ..."></textarea>
+              <div style="display: flex; gap: 0.5rem;">
+                <button id="btn-copy-css" class="btn-primary" style="flex: 1;">📋 Copy CSS</button>
+                <button id="btn-copy-full-rule" class="btn-secondary" style="flex: 1;">📋 Copy Full Rule</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <!-- VIEW 55: TEXT CASE & LIST CONVERTER -->
       <main id="case-converter-view" class="view">
         <div class="tool-view-header">
@@ -6610,6 +6664,264 @@ Supported browsers:
               </div>
 
             </div>
+
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: CODE TYPING ANIMATION VIDEO RENDERER -->
+      <main id="code-typing-video-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-code-typing-video-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>Code Typing Animation Video Renderer</h2>
+            <p>Turn a code snippet into a typewriter-style typing animation and export it as an MP4/WebM video — rendered and encoded 100% locally with WebAssembly FFmpeg.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem;">
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">1. Source Code</div>
+
+            <div class="control-group">
+              <label for="code-typing-video-input">Code Snippet</label>
+              <textarea id="code-typing-video-input" class="input-custom" style="height: 150px; font-family: monospace; resize: vertical; font-size: 0.85rem;" placeholder="Paste code here..."></textarea>
+            </div>
+
+            <div class="control-group">
+              <label for="code-typing-video-lang">Language</label>
+              <select id="code-typing-video-lang" class="select-custom">
+                <option value="javascript" selected>JavaScript</option>
+                <option value="python">Python</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="rust">Rust</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+                <option value="sql">SQL</option>
+                <option value="json">JSON</option>
+              </select>
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">2. Code Styling</div>
+
+            <div class="control-group">
+              <label for="code-typing-video-theme">Syntax Theme</label>
+              <select id="code-typing-video-theme" class="select-custom">
+                <option value="onedark" selected>One Dark</option>
+                <option value="vscode">VS Code Dark</option>
+                <option value="monokai">Monokai</option>
+                <option value="dracula">Dracula</option>
+                <option value="cyberpunk">Cyberpunk / Neon</option>
+                <option value="github-light">GitHub Light</option>
+                <option value="solarized-light">Solarized Light</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="code-typing-video-font">Font Family (Monospace)</label>
+              <select id="code-typing-video-font" class="select-custom">
+                <option value="Fira Code, SFMono-Regular, Consolas, Monaco, monospace" selected>Fira Code / System Mono</option>
+                <option value="Courier New, Courier, monospace">Courier New</option>
+                <option value="JetBrains Mono, monospace">JetBrains Mono / System Mono</option>
+              </select>
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-typing-video-font-size">Font Size</label>
+                <span id="val-code-typing-video-font-size" style="font-size: 0.8rem; color: var(--text-secondary);">18px</span>
+              </div>
+              <input type="range" id="slider-code-typing-video-font-size" min="10" max="32" value="18" step="1" style="width:100%;" />
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; margin-top: 0.25rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" id="check-code-typing-video-lines" checked /> Line Numbers
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); cursor: pointer;">
+                <input type="checkbox" id="check-code-typing-video-controls" checked /> Window Controls
+              </label>
+            </div>
+
+            <div class="control-group">
+              <label for="code-typing-video-title">Window Title / Filename</label>
+              <input type="text" id="code-typing-video-title" class="input-custom" value="snippet.js" placeholder="e.g. index.js" />
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">3. Card Frame &amp; Backdrop</div>
+
+            <div class="control-group">
+              <label for="code-typing-video-bg-type">Backdrop Type</label>
+              <select id="code-typing-video-bg-type" class="select-custom">
+                <option value="preset" selected>Preset Gradient</option>
+                <option value="custom">Custom Gradient</option>
+                <option value="solid">Solid Color</option>
+              </select>
+            </div>
+
+            <div class="control-group" id="group-code-typing-video-preset-bg">
+              <label for="code-typing-video-preset">Backdrop Preset</label>
+              <select id="code-typing-video-preset" class="select-custom">
+                <option value="sunset" selected>Sunset Purple</option>
+                <option value="ocean">Ocean Breeze</option>
+                <option value="emerald">Emerald Teal</option>
+                <option value="lemon">Lemon Squeeze</option>
+                <option value="twilight">Twilight Sparkle</option>
+                <option value="cyber">Cyberpunk Magenta</option>
+              </select>
+            </div>
+
+            <div id="group-code-typing-video-custom-bg" style="display: none; flex-direction: column; gap: 0.75rem;">
+              <div style="display: flex; gap: 0.5rem;">
+                <div class="control-group" style="flex: 1;">
+                  <label for="code-typing-video-color1">Start Color</label>
+                  <input type="color" id="code-typing-video-color1" value="#6366f1" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;" />
+                </div>
+                <div class="control-group" style="flex: 1;">
+                  <label for="code-typing-video-color2">End Color</label>
+                  <input type="color" id="code-typing-video-color2" value="#06b6d4" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;" />
+                </div>
+              </div>
+              <div class="slider-container">
+                <div style="display: flex; justify-content: space-between;">
+                  <label for="slider-code-typing-video-bg-angle">Gradient Angle</label>
+                  <span id="val-code-typing-video-bg-angle" style="font-size: 0.8rem; color: var(--text-secondary);">135°</span>
+                </div>
+                <input type="range" id="slider-code-typing-video-bg-angle" min="0" max="360" value="135" step="5" style="width:100%;" />
+              </div>
+            </div>
+
+            <div class="control-group" id="group-code-typing-video-solid-bg" style="display: none;">
+              <label for="code-typing-video-solid-color">Solid Color</label>
+              <input type="color" id="code-typing-video-solid-color" value="#1e1e24" style="width: 100%; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer;" />
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-typing-video-padding">Backdrop Padding</label>
+                <span id="val-code-typing-video-padding" style="font-size: 0.8rem; color: var(--text-secondary);">32px</span>
+              </div>
+              <input type="range" id="slider-code-typing-video-padding" min="0" max="96" value="32" step="4" style="width:100%;" />
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-typing-video-radius">Window Corner Radius</label>
+                <span id="val-code-typing-video-radius" style="font-size: 0.8rem; color: var(--text-secondary);">12px</span>
+              </div>
+              <input type="range" id="slider-code-typing-video-radius" min="0" max="32" value="12" step="2" style="width:100%;" />
+            </div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-typing-video-shadow">Window Shadow</label>
+                <span id="val-code-typing-video-shadow" style="font-size: 0.8rem; color: var(--text-secondary);">24px</span>
+              </div>
+              <input type="range" id="slider-code-typing-video-shadow" min="0" max="64" value="24" step="4" style="width:100%;" />
+            </div>
+
+            <div style="font-weight: bold; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; margin-top: 0.5rem; margin-bottom: -0.25rem; font-size: 0.9rem; color: var(--primary);">4. Typing &amp; Video Settings</div>
+
+            <div class="slider-container">
+              <div style="display: flex; justify-content: space-between;">
+                <label for="slider-code-typing-video-speed">Typing Speed</label>
+                <span id="val-code-typing-video-speed" style="font-size: 0.8rem; color: var(--text-secondary);">30 chars/sec</span>
+              </div>
+              <input type="range" id="slider-code-typing-video-speed" min="5" max="60" value="30" step="1" style="width:100%;" />
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+              <div class="slider-container" style="flex: 1;">
+                <div style="display: flex; justify-content: space-between;">
+                  <label for="slider-code-typing-video-hold-start">Hold Start</label>
+                  <span id="val-code-typing-video-hold-start" style="font-size: 0.8rem; color: var(--text-secondary);">1.0s</span>
+                </div>
+                <input type="range" id="slider-code-typing-video-hold-start" min="0" max="3" value="1" step="0.5" style="width:100%;" />
+              </div>
+              <div class="slider-container" style="flex: 1;">
+                <div style="display: flex; justify-content: space-between;">
+                  <label for="slider-code-typing-video-hold-end">Hold End</label>
+                  <span id="val-code-typing-video-hold-end" style="font-size: 0.8rem; color: var(--text-secondary);">1.5s</span>
+                </div>
+                <input type="range" id="slider-code-typing-video-hold-end" min="0" max="5" value="1.5" step="0.5" style="width:100%;" />
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="code-typing-video-resolution">Resolution</label>
+              <select id="code-typing-video-resolution" class="select-custom">
+                <option value="640x360" selected>640 × 360 (Compact, fastest)</option>
+                <option value="854x480">854 × 480 (SD)</option>
+                <option value="1280x720">1280 × 720 (HD)</option>
+                <option value="720x1280">720 × 1280 (Vertical / Shorts)</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem;">
+              <div class="control-group" style="flex: 1;">
+                <label for="code-typing-video-fps">Frame Rate</label>
+                <select id="code-typing-video-fps" class="select-custom">
+                  <option value="24">24 fps</option>
+                  <option value="30" selected>30 fps</option>
+                </select>
+              </div>
+              <div class="control-group" style="flex: 1;">
+                <label for="code-typing-video-format">Output Format</label>
+                <select id="code-typing-video-format" class="select-custom">
+                  <option value="mp4" selected>MP4 (H.264)</option>
+                  <option value="webm">WebM (VP9)</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="code-typing-video-estimate" style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.6rem 0.75rem;">
+              ~0.0s · 0 frames
+            </div>
+
+            <button class="btn-primary" id="btn-render-code-typing-video" style="width: 100%; margin-top: 0.25rem;">🎬 Render Video</button>
+
+            <div class="control-group" id="code-typing-video-result-group" style="display: none; flex-direction: column; gap: 0.75rem;">
+              <label>Result</label>
+              <button class="btn-secondary" id="btn-download-code-typing-video" style="width: 100%;">⬇️ Download Video</button>
+            </div>
+
+          </div>
+
+          <!-- Right Panel: Preview Area -->
+          <div class="panel-workspace" style="display: flex; flex-direction: column; gap: 1rem; align-items: center; justify-content: center; min-height: 550px; background: #000; padding: 2rem; border-radius: var(--radius-md); position: relative; overflow: auto;">
+
+            <div style="position: absolute; top: 1rem; left: 1rem; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); background: rgba(0,0,0,0.5); padding: 0.25rem 0.6rem; border-radius: 99px; border: 1px solid var(--border); backdrop-filter: blur(4px); z-index: 10;">
+              Live Preview
+            </div>
+
+            <div id="code-typing-video-loading-overlay" class="ai-loading" style="display: none;">
+              <div class="ai-loading-card">
+                <div class="ai-loading-orb">
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-ring"></span>
+                  <span class="ai-loading-icon">🎞️</span>
+                </div>
+                <div id="code-typing-video-loading-text" class="ai-loading-title">Loading FFmpeg WebAssembly…</div>
+                <div class="ai-loading-bar">
+                  <div id="code-typing-video-loading-fill" class="ai-loading-fill indeterminate"></div>
+                </div>
+                <div id="code-typing-video-loading-progress" class="ai-loading-pct">0%</div>
+              </div>
+            </div>
+
+            <canvas id="code-typing-video-canvas" width="640" height="360" style="max-width: 100%; max-height: 420px; border-radius: var(--radius-md); box-shadow: 0 12px 32px rgba(0,0,0,0.5);"></canvas>
+
+            <div id="code-typing-video-progress-wrap" style="display: none; width: 100%; max-width: 480px;">
+              <div style="height: 8px; width: 100%; background: var(--border); border-radius: 4px; overflow: hidden;">
+                <div id="code-typing-video-progress-bar" style="height: 100%; width: 0%; background: var(--primary); transition: width 0.2s ease;"></div>
+              </div>
+              <div id="code-typing-video-progress-label" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.4rem; text-align: center;">Rendering frames…</div>
+            </div>
+
+            <video id="code-typing-video-result" controls muted playsinline style="display: none; max-width: 100%; max-height: 420px; border-radius: var(--radius-md); background: #000;"></video>
 
           </div>
         </div>
