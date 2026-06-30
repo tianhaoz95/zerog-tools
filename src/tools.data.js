@@ -1073,6 +1073,17 @@ export const TOOLS = [
     icon: '🎞️',
     uiClass: 'ready',
     adTopics: ['screen recording software', 'video editing tools', 'coding tutorial platforms', 'youtube channel growth']
+  },
+  {
+    id: 'ai-photo-booth',
+    title: 'AI Photo Booth with Pose Decorations',
+    description: 'Turn your webcam into a fun photo booth! Detects body pose in real-time and lets you place emoji decorations at joint positions, or position them freely. Capture and download as PNG.',
+    keywords: ['photo booth', 'webcam', 'emoji overlay', 'pose detection', 'body keypoints', 'selfie editor', 'fun camera', 'decoration', 'sticker'],
+    tags: ['AI', 'Image', 'Video', 'Editor'],
+    category: 'Graphics',
+    icon: '📸',
+    uiClass: 'ready',
+    adTopics: ['emoji maker', 'sticker design tools', 'photo editing apps', 'image generation']
   }
 ];
 

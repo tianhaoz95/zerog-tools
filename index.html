@@ -6125,6 +6125,116 @@ Supported browsers:
         </div>
       </main>
 
+      <!-- VIEW: AI PHOTO BOOTH -->
+      <main id="ai-photo-booth-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ai-photo-booth-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>AI Photo Booth with Pose Decorations</h2>
+            <p>Turn your webcam into a fun photo booth! Detects body pose in real-time and lets you place emoji decorations at joint positions, or position them freely. Capture and download as PNG.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left: Controls -->
+          <div class="panel-controls" style="max-height: 100%; overflow-y: auto;">
+
+            <!-- Camera selection -->
+            <div class="control-group">
+              <label for="pb-camera-select">Camera</label>
+              <select id="pb-camera-select" class="input-custom"></select>
+            </div>
+
+            <!-- Mode toggle -->
+            <div class="control-group">
+              <label>Pose Decoration Mode</label>
+              <div style="display:flex;gap:0.5rem;">
+                <button type="button" id="pb-mode-pose-mapped" class="btn-primary btn-sm active-mode" data-mode="pose-mapped">🎯 Pose-Mapped</button>
+                <button type="button" id="pb-mode-free" class="btn-secondary btn-sm" data-mode="free">✋ Free Position</button>
+              </div>
+            </div>
+
+            <!-- Emoji/Decoration picker -->
+            <div class="control-group">
+              <label>Built-in Stickers</label>
+              <div id="pb-emoji-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.4rem;">
+                <!-- Populated by JS from PB_EMOJI_PRESETS -->
+              </div>
+            </div>
+
+            <!-- User upload -->
+            <div class="control-group">
+              <label for="pb-upload-input">Or Upload Image</label>
+              <input type="file" id="pb-upload-input" accept="image/png,image/jpeg,image/gif,image/webp" style="display:none;" />
+              <button type="button" id="btn-pb-upload" class="btn-secondary btn-sm" style="width:100%;">📁 Choose File</button>
+              <div id="pb-uploaded-list" style="margin-top:0.5rem;font-size:0.75rem;color:var(--text-secondary);"></div>
+            </div>
+
+            <!-- Decoration list (active decorations) -->
+            <div class="control-group">
+              <label>Active Decorations</label>
+              <div id="pb-decoration-list" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:0.3rem;">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- Decoration controls (size/rotation) for selected decoration -->
+            <div class="control-group" id="pb-deco-controls-group" style="display:none;">
+              <label>Selected Decoration</label>
+              <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;">
+                <input type="checkbox" id="pb-deco-visible" checked /> Visible
+              </label>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">
+                <span style="font-size:0.75rem;color:var(--text-secondary);">Size:</span>
+                <input type="range" id="pb-deco-scale" min="10" max="200" value="80" style="flex:1;" />
+                <span id="pb-deco-scale-val" style="font-size:0.75rem;">80%</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">
+                <span style="font-size:0.75rem;color:var(--text-secondary);">Rotation:</span>
+                <input type="range" id="pb-deco-rotation" min="-180" max="180" value="0" style="flex:1;" />
+                <span id="pb-deco-rotation-val" style="font-size:0.75rem;">0°</span>
+              </div>
+              <button type="button" id="btn-pb-remove-deco" class="btn-danger btn-sm" style="width:100%;margin-top:0.5rem;">🗑 Remove</button>
+            </div>
+
+            <!-- Capture -->
+            <div class="control-group">
+              <button type="button" id="btn-pb-capture" class="btn-primary" style="width:100%;">📸 Capture Photo</button>
+            </div>
+
+            <!-- Model status -->
+            <div class="control-group" id="pb-model-status-group">
+              <label>Model Status</label>
+              <div id="pb-status-badge" style="padding:0.5rem 0.75rem;border-radius:var(--radius-sm);font-size:0.82rem;font-weight:600;background:var(--bg-preview);border:1px solid var(--border);color:var(--text-secondary);">
+                ⏳ Model not loaded
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right: Workspace -->
+          <div class="panel-workspace" style="flex-direction:column;align-items:center;padding:0;">
+            <!-- Live composite canvas (video + overlays) -->
+            <div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:var(--radius-md);overflow:hidden;background:#000;border:1px solid var(--border);">
+              <canvas id="pb-composite-canvas" style="width:100%;height:100%;object-fit:contain;display:block;"></canvas>
+              <div id="pb-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.75rem;color:#888;background:#111;">
+                <span style="font-size:2.5rem;">📸</span>
+                <span style="font-size:0.85rem;">Camera preview will appear here</span>
+              </div>
+            </div>
+
+            <!-- Captured photo preview (appears after capture) -->
+            <div id="pb-captured-preview" style="display:none;width:100%;margin-top:1rem;text-align:center;">
+              <img id="pb-captured-img" style="max-width:100%;border-radius:var(--radius-sm);border:1px solid var(--border);" />
+              <div style="margin-top:0.5rem;display:flex;gap:0.5rem;justify-content:center;">
+                <button type="button" id="btn-pb-download" class="btn-primary btn-sm">💾 Download PNG</button>
+                <button type="button" id="btn-pb-retake" class="btn-secondary btn-sm">🔄 Retake</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
       <!-- VIEW: FIRE EARLY RETIREMENT CALCULATOR -->
       <main id="fire-retirement-calc-view" class="view">
         <div class="tool-view-header">

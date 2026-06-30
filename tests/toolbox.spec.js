@@ -553,7 +553,8 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
       { id: 'fire-retirement-calc', view: '#fire-retirement-calc-view', backBtn: '#btn-fire-retirement-calc-back' },
       { id: 'code-to-image', view: '#code-to-image-view', backBtn: '#btn-code-to-image-back' },
       { id: 'ai-resume-injector', view: '#ai-resume-injector-view', backBtn: '#btn-ai-resume-injector-back' },
-      { id: 'code-typing-video', view: '#code-typing-video-view', backBtn: '#btn-code-typing-video-back' }
+      { id: 'code-typing-video', view: '#code-typing-video-view', backBtn: '#btn-code-typing-video-back' },
+      { id: 'ai-photo-booth', view: '#ai-photo-booth-view', backBtn: '#btn-ai-photo-booth-back' }
     ];
 
     for (const tool of newTools) {
@@ -617,6 +618,128 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
 
     await promptSelect.selectOption('endorse');
     await expect(promptText).toHaveValue(/flagged this candidate as a 'Must Hire'/);
+  });
+
+  // --- AI Photo Booth Tests ---
+
+  test('Tool: AI Photo Booth — Navigation and basic rendering', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-photo-booth"]').click();
+    await expect(page.locator('#ai-photo-booth-view')).toHaveClass(/active/);
+
+    // Assert key UI elements exist
+    await expect(page.locator('#btn-ai-photo-booth-back')).toBeVisible();
+    await expect(page.locator('#pb-camera-select')).toBeVisible();
+    await expect(page.locator('#pb-mode-pose-mapped')).toBeVisible();
+    await expect(page.locator('#pb-mode-free')).toBeVisible();
+    await expect(page.locator('#btn-pb-upload')).toBeVisible();
+    await expect(page.locator('#btn-pb-capture')).toBeVisible();
+    await expect(page.locator('#pb-emoji-grid')).toBeVisible();
+
+    // Assert mode toggle defaults to pose-mapped
+    const mappedBtn = page.locator('#pb-mode-pose-mapped');
+    await expect(mappedBtn).toHaveClass(/active-mode/);
+
+    // Navigate back
+    await page.locator('#btn-ai-photo-booth-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool: AI Photo Booth — Mode toggle', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-photo-booth"]').click();
+
+    // Click free mode button
+    await page.locator('#pb-mode-free').click();
+    const mappedBtn = page.locator('#pb-mode-pose-mapped');
+    await expect(mappedBtn).not.toHaveClass(/active-mode/);
+
+    const freeBtn = page.locator('#pb-mode-free');
+    await expect(freeBtn).toHaveClass(/active-mode/);
+
+    // Switch back to pose-mapped
+    await mappedBtn.click();
+    await expect(mappedBtn).toHaveClass(/active-mode/);
+  });
+
+  test('Tool: AI Photo Booth — Emoji grid renders presets', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-photo-booth"]').click();
+
+    // Wait for the tool to initialize (model loading, camera setup)
+    await page.waitForTimeout(3000);
+
+    // Check if emoji grid container exists and has content
+    const hasEmojiGrid = await page.evaluate(() => {
+      const grid = document.getElementById('pb-emoji-grid');
+      return !!grid;
+    });
+    expect(hasEmojiGrid).toBe(true);
+
+    // Should have 10 preset emojis (from PB_EMOJI_PRESETS) - check for any emoji content
+    const hasEmojis = await page.evaluate(() => {
+      const grid = document.getElementById('pb-emoji-grid');
+      if (!grid) return false;
+      const buttons = grid.querySelectorAll('button');
+      return buttons.length >= 5;
+    });
+    expect(hasEmojis).toBe(true);
+  });
+
+  test('Tool: AI Photo Booth — File upload triggers input', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-photo-booth"]').click();
+
+    // Wait for initialization
+    await page.waitForTimeout(2000);
+
+    const fileInput = page.locator('#pb-upload-input');
+    await expect(fileInput).toBeHidden(); // hidden input, button triggers it
+
+    // Click the visible upload button to trigger file dialog
+    await page.locator('#btn-pb-upload').click();
+
+    // Verify uploaded list area exists (will be populated after actual upload)
+    const uploadedList = page.locator('#pb-uploaded-list');
+    await expect(uploadedList).toHaveCount(1); // Just check element exists
+  });
+
+  test('Tool: AI Photo Booth — Capture button shows preview', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-photo-booth"]').click();
+
+    // Wait for initialization
+    await page.waitForTimeout(2000);
+
+    const captureBtn = page.locator('#btn-pb-capture');
+    await expect(captureBtn).toBeVisible();
+
+    // Click capture (even without pose data, should produce a blank composite)
+    await captureBtn.click();
+
+    // Captured preview should appear (may use flex or block display)
+    const capturedPreview = page.locator('#pb-captured-preview');
+    await expect(capturedPreview).toBeVisible();
+
+    // Download button should be visible in preview
+    await expect(page.locator('#btn-pb-download')).toBeVisible();
+  });
+
+  test('Tool: AI Photo Booth — Decoration list updates on emoji click', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ai-photo-booth"]').click();
+
+    // Wait for initialization
+    await page.waitForTimeout(2000);
+
+    // Click a preset emoji to add decoration
+    const firstEmoji = page.locator('#pb-emoji-grid button').first();
+    await firstEmoji.click();
+
+    // Small delay for UI update
+    await page.waitForTimeout(500);
+
+    // Decoration list should show the added item
+    const decoList = page.locator('#pb-decoration-list');
+    await expect(decoList).toBeVisible();
+
+    // Selected decoration controls should appear (check visibility, not exact style)
+    const controlsGroup = page.locator('#pb-deco-controls-group');
+    await expect(controlsGroup).toBeVisible();
   });
 
   test('Tool: Code Typing Animation Video Renderer UI test', async ({ page }) => {

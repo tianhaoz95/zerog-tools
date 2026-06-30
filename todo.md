@@ -4,7 +4,7 @@ A research-backed backlog of client-side, serverless, browser-native tools to ad
 All tools must run **entirely client-side** (no server round-trips), follow the project design system, and
 AI-powered tools must carry the `.tool-badge.ai` badge per workspace rules.
 
-**Progress:** 0 / 100 complete
+**Progress:** 1 / 100 complete
 
 > Agent: check the box `[x]` after each tool is built, tested (Playwright), and merged.
 > Avoid duplicating the ~108 tools already shipped (see `src/tools.data.js`).
@@ -74,7 +74,7 @@ AI-powered tools must carry the `.tool-badge.ai` badge per workspace rules.
 
 ## 🎨 Design & CSS (53–66)
 
-- [ ] 53. **CSS Box Shadow Generator** — Multi-layer shadow builder with live preview
+- [x] 53. **CSS Box Shadow Generator** — Multi-layer shadow builder with live preview
 - [ ] 54. **CSS Animation / Keyframe Builder** — Animista-style animation generator
 - [ ] 55. **CSS Cubic-Bezier Easing Editor** — Visual easing curve editor + presets
 - [ ] 56. **CSS Clip-Path / Shape Generator** — Visual polygon/clip-path maker

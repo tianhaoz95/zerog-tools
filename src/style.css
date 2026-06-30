@@ -443,6 +443,11 @@ h1, h2, h3, h4 {
   display: flex;
   flex-direction: column;
   height: 256px;
+  /* As the catalog grows past 100+ tools, skip style/layout/paint for
+     off-screen cards entirely. The browser substitutes contain-intrinsic-size
+     as a placeholder until each card scrolls near the viewport. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 256px;
 }
 
 .tool-card::before {
@@ -3260,5 +3265,73 @@ div[style*="color: var(--danger)"] {
   --token-builtin-color: #b58900;
   --token-function-color: #268bd2;
   --token-operator-color: #657b83;
+}
+
+/* --- AI Photo Booth Styles --- */
+#ai-photo-booth-view .panel-workspace {
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.pb-emoji-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pb-emoji-btn:hover {
+  border-color: var(--primary);
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.pb-emoji-btn.active-mode {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+#pb-decoration-list .pb-deco-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+#pb-decoration-list .pb-deco-item:hover {
+  background: var(--border);
+}
+
+#pb-decoration-list .pb-deco-item.selected {
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.pb-composite-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border);
+}
+
+.pb-captured-preview img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
 }
 

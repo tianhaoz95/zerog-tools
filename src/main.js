@@ -81,8 +81,12 @@ function updateGlobalAiStatus() {
   }
 }
 
-// Spawns and initializes Chat Worker on page load
+// Lazily spawns and initializes the Chat Worker on first chat interaction,
+// instead of forcing every visitor to download/load the ~350MB chat model
+// on page load even if they never open the AI assistant.
 function initWorkers() {
+  if (chatWorker) return; // already running
+
   try {
     chatWorker = new Worker(
       new URL('./chat.worker.js', import.meta.url),
@@ -463,9 +467,18 @@ let chatHistory = [
 let activeStreamedMsgElement = null;
 let activeStreamedText = '';
 
-btnSendChat.addEventListener('click', sendChatMessage);
+// Defer spawning/loading the chat model until the user actually shows intent
+// to chat (focuses the input) rather than on every page load.
+chatInput.addEventListener('focus', initWorkers);
+btnSendChat.addEventListener('click', () => {
+  initWorkers();
+  sendChatMessage();
+});
 chatInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') sendChatMessage();
+  if (e.key === 'Enter') {
+    initWorkers();
+    sendChatMessage();
+  }
 });
 
 function sendChatMessage() {
@@ -1043,6 +1056,9 @@ function navigateTo(viewId, opts = {}) {
     document.getElementById('ai-pose-estimator-view').classList.add('active');
     resetPoseEstimatorState();
     initPoseWorker();
+  } else if (viewId === 'ai-photo-booth') {
+    document.getElementById('ai-photo-booth-view').classList.add('active');
+    initPhotoBooth();
   } else if (viewId === 'fire-retirement-calc') {
     document.getElementById('fire-retirement-calc-view').classList.add('active');
     resetFireRetirementCalcState();
@@ -1147,7 +1163,7 @@ const newToolsIds = [
   'css-gradient-mesh', 'svg-path-viewer', 'guitar-tuner', 'speed-reader',
   'mime-inspector', 'sql-playground', 'hash-verifier', 'lorem-pixel',
   'ratio-solver', 'ai-pose-estimator', 'fire-retirement-calc', 'str-cost-segregation', 'code-to-image', 'ai-resume-injector',
-  'code-typing-video'
+  'code-typing-video', 'ai-photo-booth'
 ];
 newToolsIds.forEach(id => {
   const el = document.getElementById(`btn-${id}-back`);
@@ -5195,6 +5211,7 @@ function toggleChat(forceState) {
   } else {
     appContainer.classList.remove('chat-collapsed');
     if (toggleText) toggleText.innerText = 'Hide Chat';
+    initWorkers();
     // Scroll chat messages list to the bottom on expand
     const chatMessages = document.getElementById('chat-messages');
     if (chatMessages) {
@@ -10916,7 +10933,6 @@ if (btnPwdAnalyzerToggle) {
 
 window.addEventListener('DOMContentLoaded', () => {
   renderToolsGrid(TOOLS);
-  initWorkers();
   initFaceSwapListeners();
 
   // Open the tool requested by the URL: prefer the marker injected into a
@@ -12208,6 +12224,975 @@ async function populatePoseCameraList() {
   const btnStop = document.getElementById('btn-pose-stop');
   if (btnStop) btnStop.addEventListener('click', () => stopPoseEstimator());
 })();
+
+// --- AI PHOTO BOOTH LOGIC ---
+let pbWorker = null;
+let pbWorkerReady = false;
+let pbStream = null;
+let pbIsRunning = false;
+let pbMode = 'pose-mapped'; // 'pose-mapped' | 'free'
+let pbSelectedDecorationIdx = null;
+let pbDecorations = []; // { id, type:'emoji'|'image', content, x, y, scale, rotation, visible }
+let pbLastPose = null;
+let pbSampleIntervalMs = 500; // ~2fps for pose detection
+let pbNextSampleAt = 0;
+let pbAnimFrameId = null;
+
+const PB_EMOJI_PRESETS = [
+  { emoji: '🎩', name: 'Top Hat', joints: [0] },              // nose/face center
+  { emoji: '👓', name: 'Glasses', joints: [1, 2] },           // eyes
+  { emoji: '😎', name: 'Sunglasses', joints: [1, 2] },        // eyes
+  { emoji: '🧔', name: 'Beard', joints: [0, 14, 15] },       // nose/chin/ears
+  { emoji: '👋', name: 'Wave Hand', joints: [9, 10] },        // wrists
+  { emoji: '💐', name: 'Flowers', joints: [5, 6] },           // shoulders
+  { emoji: '⭐', name: 'Star', joints: [0] },                 // face center
+  { emoji: '🎀', name: 'Bow Tie', joints: [11, 12] },         // hips/lower body
+  { emoji: '👻', name: 'Ghost', joints: [0, 5, 6, 9, 10] },   // full body outline
+  { emoji: '❤️', name: 'Heart', joints: [9, 10] },            // hands area
+];
+
+const PB_JOINT_NAMES = ['Nose', 'Left Eye', 'Right Eye', 'Left Ear', 'Right Ear',
+  'Left Shoulder', 'Right Shoulder', 'Left Elbow', 'Right Elbow',
+  'Left Wrist', 'Right Wrist', 'Left Hip', 'Right Hip',
+  'Left Knee', 'Right Knee', 'Left Ankle', 'Right Ankle'];
+
+function resetPhotoBoothState() {
+  if (pbAnimFrameId) cancelAnimationFrame(pbAnimFrameId);
+  pbAnimFrameId = null;
+  pbIsRunning = false;
+  pbDecorations = [];
+  pbSelectedDecorationIdx = null;
+  pbLastPose = null;
+
+  // Stop camera stream
+  if (pbStream) {
+    pbStream.getTracks().forEach(t => t.stop());
+    pbStream = null;
+  }
+
+  const canvas = document.getElementById('pb-composite-canvas');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width || 640, canvas.height || 480);
+  }
+
+  // Hide captured preview
+  const preview = document.getElementById('pb-captured-preview');
+  if (preview) {
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+  }
+
+  // Show placeholder again
+  const placeholder = document.getElementById('pb-placeholder');
+  if (placeholder) placeholder.style.display = 'flex';
+
+  // Update status badge
+  const badge = document.getElementById('pb-status-badge');
+  if (badge) {
+    if (pbWorkerReady) {
+      badge.textContent = '✅ Model ready — camera will start automatically';
+      badge.style.color = 'var(--success, #22c55e)';
+    } else {
+      badge.textContent = '⏳ Loading model…';
+      badge.style.color = 'var(--primary)';
+    }
+  }
+
+  // Reset decoration controls group visibility
+  const decoControls = document.getElementById('pb-deco-controls-group');
+  if (decoControls) decoControls.style.display = 'none';
+
+  // Clear decoration list
+  const decoList = document.getElementById('pb-decoration-list');
+  if (decoList) {
+    decoList.innerHTML = '<div style="font-size:0.8rem;color:var(--text-secondary);padding:0.5rem;">No decorations yet. Click an emoji below to add one.</div>';
+  }
+
+  // Reset mode buttons
+  const mappedBtn = document.getElementById('pb-mode-pose-mapped');
+  const freeBtn = document.getElementById('pb-mode-free');
+  if (mappedBtn) {
+    mappedBtn.classList.add('active-mode');
+    mappedBtn.classList.remove('btn-secondary');
+    mappedBtn.classList.add('btn-primary');
+  }
+  if (freeBtn) {
+    freeBtn.classList.remove('active-mode');
+    freeBtn.classList.remove('btn-primary');
+    freeBtn.classList.add('btn-secondary');
+  }
+
+  pbMode = 'pose-mapped';
+}
+
+function initPhotoBooth() {
+  // Initialize worker if not already done
+  if (!pbWorker) {
+    pbWorkerReady = false;
+    pbWorker = new Worker(new URL('./ai-photo-booth.worker.js', import.meta.url), { type: 'module' });
+
+    pbWorker.onmessage = (e) => {
+      const { type, data, progress, file, error } = e.data;
+      if (type === 'status') {
+        if (data === 'loading') {
+          updatePhotoBoothStatus('loading', progress, file);
+        } else if (data === 'ready') {
+          pbWorkerReady = true;
+          updatePhotoBoothStatus('ready');
+          // Auto-start camera if not already running
+          if (!pbStream && !pbIsRunning) {
+            startPhotoBoothCamera();
+          }
+        } else if (data === 'error') {
+          updatePhotoBoothStatus('error', 0, error);
+        }
+      } else if (type === 'pose_result') {
+        pbLastPose = data;
+        // Trigger immediate re-render with new pose data
+        renderPhotoBoothComposite();
+      } else if (type === 'error') {
+        console.error('Photo booth worker error:', error);
+      }
+    };
+
+    pbWorker.onerror = (err) => {
+      console.error('Photo booth worker fatal error:', err);
+      updatePhotoBoothStatus('error', 0, err.message);
+    };
+
+    updatePhotoBoothStatus('loading', 0);
+    pbWorker.postMessage({ type: 'init' });
+  } else if (pbWorkerReady && !pbStream) {
+    // Worker already ready but no camera yet — start it now
+    startPhotoBoothCamera();
+  }
+
+  // Build emoji grid UI
+  buildEmojiGrid();
+
+  // Setup event listeners
+  setupPhotoBoothListeners();
+
+  // Start render loop if model is ready and camera will be started
+  if (pbWorkerReady) {
+    updatePhotoBoothStatus('ready');
+    if (!pbStream) {
+      startPhotoBoothCamera();
+    } else if (!pbIsRunning) {
+      pbIsRunning = true;
+      startPhotoBoothRenderLoop();
+    }
+  }
+}
+
+function updatePhotoBoothStatus(state, progress = 0, detail = '') {
+  const badge = document.getElementById('pb-status-badge');
+  if (!badge) return;
+
+  if (state === 'loading') {
+    badge.textContent = '⬇️ Downloading model…';
+    badge.style.color = 'var(--primary)';
+  } else if (state === 'ready') {
+    badge.textContent = '✅ Model ready — camera will start automatically';
+    badge.style.color = 'var(--success, #22c55e)';
+  } else if (state === 'error') {
+    badge.textContent = `❌ Error: ${detail || 'failed to load'}`;
+    badge.style.color = 'var(--danger, #ef4444)';
+  }
+}
+
+function buildEmojiGrid() {
+  const grid = document.getElementById('pb-emoji-grid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+  PB_EMOJI_PRESETS.forEach((preset, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pb-emoji-btn';
+    btn.title = preset.name;
+    btn.textContent = preset.emoji;
+    btn.setAttribute('data-preset-idx', idx);
+    btn.addEventListener('click', () => addPresetDecoration(idx));
+    grid.appendChild(btn);
+  });
+}
+
+function setupPhotoBoothListeners() {
+  // Mode toggle buttons
+  const mappedBtn = document.getElementById('pb-mode-pose-mapped');
+  const freeBtn = document.getElementById('pb-mode-free');
+
+  if (mappedBtn) {
+    mappedBtn.addEventListener('click', () => setPhotoBoothMode('pose-mapped'));
+  }
+  if (freeBtn) {
+    freeBtn.addEventListener('click', () => setPhotoBoothMode('free'));
+  }
+
+  // Camera select population
+  populateCameraSelect();
+
+  // File upload button triggers hidden input
+  const uploadBtn = document.getElementById('btn-pb-upload');
+  const fileInput = document.getElementById('pb-upload-input');
+  if (uploadBtn && fileInput) {
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handlePhotoBoothFileUpload);
+  }
+
+  // Capture button
+  const captureBtn = document.getElementById('btn-pb-capture');
+  if (captureBtn) {
+    captureBtn.addEventListener('click', handlePhotoBoothCapture);
+  }
+
+  // Download button in captured preview
+  const downloadBtn = document.getElementById('btn-pb-download');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', handlePhotoBoothDownload);
+  }
+
+  // Retake button in captured preview
+  const retakeBtn = document.getElementById('btn-pb-retake');
+  if (retakeBtn) {
+    retakeBtn.addEventListener('click', handlePhotoBoothRetake);
+  }
+
+  // Remove decoration button
+  const removeBtn = document.getElementById('btn-pb-remove-deco');
+  if (removeBtn) {
+    removeBtn.addEventListener('click', handleRemoveSelectedDecoration);
+  }
+
+  // Scale/rotation sliders for selected decoration
+  const scaleSlider = document.getElementById('pb-deco-scale');
+  const rotationSlider = document.getElementById('pb-deco-rotation');
+  if (scaleSlider) {
+    scaleSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      const label = document.getElementById('pb-deco-scale-val');
+      if (label) label.textContent = `${val}%`;
+      updateSelectedDecorationTransform();
+    });
+  }
+  if (rotationSlider) {
+    rotationSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      const label = document.getElementById('pb-deco-rotation-val');
+      if (label) label.textContent = `${val}°`;
+      updateSelectedDecorationTransform();
+    });
+  }
+
+  // Visible checkbox for selected decoration
+  const visibleCb = document.getElementById('pb-deco-visible');
+  if (visibleCb) {
+    visibleCb.addEventListener('change', () => {
+      if (pbSelectedDecorationIdx !== null && pbDecorations[pbSelectedDecorationIdx]) {
+        pbDecorations[pbSelectedDecorationIdx].visible = visibleCb.checked;
+        renderPhotoBoothComposite();
+        updateDecorationListUI();
+      }
+    });
+  }
+
+  // Click on composite canvas in free mode to place decoration
+  const compositeCanvas = document.getElementById('pb-composite-canvas');
+  if (compositeCanvas) {
+    compositeCanvas.addEventListener('click', handleCompositeCanvasClick);
+  }
+}
+
+async function populateCameraSelect() {
+  const select = document.getElementById('pb-camera-select');
+  if (!select) return;
+
+  try {
+    // Request permission first to enumerate devices
+    await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+
+    select.innerHTML = '';
+    videoDevices.forEach((device, idx) => {
+      const option = document.createElement('option');
+      option.value = device.deviceId;
+      option.textContent = device.label || `Camera ${idx + 1}`;
+      if (idx === 0) option.selected = true; // Default to first camera
+      select.appendChild(option);
+    });
+
+    // Revoke the test stream
+    const testStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    testStream.getTracks().forEach(t => t.stop());
+  } catch (err) {
+    console.warn('Could not enumerate cameras:', err);
+    // Fallback: add a generic option
+    select.innerHTML = '<option value="">Default Camera</option>';
+  }
+
+  // Listen for device changes
+  navigator.mediaDevices.addEventListener('devicechange', () => {
+    populateCameraSelect();
+  });
+}
+
+async function startPhotoBoothCamera() {
+  if (pbStream) return; // Already have a stream
+
+  try {
+    const cameraSelect = document.getElementById('pb-camera-select');
+    const deviceId = cameraSelect ? cameraSelect.value : undefined;
+
+    const constraints = {
+      video: {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        deviceId: deviceId ? { exact: deviceId } : undefined,
+        facingMode: deviceId ? undefined : 'user',
+      },
+      audio: false,
+    };
+
+    pbStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    // Create a video element to play the stream (off-screen)
+    const video = document.createElement('video');
+    video.id = 'pb-video-source';
+    video.autoplay = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.style.display = 'none'; // Off-screen, we render to canvas
+    document.body.appendChild(video);
+    video.srcObject = pbStream;
+    await video.play();
+
+    // Hide placeholder
+    const placeholder = document.getElementById('pb-placeholder');
+    if (placeholder) placeholder.style.display = 'none';
+
+    // Start render loop
+    if (!pbIsRunning) {
+      pbIsRunning = true;
+      startPhotoBoothRenderLoop();
+    }
+
+  } catch (err) {
+    console.error('Failed to start photo booth camera:', err);
+    updatePhotoBoothStatus('error', 0, 'Camera access denied');
+    // Re-show placeholder with error message
+    const placeholder = document.getElementById('pb-placeholder');
+    if (placeholder) {
+      placeholder.innerHTML = `
+        <span style="font-size:2.5rem;">📷</span>
+        <span style="font-size:0.85rem;">Camera access denied</span>
+        <button type="button" id="btn-pb-retry-camera" class="btn-primary btn-sm">Retry</button>
+      `;
+      const retryBtn = document.getElementById('btn-pb-retry-camera');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          placeholder.innerHTML = '';
+          startPhotoBoothCamera();
+        });
+      }
+    }
+  }
+}
+
+function startPhotoBoothRenderLoop() {
+  function loop(timestamp) {
+    if (!pbIsRunning || !pbStream) return;
+
+    // Draw current video frame to composite canvas (mirrored for selfie view)
+    renderPhotoBoothComposite();
+
+    // Sample pose detection at ~2fps
+    if (timestamp >= pbNextSampleAt && pbWorkerReady && pbLastPose === null) {
+      sampleForPoseDetection();
+      pbNextSampleAt = timestamp + pbSampleIntervalMs;
+    }
+
+    pbAnimFrameId = requestAnimationFrame(loop);
+  }
+
+  pbAnimFrameId = requestAnimationFrame(loop);
+}
+
+function renderPhotoBoothComposite() {
+  const video = document.getElementById('pb-video-source');
+  if (!video || video.readyState < 2) return; // Video not ready
+
+  let W, H;
+  try {
+    W = video.videoWidth;
+    H = video.videoHeight;
+  } catch (e) {
+    W = 640;
+    H = 480;
+  }
+
+  if (W === 0 || H === 0) return;
+
+  const canvas = document.getElementById('pb-composite-canvas');
+  if (!canvas) return;
+
+  // Resize canvas to match video resolution for sharp rendering
+  if (canvas.width !== W || canvas.height !== H) {
+    canvas.width = W;
+    canvas.height = H;
+  }
+
+  const ctx = canvas.getContext('2d');
+
+  // Clear and draw mirrored video frame
+  ctx.save();
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, -W, 0, W, H);
+  ctx.restore();
+
+  // Draw decorations based on current pose and mode
+  if (pbLastPose && pbMode === 'pose-mapped') {
+    drawDecorationsMappedToPose(ctx, W, H);
+  } else if (pbMode === 'free') {
+    drawDecorationsAtPositions(ctx, W, H);
+  }
+
+  // Draw pose skeleton overlay (optional, for debugging/visual feedback)
+  if (pbLastPose && document.getElementById('pose-show-skeleton')?.checked !== false) {
+    drawPoseSkeletonOverlay(ctx, W, H);
+  }
+}
+
+function drawDecorationsMappedToPose(ctx, canvasW, canvasH) {
+  const { keypoints, scores } = pbLastPose;
+  if (!keypoints || keypoints.length === 0) return;
+
+  // Normalize keypoints from [0,1] to pixel coordinates and mirror (since video is mirrored)
+  const posePixels = keypoints.map((kp, i) => {
+    const x = (1 - kp[0]) * canvasW; // Mirror X coordinate
+    const y = kp[1] * canvasH;
+    return [x, y];
+  });
+
+  pbDecorations.forEach((deco, idx) => {
+    if (!deco.visible) return;
+    if (deco.type !== 'emoji') return;
+
+    // Find which joint this decoration is mapped to
+    const preset = PB_EMOJI_PRESETS.find(p => p.emoji === deco.content);
+    if (!preset || !preset.joints) return;
+
+    // Use the first joint for positioning, or average of all joints
+    let centerX, centerY;
+    if (preset.joints.length === 1) {
+      const [x, y] = posePixels[preset.joints[0]] || [canvasW / 2, canvasH / 2];
+      centerX = x;
+      centerY = y;
+    } else {
+      // Average position of all mapped joints
+      let sumX = 0, sumY = 0, count = 0;
+      preset.joints.forEach(jointIdx => {
+        if (jointIdx < posePixels.length) {
+          const [x, y] = posePixels[jointIdx];
+          sumX += x;
+          sumY += y;
+          count++;
+        }
+      });
+      centerX = sumX / count;
+      centerY = sumY / count;
+    }
+
+    // Apply scale and rotation
+    const scale = (deco.scale || 80) / 100;
+    const rotation = (deco.rotation || 0) * Math.PI / 180;
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotation);
+    ctx.scale(scale, scale);
+
+    // Draw emoji text centered at the position
+    const fontSize = 64;
+    ctx.font = `${fontSize}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(deco.content, 0, 0);
+
+    ctx.restore();
+  });
+}
+
+function drawDecorationsAtPositions(ctx, canvasW, canvasH) {
+  pbDecorations.forEach((deco, idx) => {
+    if (!deco.visible) return;
+
+    const x = deco.x || canvasW / 2;
+    const y = deco.y || canvasH / 2;
+    const scale = (deco.scale || 80) / 100;
+    const rotation = (deco.rotation || 0) * Math.PI / 180;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.scale(scale, scale);
+
+    if (deco.type === 'emoji') {
+      // Draw emoji text
+      const fontSize = 64;
+      ctx.font = `${fontSize}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(deco.content, 0, 0);
+    } else if (deco.type === 'image' && deco.imageData) {
+      // Draw uploaded image
+      try {
+        const img = new Image();
+        img.src = deco.imageData;
+        // For synchronous rendering, we'd need to pre-load images.
+        // For now, skip if not loaded (would cause flicker)
+        if (img.complete && img.naturalWidth > 0) {
+          const size = Math.min(canvasW, canvasH) * scale * 0.3;
+          ctx.drawImage(img, -size / 2, -size / 2, size, size);
+        }
+      } catch (e) {
+        // Ignore image loading errors
+      }
+    }
+
+    ctx.restore();
+  });
+}
+
+function drawPoseSkeletonOverlay(ctx, canvasW, canvasH) {
+  const { keypoints } = pbLastPose;
+  if (!keypoints || keypoints.length === 0) return;
+
+  // COCO-17 skeleton connections (same as pose.worker.js)
+  const SKELETON_CONNECTIONS = [
+    [15, 13], [13, 11], [16, 14], [14, 12], // legs
+    [11, 12],                                 // hips
+    [5, 11], [6, 12],                         // torso
+    [5, 6],                                   // shoulders
+    [5, 7], [6, 8],                           // upper arms
+    [7, 9], [8, 10],                          // lower arms
+    [1, 2],                                   // eyes
+    [0, 1], [0, 2],                           // nose-eyes
+    [1, 3], [2, 4],                           // eyes-ears
+    [3, 5], [4, 6],                           // ears-shoulders
+  ];
+
+  const skeletonColor = 'rgba(255, 255, 0, 0.7)';
+  const lineWidth = 3;
+
+  ctx.strokeStyle = skeletonColor;
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+
+  // Normalize keypoints from [0,1] to pixel coordinates and mirror X
+  const posePixels = keypoints.map((kp, i) => {
+    const x = (1 - kp[0]) * canvasW;
+    const y = kp[1] * canvasH;
+    return [x, y];
+  });
+
+  SKELETON_CONNECTIONS.forEach(([i, j]) => {
+    if (i >= posePixels.length || j >= posePixels.length) return;
+    const [x1, y1] = posePixels[i];
+    const [x2, y2] = posePixels[j];
+
+    // Skip if either point is too low confidence
+    // (We don't have scores here, so just draw all connections)
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  });
+
+  // Draw keypoint dots
+  const dotColor = '#FFD700';
+  const dotRadius = 5;
+  posePixels.forEach(([x, y]) => {
+    ctx.fillStyle = dotColor;
+    ctx.beginPath();
+    ctx.arc(x, y, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+async function sampleForPoseDetection() {
+  const video = document.getElementById('pb-video-source');
+  if (!video || video.readyState < 2) return;
+
+  let W, H;
+  try {
+    W = video.videoWidth;
+    H = video.videoHeight;
+  } catch (e) {
+    W = 640;
+    H = 480;
+  }
+
+  if (W === 0 || H === 0) return;
+
+  // Capture frame from video to offscreen canvas
+  const captureCanvas = document.createElement('canvas');
+  captureCanvas.width = W;
+  captureCanvas.height = H;
+  const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
+
+  // Mirror the capture (same as displayed view)
+  captureCtx.save();
+  captureCtx.scale(-1, 1);
+  captureCtx.drawImage(video, -W, 0, W, H);
+  captureCtx.restore();
+
+  const imageData = captureCtx.getImageData(0, 0, W, H);
+
+  // Send to worker for pose detection
+  pbWorker.postMessage({
+    type: 'estimate',
+    data: {
+      width: W,
+      height: H,
+      rgbaData: imageData.data.buffer,
+    },
+  }, [imageData.data.buffer]); // Transferable! Zero-copy
+}
+
+function setPhotoBoothMode(mode) {
+  pbMode = mode;
+
+  const mappedBtn = document.getElementById('pb-mode-pose-mapped');
+  const freeBtn = document.getElementById('pb-mode-free');
+
+  if (mappedBtn && freeBtn) {
+    if (mode === 'pose-mapped') {
+      mappedBtn.classList.add('active-mode', 'btn-primary');
+      mappedBtn.classList.remove('btn-secondary');
+      freeBtn.classList.remove('active-mode', 'btn-primary');
+      freeBtn.classList.add('btn-secondary');
+    } else {
+      freeBtn.classList.add('active-mode', 'btn-primary');
+      freeBtn.classList.remove('btn-secondary');
+      mappedBtn.classList.remove('active-mode', 'btn-primary');
+      mappedBtn.classList.add('btn-secondary');
+    }
+  }
+
+  // Re-render immediately to reflect mode change
+  renderPhotoBoothComposite();
+}
+
+function addPresetDecoration(presetIdx) {
+  const preset = PB_EMOJI_PRESETS[presetIdx];
+  if (!preset) return;
+
+  let x, y;
+
+  if (pbMode === 'pose-mapped' && pbLastPose) {
+    // Place at the first mapped joint position
+    const canvas = document.getElementById('pb-composite-canvas');
+    const W = canvas ? canvas.width : 640;
+    const H = canvas ? canvas.height : 480;
+
+    if (preset.joints && preset.joints.length > 0) {
+      const jointIdx = preset.joints[0];
+      const kp = pbLastPose.keypoints[jointIdx];
+      if (kp) {
+        // Mirror X coordinate and convert from [0,1] to pixel coords
+        x = (1 - kp[0]) * W;
+        y = kp[1] * H;
+      } else {
+        x = W / 2;
+        y = H / 2;
+      }
+    } else {
+      x = W / 2;
+      y = H / 2;
+    }
+  } else {
+    // Free mode: place at center of canvas (user can drag later)
+    const canvas = document.getElementById('pb-composite-canvas');
+    const W = canvas ? canvas.width : 640;
+    const H = canvas ? canvas.height : 480;
+    x = W / 2;
+    y = H / 2;
+  }
+
+  const newDeco = {
+    id: `deco-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: 'emoji',
+    content: preset.emoji,
+    x,
+    y,
+    scale: 80,
+    rotation: 0,
+    visible: true,
+  };
+
+  pbDecorations.push(newDeco);
+  pbSelectedDecorationIdx = pbDecorations.length - 1;
+
+  updateDecorationListUI();
+  updateSelectedDecorationControls();
+  renderPhotoBoothComposite();
+}
+
+function handlePhotoBoothFileUpload(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // Validate file type
+  const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+  if (!validTypes.includes(file.type)) {
+    alert('Please upload a PNG, JPEG, GIF, or WebP image.');
+    e.target.value = ''; // Reset input
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const imageDataUrl = event.target.result;
+
+    let x, y;
+    if (pbMode === 'pose-mapped' && pbLastPose) {
+      const canvas = document.getElementById('pb-composite-canvas');
+      const W = canvas ? canvas.width : 640;
+      const H = canvas ? canvas.height : 480;
+      x = W / 2;
+      y = H / 2;
+    } else {
+      const canvas = document.getElementById('pb-composite-canvas');
+      const W = canvas ? canvas.width : 640;
+      const H = canvas ? canvas.height : 480;
+      x = W / 2;
+      y = H / 2;
+    }
+
+    const newDeco = {
+      id: `deco-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'image',
+      content: file.name,
+      imageData: imageDataUrl,
+      x,
+      y,
+      scale: 80,
+      rotation: 0,
+      visible: true,
+    };
+
+    pbDecorations.push(newDeco);
+    pbSelectedDecorationIdx = pbDecorations.length - 1;
+
+    updateDecorationListUI();
+    updateSelectedDecorationControls();
+    renderPhotoBoothComposite();
+
+    // Show uploaded file name in list
+    const uploadList = document.getElementById('pb-uploaded-list');
+    if (uploadList) {
+      uploadList.innerHTML += `<div>✅ ${file.name}</div>`;
+    }
+  };
+
+  reader.readAsDataURL(file);
+  e.target.value = ''; // Reset input for next upload
+}
+
+function handleCompositeCanvasClick(e) {
+  if (pbMode !== 'free') return;
+  if (!pbSelectedDecorationIdx && pbDecorations.length === 0) return;
+
+  const canvas = document.getElementById('pb-composite-canvas');
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  if (pbSelectedDecorationIdx !== null && pbDecorations[pbSelectedDecorationIdx]) {
+    // Move selected decoration to click position
+    pbDecorations[pbSelectedDecorationIdx].x = x;
+    pbDecorations[pbSelectedDecorationIdx].y = y;
+    renderPhotoBoothComposite();
+  } else if (pbDecorations.length > 0) {
+    // If no selection but decorations exist, move the last one
+    const idx = pbDecorations.length - 1;
+    pbDecorations[idx].x = x;
+    pbDecorations[idx].y = y;
+    pbSelectedDecorationIdx = idx;
+    renderPhotoBoothComposite();
+    updateDecorationListUI();
+    updateSelectedDecorationControls();
+  }
+}
+
+function handleRemoveSelectedDecoration() {
+  if (pbSelectedDecorationIdx === null || !pbDecorations[pbSelectedDecorationIdx]) return;
+
+  pbDecorations.splice(pbSelectedDecorationIdx, 1);
+  pbSelectedDecorationIdx = null;
+
+  updateDecorationListUI();
+  document.getElementById('pb-deco-controls-group').style.display = 'none';
+  renderPhotoBoothComposite();
+}
+
+function handlePhotoBoothCapture() {
+  const canvas = document.getElementById('pb-composite-canvas');
+  if (!canvas) return;
+
+  // Create a high-res capture canvas (use actual canvas dimensions)
+  const captureCanvas = document.createElement('canvas');
+  captureCanvas.width = canvas.width;
+  captureCanvas.height = canvas.height;
+  const captureCtx = captureCanvas.getContext('2d');
+
+  // Draw the composite scene at full resolution
+  // We need to re-render without mirroring for the final capture (or keep mirrored)
+  // For consistency, we'll use the same mirrored view
+  captureCtx.save();
+  captureCtx.scale(-1, 1);
+  captureCtx.drawImage(canvas, -canvas.width, 0, canvas.width, canvas.height);
+  captureCtx.restore();
+
+  // Convert to PNG data URL
+  const dataUrl = captureCanvas.toDataURL('image/png');
+
+  // Show captured preview
+  showCapturedPreview(dataUrl);
+}
+
+function showCapturedPreview(dataUrl) {
+  const preview = document.getElementById('pb-captured-preview');
+  const img = document.getElementById('pb-captured-img');
+
+  if (!preview || !img) return;
+
+  img.src = dataUrl;
+  preview.style.display = 'block';
+
+  // Scroll to preview
+  setTimeout(() => {
+    preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+function handlePhotoBoothDownload() {
+  const img = document.getElementById('pb-captured-img');
+  if (!img || !img.src) return;
+
+  // Create download link
+  const a = document.createElement('a');
+  a.href = img.src;
+  a.download = `photo-booth-${Date.now()}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function handlePhotoBoothRetake() {
+  // Hide preview and clear decorations for fresh start
+  const preview = document.getElementById('pb-captured-preview');
+  if (preview) {
+    preview.style.display = 'none';
+  }
+
+  // Optional: clear all decorations on retake
+  // pbDecorations = [];
+  // pbSelectedDecorationIdx = null;
+  // updateDecorationListUI();
+  // renderPhotoBoothComposite();
+}
+
+function updateDecorationListUI() {
+  const list = document.getElementById('pb-decoration-list');
+  if (!list) return;
+
+  if (pbDecorations.length === 0) {
+    list.innerHTML = '<div style="font-size:0.8rem;color:var(--text-secondary);padding:0.5rem;">No decorations yet. Click an emoji below to add one.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  pbDecorations.forEach((deco, idx) => {
+    const item = document.createElement('div');
+    item.className = 'pb-deco-item';
+    if (idx === pbSelectedDecorationIdx) {
+      item.classList.add('selected');
+    }
+
+    const icon = deco.type === 'emoji' ? deco.content : '🖼️';
+    const label = deco.type === 'emoji' ? deco.content : deco.content; // Use name for images
+
+    item.innerHTML = `
+      <span style="font-size:1.2rem;">${icon}</span>
+      <span style="flex:1;font-size:0.85rem;color:var(--text-secondary);">${label || 'Decoration'}</span>
+      ${deco.visible ? '' : '<span style="font-size:0.7rem;color:var(--danger);">👁️‍🗨️</span>'}
+    `;
+
+    item.addEventListener('click', () => {
+      pbSelectedDecorationIdx = idx;
+      updateDecorationListUI();
+      updateSelectedDecorationControls();
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function updateSelectedDecorationControls() {
+  const controlsGroup = document.getElementById('pb-deco-controls-group');
+  if (!controlsGroup) return;
+
+  if (pbSelectedDecorationIdx === null || !pbDecorations[pbSelectedDecorationIdx]) {
+    controlsGroup.style.display = 'none';
+    return;
+  }
+
+  const deco = pbDecorations[pbSelectedDecorationIdx];
+  controlsGroup.style.display = ''; // Show
+
+  // Update checkbox and sliders
+  const visibleCb = document.getElementById('pb-deco-visible');
+  const scaleSlider = document.getElementById('pb-deco-scale');
+  const rotationSlider = document.getElementById('pb-deco-rotation');
+
+  if (visibleCb) {
+    visibleCb.checked = deco.visible;
+  }
+  if (scaleSlider) {
+    scaleSlider.value = deco.scale || 80;
+    const label = document.getElementById('pb-deco-scale-val');
+    if (label) label.textContent = `${deco.scale || 80}%`;
+  }
+  if (rotationSlider) {
+    rotationSlider.value = deco.rotation || 0;
+    const label = document.getElementById('pb-deco-rotation-val');
+    if (label) label.textContent = `${deco.rotation || 0}°`;
+  }
+}
+
+function updateSelectedDecorationTransform() {
+  if (pbSelectedDecorationIdx === null || !pbDecorations[pbSelectedDecorationIdx]) return;
+
+  const deco = pbDecorations[pbSelectedDecorationIdx];
+  const scaleSlider = document.getElementById('pb-deco-scale');
+  const rotationSlider = document.getElementById('pb-deco-rotation');
+
+  if (scaleSlider) {
+    deco.scale = parseInt(scaleSlider.value, 10);
+  }
+  if (rotationSlider) {
+    deco.rotation = parseInt(rotationSlider.value, 10);
+  }
+
+  renderPhotoBoothComposite();
+}
 
 // --- FIRE EARLY RETIREMENT CALCULATOR LOGIC ---
 const fireCurrentAge = document.getElementById('fire-current-age');
