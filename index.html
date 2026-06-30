@@ -2476,6 +2476,21 @@ Supported browsers:
 
             <label>Preview <span id="image-upscaler-dims" style="font-weight: 400; color: var(--text-secondary); font-size: 0.8rem;"></span></label>
 
+            <div id="image-upscaler-live" class="upscale-live bg-checkerboard" style="display: none;">
+              <canvas id="image-upscaler-live-canvas" class="upscale-live-canvas"></canvas>
+              <canvas id="image-upscaler-live-fx" class="upscale-live-fx"></canvas>
+              <div class="upscale-live-status">
+                <div class="upscale-live-status-row">
+                  <span class="upscale-live-spinner"></span>
+                  <span id="image-upscaler-live-text">Upscaling…</span>
+                  <span id="image-upscaler-live-pct" class="upscale-live-pct">0%</span>
+                </div>
+                <div class="upscale-live-bar">
+                  <div id="image-upscaler-live-fill" class="upscale-live-fill"></div>
+                </div>
+              </div>
+            </div>
+
             <div id="image-upscaler-compare" class="upscale-compare bg-checkerboard" style="display: none;">
               <img id="image-upscaler-before-img" class="upscale-compare-img" alt="Resized original" />
               <div id="image-upscaler-after-wrap" class="upscale-compare-after">

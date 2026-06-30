@@ -128,26 +128,52 @@ self.onmessage = async (e) => {
           const cr = tx + tw < width ? half * factor : 0;
           const cb = ty + th < height ? half * factor : 0;
 
+          // Build a standalone RGBA buffer for just the interior region we place,
+          // so the main thread can paint this tile into a live preview as it
+          // arrives (progressive reveal) without copying the whole output.
+          const regionX = tx * factor + cl;
+          const regionY = ty * factor + ct;
+          const regionW = (otw - cr) - cl;
+          const regionH = (oth - cb) - ct;
+          const regionRGBA = new Uint8ClampedArray(regionW * regionH * 4);
+
           for (let y = ct; y < oth - cb; y++) {
             const oy = ty * factor + y;
             const srcRow = y * otw;
             const dstRow = oy * outW;
+            const regRow = (y - ct) * regionW;
             for (let x = cl; x < otw - cr; x++) {
               const ox = tx * factor + x;
               const si = (srcRow + x) * 3;
               const di = (dstRow + ox) * 4;
-              outRGBA[di] = res.data[si];
-              outRGBA[di + 1] = res.data[si + 1];
-              outRGBA[di + 2] = res.data[si + 2];
+              const ri = (regRow + (x - cl)) * 4;
+              const r = res.data[si];
+              const g = res.data[si + 1];
+              const b = res.data[si + 2];
+              outRGBA[di] = r;
+              outRGBA[di + 1] = g;
+              outRGBA[di + 2] = b;
               outRGBA[di + 3] = 255;
+              regionRGBA[ri] = r;
+              regionRGBA[ri + 1] = g;
+              regionRGBA[ri + 2] = b;
+              regionRGBA[ri + 3] = 255;
             }
           }
 
           done++;
-          self.postMessage({
-            type: 'progress',
-            data: { current: done, total: totalTiles }
-          });
+          self.postMessage(
+            {
+              type: 'progress',
+              data: {
+                current: done,
+                total: totalTiles,
+                tile: { x: regionX, y: regionY, w: regionW, h: regionH }
+              },
+              rgba: regionRGBA
+            },
+            [regionRGBA.buffer]
+          );
         }
       }
 

@@ -270,10 +270,13 @@ function initUpscaleWorker() {
         } else if (data === 'ready') {
           isUpscaleModelLoaded = true;
           if (isUpscaling) {
-            // Model is ready; inference is about to start streaming tile progress.
-            overlayText.innerText = 'Upscaling…';
-            overlayProgress.innerText = 'Preparing tiles…';
-            overlayFill.classList.add('indeterminate');
+            // Model is ready; hand off from the blocking overlay to the live
+            // tile-by-tile preview, which fills in as tiles stream back.
+            overlay.style.display = 'none';
+            document.getElementById('image-upscaler-live').style.display = 'block';
+            document.getElementById('image-upscaler-live-text').innerText = 'Preparing tiles…';
+            document.getElementById('image-upscaler-live-pct').innerText = '';
+            document.getElementById('image-upscaler-live-fill').style.width = '0%';
           } else {
             overlay.style.display = 'none';
             btnRun.disabled = !upscaleImageElement;
@@ -281,6 +284,7 @@ function initUpscaleWorker() {
           }
         } else if (data === 'error') {
           overlay.style.display = 'none';
+          document.getElementById('image-upscaler-live').style.display = 'none';
           isUpscaling = false;
           btnRun.disabled = false;
           btnRun.innerText = 'AI Model Error';
@@ -288,12 +292,12 @@ function initUpscaleWorker() {
       }
 
       else if (type === 'progress') {
-        overlay.style.display = 'flex';
         const pct = data.total ? Math.round((data.current / data.total) * 100) : 0;
-        overlayText.innerText = `Upscaling… tile ${data.current} / ${data.total}`;
-        overlayProgress.innerText = `${pct}%`;
-        overlayFill.classList.remove('indeterminate');
-        overlayFill.style.width = `${pct}%`;
+        if (rgba && data.tile) drawUpscaleTile(rgba, data.tile);
+        document.getElementById('image-upscaler-live-text').innerText =
+          `Upscaling… tile ${data.current} / ${data.total}`;
+        document.getElementById('image-upscaler-live-pct').innerText = `${pct}%`;
+        document.getElementById('image-upscaler-live-fill').style.width = `${pct}%`;
       }
 
       else if (type === 'upscale_result') {
@@ -304,6 +308,7 @@ function initUpscaleWorker() {
         console.error('Upscale Worker Error:', error);
         alert('Image upscaling error: ' + error);
         overlay.style.display = 'none';
+        document.getElementById('image-upscaler-live').style.display = 'none';
         isUpscaling = false;
         btnRun.disabled = false;
         btnRun.innerText = '🔬 Upscale Image';
@@ -5325,6 +5330,43 @@ let upscaleImageElement = null;   // <img> holding the loaded source image
 let upscaleScale = 2;             // selected upscale factor (2 or 4)
 let isUpscaling = false;          // true while a run is in flight
 let upscaleResultCanvas = null;   // canvas holding the AI super-resolution output
+let upscaleLiveCtx = null;        // 2D ctx of the live tile-preview canvas
+let upscaleLiveFxCtx = null;      // 2D ctx of the highlight overlay canvas
+
+// Prepare the live preview: a full-resolution canvas seeded with a blurry
+// naive-resized baseline that each AI tile sharpens over as it streams in.
+function setupUpscaleLive(outW, outH) {
+  const canvas = document.getElementById('image-upscaler-live-canvas');
+  const fx = document.getElementById('image-upscaler-live-fx');
+  canvas.width = outW;
+  canvas.height = outH;
+  fx.width = outW;
+  fx.height = outH;
+  upscaleLiveCtx = canvas.getContext('2d');
+  upscaleLiveFxCtx = fx.getContext('2d');
+  upscaleLiveCtx.imageSmoothingEnabled = true;
+  upscaleLiveCtx.imageSmoothingQuality = 'medium';
+  upscaleLiveCtx.drawImage(upscaleImageElement, 0, 0, outW, outH);
+  upscaleLiveFxCtx.clearRect(0, 0, outW, outH);
+}
+
+// Paint one finished tile into the live preview and flash a glow on it.
+function drawUpscaleTile(rgba, tile) {
+  if (!upscaleLiveCtx) return;
+  const { x, y, w, h } = tile;
+  upscaleLiveCtx.putImageData(new ImageData(rgba, w, h), x, y);
+
+  const fx = upscaleLiveFxCtx;
+  fx.clearRect(0, 0, fx.canvas.width, fx.canvas.height);
+  fx.save();
+  const lw = Math.max(2, Math.round(fx.canvas.width / 360));
+  fx.lineWidth = lw;
+  fx.strokeStyle = 'rgba(99, 102, 241, 0.95)';
+  fx.shadowColor = 'rgba(99, 102, 241, 0.9)';
+  fx.shadowBlur = 20;
+  fx.strokeRect(x + lw / 2, y + lw / 2, w - lw, h - lw);
+  fx.restore();
+}
 
 // Cap the input resolution per factor so peak memory and runtime stay bounded.
 // Larger sources are downscaled (preserving aspect) before upscaling.
@@ -5372,6 +5414,7 @@ function resetImageUpscalerState() {
   document.getElementById('image-upscaler-upload-container').style.display = 'flex';
   document.getElementById('image-upscaler-file-name').style.display = 'none';
   document.getElementById('image-upscaler-compare').style.display = 'none';
+  document.getElementById('image-upscaler-live').style.display = 'none';
   document.getElementById('image-upscaler-placeholder').style.display = 'flex';
   document.getElementById('image-upscaler-dims').innerText = '';
   document.getElementById('image-upscaler-slider').value = 50;
@@ -5470,6 +5513,12 @@ document.getElementById('btn-run-image-upscaler').addEventListener('click', () =
   tctx.drawImage(upscaleImageElement, 0, 0, dims.inW, dims.inH);
   const imgData = tctx.getImageData(0, 0, dims.inW, dims.inH);
 
+  // Seed the live preview with the naive baseline; tiles sharpen over it once
+  // the model is ready and starts streaming results back.
+  setupUpscaleLive(dims.outW, dims.outH);
+  document.getElementById('image-upscaler-compare').style.display = 'none';
+  document.getElementById('image-upscaler-placeholder').style.display = 'none';
+
   upscaleWorker.postMessage(
     {
       type: 'upscale',
@@ -5502,6 +5551,7 @@ function handleUpscaleResult(result, rgba) {
   document.getElementById('image-upscaler-after-img').src = out.toDataURL('image/png');
 
   document.getElementById('image-upscaler-placeholder').style.display = 'none';
+  document.getElementById('image-upscaler-live').style.display = 'none';
   document.getElementById('image-upscaler-compare').style.display = 'block';
   document.getElementById('image-upscaler-dims').innerText = `— ${width} × ${height}px (${factor}x)`;
   document.getElementById('image-upscaler-slider').value = 50;
