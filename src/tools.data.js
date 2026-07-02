@@ -49,6 +49,16 @@ export const TOOLS = [
     uiClass: 'ready'
   },
   {
+    id: 'ai-baby-predictor',
+    title: 'AI Baby Appearance Predictor',
+    description: 'Upload a photo of each parent, pick a gender, and generate a playful AI face-blend preview of your future baby at ages 2, 6, 12, and 18.',
+    keywords: ['baby predictor', 'future baby', 'baby generator', 'face blend', 'baby face', 'what will my baby look like', 'baby maker', 'parents face merge', 'baby age progression'],
+    tags: ['AI', 'Image', 'Generator'],
+    category: 'Graphics',
+    icon: '👶',
+    uiClass: 'ready'
+  },
+  {
     id: 'image-vectorizer',
     title: 'PNG to SVG Vectorizer',
     description: 'Trace bitmap images (PNG, JPEG, WebP) into scalable vector graphics (SVG) using color edge contours, or rasterize SVGs back to PNG.',
@@ -1064,6 +1074,566 @@ export const TOOLS = [
     adTopics: ['resume writing services', 'job search platforms', 'interview preparation', 'career counseling']
   },
   {
+    id: 'code-beautifier',
+    title: 'Code Beautifier & Minifier',
+    description: 'Format or minify JavaScript, CSS, and HTML instantly in your browser with the full Prettier engine — no server needed.',
+    keywords: ['format code', 'beautify', 'minify', 'prettify', 'code formatter', 'JS format', 'CSS format', 'HTML format', 'code beautifier', 'prettier'],
+    tags: ['Code', 'Developer', 'Formatter'],
+    category: 'Developer',
+    icon: '✨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'graphql-formatter',
+    title: 'GraphQL Query Formatter & Validator',
+    description: 'Pretty-print, validate, and format GraphQL queries and schemas entirely in your browser with the official GraphQL.js engine.',
+    keywords: ['graphql', 'query formatter', 'graphql validator', 'graphql pretty print', 'graphql lint', 'graphql schema', 'gql', 'apollo'],
+    tags: ['Code', 'Developer', 'Formatter'],
+    category: 'Developer',
+    icon: '🔷',
+    uiClass: 'ready'
+  },
+  {
+    id: 'config-converter',
+    title: 'TOML ↔ JSON ↔ YAML Converter',
+    description: 'Convert between TOML, JSON, and YAML config formats with validation — all in your browser. Paste any format and get the others instantly.',
+    keywords: ['toml converter', 'yaml converter', 'json converter', 'config format', 'toml to json', 'yaml to toml', 'format converter', 'dotenv'],
+    tags: ['Code', 'Developer', 'Converter'],
+    category: 'Developer',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'env-validator',
+    title: '.env File Validator & Formatter',
+    description: 'Validate, sort, and clean .env files. Detect syntax errors, sort keys alphabetically, mask sensitive values, and export formatted output.',
+    keywords: ['dotenv', 'env file', 'environment variables', 'env validator', 'env formatter', 'sort env', 'mask secrets', 'lint dotenv'],
+    tags: ['Code', 'Developer', 'Validator'],
+    category: 'Developer',
+    icon: '📋',
+    uiClass: 'ready'
+  },
+  {
+    id: 'git-diff-viewer',
+    title: 'Git Diff Viewer (Patch/Unified)',
+    description: 'Paste a git diff or patch file and view it in unified or side-by-side format with syntax highlighting. Supports standard unified diff format.',
+    keywords: ['git diff', 'patch viewer', 'unified diff', 'side by side diff', 'code review', 'git patch', 'diff viewer'],
+    tags: ['Code', 'Developer', 'Viewer'],
+    category: 'Developer',
+    icon: '📄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'gitignore-generator',
+    title: '.gitignore Generator',
+    description: 'Generate a .gitignore file by selecting languages, frameworks, and editors. Combines templates and lets you customize before downloading.',
+    keywords: ['gitignore', 'git ignore', 'generator', 'templates', 'node', 'python', 'java', 'editor', 'ide'],
+    tags: ['Code', 'Developer', 'Generator'],
+    category: 'Developer',
+    icon: '📝',
+    uiClass: 'ready'
+  },
+  {
+    id: 'curl-converter',
+    title: 'cURL ↔ Fetch/Axios Converter',
+    description: 'Instantly convert cURL commands to JavaScript fetch() or axios code, and vice versa. Paste a curl command or JS snippet and get clean, ready-to-use output — no server calls.',
+    keywords: ['curl converter', 'fetch converter', 'axios converter', 'curl to js', 'js to curl', 'http request converter', 'api code generator', 'request builder'],
+    tags: ['Code', 'Developer', 'Converter'],
+    category: 'Developer',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'dockerfile-linter',
+    title: 'Dockerfile Linter & Best-Practice Checker',
+    description: 'Paste a Dockerfile and get instant feedback on anti-patterns, security issues, optimization opportunities, and layer-ordering best practices — all running client-side.',
+    keywords: ['dockerfile linter', 'docker lint', 'docker best practices', 'container optimization', 'layer ordering', 'security audit', 'docker check', 'dockerfile analyzer'],
+    tags: ['Code', 'Security'],
+    category: 'Developer',
+    icon: '🐳',
+    uiClass: 'ready'
+  },
+  {
+    id: 'crontab-builder',
+    title: 'Crontab Builder (Visual)',
+    description: 'Build cron expressions with a visual scheduler UI — select minutes, hours, days, months and weekdays, then preview the next run times. No server calls.',
+    keywords: ['cron builder', 'cron expression', 'schedule generator', 'crontab', 'task scheduler', 'cron tester', 'next run time'],
+    tags: ['Code', 'Productivity'],
+    category: 'Developer',
+    icon: '⏰',
+    uiClass: 'ready'
+  },
+  {
+    id: 'http-status-codes',
+    title: 'HTTP Status Code Reference & Tester',
+    description: 'Searchable reference of all HTTP status codes (1xx–5xx) with descriptions, use cases, and example scenarios. Filter by category or search by code.',
+    keywords: ['http status codes', 'status code reference', '200 404 500', 'http response codes', 'web development reference', 'api status codes'],
+    tags: ['Code', 'Network'],
+    category: 'Developer',
+    icon: '📋',
+    uiClass: 'ready'
+  },
+  {
+    id: 'json-path-query',
+    title: 'JSON Path / JMESPath Query Tester',
+    description: 'Live query JSON data with JSONPath or JMESPath expressions. Paste your JSON, enter a query, and see results highlighted in the original structure — all running client-side.',
+    keywords: ['jsonpath', 'jmespath', 'json query', 'json explorer', 'api response tester', 'aws jmespath', 'jsonpath expression'],
+    tags: ['Code', 'Data', 'Developer'],
+    category: 'Developer',
+    icon: '🔍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'code-snippet-screenshot',
+    title: 'Code Snippet Screenshot Generator',
+    description: 'Turn any code snippet into a beautiful, shareable image with syntax highlighting, themes, line numbers, and more — all rendered client-side in your browser.',
+    keywords: ['carbon', 'code screenshot', 'code image', 'syntax highlighter', 'share code', 'beautiful code', 'code export', 'png generator'],
+    tags: ['Code', 'Design', 'Developer'],
+    category: 'Graphics',
+    icon: '🖼️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'regex-cheatsheet',
+    title: 'Regex Cheatsheet & Library',
+    description: 'Searchable collection of common regular expressions with a live tester, syntax helper, and one-click copy — all running client-side in your browser.',
+    keywords: ['regex', 'regular expression', 'pattern matcher', 'regex tester', 'regex library', 'email validator', 'url regex', 'phone number regex'],
+    tags: ['Code', 'Developer', 'Reference'],
+    category: 'Developer',
+    icon: '🔣',
+    uiClass: 'ready'
+  },
+  {
+    id: 'semver-calculator',
+    title: 'Semantic Version (SemVer) Calculator',
+    description: 'Parse, compare, bump and validate semantic versions. Check version ranges, extract parts, and compute differences between releases — all running client-side.',
+    keywords: ['semver', 'version calculator', 'version comparison', 'npm version', 'package.json', 'major minor patch', 'version range'],
+    tags: ['Code', 'Developer', 'Calculator'],
+    category: 'Developer',
+    icon: '🔢',
+    uiClass: 'ready'
+  },
+  {
+    id: 'htaccess-nginx-generator',
+    title: 'HTAccess / Nginx Redirect Generator',
+    description: 'Build redirect rules visually and generate .htaccess or Nginx configuration code. Supports 301/302 redirects, regex patterns, query strings, and more — all generated client-side.',
+    keywords: ['htaccess', 'nginx redirect', '301 redirect', 'url rewrite', 'apache config', 'web server config', 'redirect generator'],
+    tags: ['Code', 'Developer', 'Network'],
+    category: 'Developer',
+    icon: '🔀',
+    uiClass: 'ready'
+  },
+  {
+    id: 'api-mock-response',
+    title: 'API Mock Response Generator',
+    description: 'Define a JSON schema and generate realistic mock API responses. Supports string, integer, array, object types with format hints — all generated client-side.',
+    keywords: ['mock api', 'fake json', 'api mock', 'json generator', 'schema to data', 'api testing', 'stub response'],
+    tags: ['Code', 'Developer', 'Generator'],
+    category: 'Developer',
+    icon: '🔀',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ws-tester',
+    title: 'WebSocket Tester / Echo Client',
+    description: 'Connect to any WebSocket server and inspect messages in real-time. Debug protocols, test APIs, or experiment with WS-based services — all from your browser.',
+    keywords: ['websocket', 'wss', 'echo client', 'ws tester', 'socket debug', 'real-time messaging', 'protocol testing'],
+    tags: ['Developer', 'Network', 'Tester'],
+    category: 'Developer',
+    icon: '🔌',
+    uiClass: 'ready'
+  },
+  {
+    id: 'html-to-jsx',
+    title: 'HTML to JSX Converter',
+    description: 'Convert raw HTML markup to React-compatible JSX syntax. Handles className, htmlFor, inline styles, self-closing tags, boolean attributes, and event handlers — all in your browser.',
+    keywords: ['html to jsx', 'react converter', 'jsx generator', 'html react', 'markup converter', 'component code gen'],
+    tags: ['Code', 'Developer', 'Converter'],
+    category: 'Developer',
+    icon: '⚛️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-to-tailwind',
+    title: 'CSS to Tailwind Converter',
+    description: 'Map raw CSS declarations to equivalent Tailwind utility classes. Handles colors, spacing, sizing, typography, flexbox, grid, borders, shadows, and more — all in your browser.',
+    keywords: ['css to tailwind', 'tailwind converter', 'utility classes', 'css convert', 'tailwind gen', 'style to class'],
+    tags: ['Code', 'Developer', 'Converter'],
+    category: 'Developer',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'code-complexity',
+    title: 'Code Complexity / LOC Analyzer',
+    description: 'Paste source code and get detailed metrics: total lines, blank lines, comment lines, function count, cyclomatic complexity estimate, and more. Supports JavaScript, CSS, HTML, Python, and more.',
+    keywords: ['loc counter', 'code analyzer', 'complexity metric', 'lines of code', 'cyclomatic complexity', 'code metrics'],
+    tags: ['Code', 'Developer', 'Analyzer'],
+    category: 'Developer',
+    icon: '📊',
+    uiClass: 'ready'
+  },
+  {
+    id: 'find-replace',
+    title: 'Find & Replace (Regex Bulk Editor)',
+    description: 'Paste text and apply multiple find/replace patterns at once. Toggle regex mode and case sensitivity per pattern, preview changes before applying — all in your browser.',
+    keywords: ['find replace', 'bulk editor', 'regex replace', 'multi replace', 'text editor', 'search replace'],
+    tags: ['Text', 'Developer', 'Editor'],
+    category: 'Text & Writing',
+    icon: '🔍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'text-sorter',
+    title: 'Text Sorter & Column Splitter',
+    description: 'Sort lines alphabetically, reverse order, shuffle, split text by delimiter into columns or lines, and join them back. All operations run in your browser.',
+    keywords: ['sort text', 'column splitter', 'split lines', 'text sorter', 'shuffle lines', 'deduplicate'],
+    tags: ['Text', 'Developer', 'Utility'],
+    category: 'Text & Writing',
+    icon: '🔀',
+    uiClass: 'ready'
+  },
+  {
+    id: 'whitespace-cleaner',
+    title: 'Whitespace & Line Break Cleaner',
+    description: 'Clean up messy text: trim whitespace, remove blank lines, replace tabs with spaces, normalize line endings (CRLF→LF), and collapse consecutive newlines. All operations run client-side.',
+    keywords: ['whitespace cleaner', 'trim text', 'remove blank lines', 'normalize line endings', 'collapse newlines', 'tabs to spaces'],
+    tags: ['Text', 'Developer', 'Utility'],
+    category: 'Text & Writing',
+    icon: '✨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'slug-generator',
+    title: 'Slug / Permalink Generator',
+    description: 'Convert titles, headings, or sentences into URL-safe slugs. Customize separators (dash, underscore, dot), case conversion, and special character handling. Preview full URLs with your domain.',
+    keywords: ['slug generator', 'permalink generator', 'url slug converter', 'seo friendly url', 'title to slug', 'url safe string'],
+    tags: ['Text', 'Developer', 'SEO', 'Utility'],
+    category: 'Text & Writing',
+    icon: '🔗',
+    uiClass: 'ready'
+  },
+  {
+    id: 'markdown-html',
+    title: 'Markdown ↔ HTML Converter',
+    description: 'Convert between Markdown and HTML with live preview. Supports headers, bold, italic, links, images, code blocks, lists, blockquotes, and more. All conversion happens in your browser.',
+    keywords: ['markdown converter', 'html converter', 'md to html', 'html to markdown', 'markdown editor', 'rich text converter'],
+    tags: ['Text', 'Developer', 'Converter', 'Utility'],
+    category: 'Text & Writing',
+    icon: '📝',
+    uiClass: 'ready'
+  },
+  {
+    id: 'md-table-generator',
+    title: 'Markdown Table Generator',
+    description: 'Create markdown tables with a visual grid editor. Add rows and columns, edit cells directly, preview the rendered HTML table live, and copy the markdown source code.',
+    keywords: ['markdown table generator', 'table creator', 'grid editor', 'md table builder', 'html table preview'],
+    tags: ['Text', 'Developer', 'Table', 'Utility'],
+    category: 'Text & Writing',
+    icon: '📊',
+    uiClass: 'ready'
+  },
+  {
+    id: 'text-handwriting',
+    title: 'Text to Handwriting Generator',
+    description: 'Render your text as realistic handwriting on virtual paper. Choose from different styles (cursive, print, neat), customize pen color and size, adjust line spacing, and export as PNG.',
+    keywords: ['handwriting generator', 'text to handwriting', 'virtual pen', 'handwritten text', 'canvas drawing text'],
+    tags: ['Text', 'Design', 'Generator', 'Utility'],
+    category: 'Text & Writing',
+    icon: '✍️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'fancy-unicode',
+    title: 'Fancy Unicode Text Generator',
+    description: 'Convert your text into fancy styles for social media: bold, italic, script, circled, squared, and more. Copy any style directly to clipboard.',
+    keywords: ['fancy text generator', 'unicode text converter', 'social media text', 'bold italic text', 'decorative text'],
+    tags: ['Text', 'Social Media', 'Generator', 'Utility'],
+    category: 'Text & Writing',
+    icon: '✨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'emoji-picker',
+    title: 'Emoji Picker & Searcher',
+    description: 'Browse and search a directory of emojis. Click any emoji to copy it directly to your clipboard, along with its shortcode.',
+    keywords: ['emoji picker', 'emoji searcher', 'emoji directory', 'copy emoji', 'emoji shortcodes'],
+    tags: ['Text', 'Social Media', 'Utility', 'Emoji'],
+    category: 'Text & Writing',
+    icon: '😀',
+    uiClass: 'ready'
+  },
+  {
+    id: 'lorem-ipsum',
+    title: 'Lorem Ipsum (Themed) Generator',
+    description: 'Generate placeholder text in multiple themes: classic Lorem Ipsum, hipster, corporate, and pirate. Perfect for design mockups and prototypes.',
+    keywords: ['lorem ipsum generator', 'placeholder text', 'hipster text generator', 'corporate speak generator', 'pirate text generator'],
+    tags: ['Text', 'Writing', 'Generator', 'Utility'],
+    category: 'Text & Writing',
+    icon: '📄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'text-reverser',
+    title: 'Text Reverser & Mirror Tool',
+    description: 'Reverse strings, words, flip text into mirror characters (Unicode bidirectional), and transform case — all in your browser.',
+    keywords: ['text reverser', 'reverse string', 'mirror text', 'flip text', 'swap case', 'camelCase converter', 'snake_case converter'],
+    tags: ['Text', 'Writing', 'Utility', 'Formatter'],
+    category: 'Text & Writing',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'duplicate-line',
+    title: 'Duplicate Line Finder & Remover',
+    description: 'Paste text and find duplicate lines. Highlight them or remove them entirely — all in your browser.',
+    keywords: ['duplicate line finder', 'remove duplicates', 'deduplicate', 'find repeated lines', 'highlight duplicates'],
+    tags: ['Text', 'Writing', 'Utility', 'Formatter'],
+    category: 'Text & Writing',
+    icon: '🔍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'word-frequency',
+    title: 'Word Frequency & Keyword Density',
+    description: 'Analyze text for word frequency, keyword density, and SEO metrics — all in your browser.',
+    keywords: ['word frequency analyzer', 'keyword density checker', 'SEO word counter', 'text analysis', 'top words'],
+    tags: ['Text', 'Writing', 'Utility', 'SEO'],
+    category: 'Text & Writing',
+    icon: '📊',
+    uiClass: 'ready'
+  },
+  {
+    id: 'cipher-suite',
+    title: 'Classic Cipher Suite (ROT / Vigenère / Atbash)',
+    description: 'Encode and decode text using classic ciphers: ROT13, ROT-N, Vigenère, and Atbash — all in your browser.',
+    keywords: ['ROT13 encoder', 'Vigenere cipher', 'Atbash cipher', 'text encryption', 'classic ciphers', 'crypto tool'],
+    tags: ['Text', 'Writing', 'Utility', 'Security'],
+    category: 'Text & Writing',
+    icon: '🔐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'citation-bibtex',
+    title: 'Citation / BibTeX Formatter',
+    description: 'Format references into APA, MLA, or BibTeX citation styles — all in your browser.',
+    keywords: ['citation formatter', 'BibTeX generator', 'APA format', 'MLA format', 'reference formatter'],
+    tags: ['Text', 'Writing', 'Utility', 'Academic'],
+    category: 'Text & Writing',
+    icon: '📝',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-cropper',
+    title: 'Image Cropper & Rotator',
+    description: 'Crop, rotate, and flip images with aspect ratio presets — all in your browser.',
+    keywords: ['image cropper', 'rotate image', 'flip image', 'aspect ratio', 'crop tool'],
+    tags: ['Image', 'Media', 'Utility', 'Editor'],
+    category: 'Image & Media',
+    icon: '✂️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-compressor',
+    title: 'Image Compressor (Lossy/Lossless)',
+    description: 'Compress images client-side with quality controls — supports JPEG, PNG, and WebP output formats.',
+    keywords: ['image compressor', 'compress image', 'reduce image size', 'jpeg compression', 'webp converter', 'png optimizer', 'lossy compression', 'lossless compression'],
+    tags: ['Image', 'Media', 'Optimizer', 'Converter'],
+    category: 'Image & Media',
+    icon: '🗜️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'webp-avif-converter',
+    title: 'WebP / AVIF Converter',
+    description: 'Convert images to modern WebP or AVIF formats with smaller file sizes and better compression.',
+    keywords: ['webp converter', 'avif converter', 'image format converter', 'convert webp', 'convert avif', 'modern image format'],
+    tags: ['Image', 'Media', 'Converter', 'Optimizer'],
+    category: 'Image & Media',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'favicon-generator',
+    title: 'Favicon & App Icon Generator',
+    description: 'Generate favicon, PWA icons (16x16 to 512x512), and manifest.json from a single source image.',
+    keywords: ['favicon generator', 'app icon generator', 'pwa icons', 'manifest.json', 'icon generator', 'website icon'],
+    tags: ['Image', 'Media', 'Generator', 'PWA'],
+    category: 'Image & Media',
+    icon: '🌐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-color-picker',
+    title: 'Image Color Picker / Eyedropper',
+    description: 'Upload an image and click anywhere to pick its color. Get hex, RGB, HSL values instantly with a zoom view.',
+    keywords: ['color picker', 'eyedropper tool', 'hex color', 'rgb color', 'image color', 'color selector'],
+    tags: ['Image', 'Media', 'Tool', 'Utility'],
+    category: 'Image & Media',
+    icon: '💧',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-ascii-art',
+    title: 'Image to ASCII Art Converter',
+    description: 'Convert any image into ASCII or ANSI art. Upload a photo, adjust density and character set, and get back text-based pixel art — all client-side.',
+    keywords: ['ascii art', 'image to ascii', 'ansi art', 'pixel art text', 'ascii converter', 'text art generator', 'character art'],
+    tags: ['Image', 'Media', 'Converter', 'Art'],
+    category: 'Image & Media',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-meme-generator',
+    title: 'Meme Generator',
+    description: 'Upload an image and add top/bottom captions with customizable font, size, color, stroke, and position. Create classic meme-style images entirely in your browser.',
+    keywords: ['meme generator', 'top text bottom text', 'image caption tool', 'meme maker', 'caption overlay', 'funny text on image', 'meme creator'],
+    tags: ['Image', 'Media', 'Generator', 'Fun'],
+    category: 'Image & Media',
+    icon: '😂',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-watermark-adder',
+    title: 'Watermark Adder',
+    description: 'Add text or logo watermarks to images with tiling, rotation, opacity control, and positioning. Protect your photos with professional-looking watermarks — all processed in your browser.',
+    keywords: ['watermark tool', 'image watermark', 'logo overlay', 'tile watermark', 'protect photos', 'copyright image', 'brand protection'],
+    tags: ['Image', 'Media', 'Tool', 'Security'],
+    category: 'Image & Media',
+    icon: '💧',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-gif-maker',
+    title: 'GIF Maker (Images → GIF)',
+    description: 'Upload multiple images as frames and create an animated GIF with customizable frame duration, loop count, and quality. Perfect for simple animations and meme sequences — all generated in your browser.',
+    keywords: ['gif maker', 'animated gif', 'image to gif', 'frame animation', 'meme sequence', 'photo slideshow gif', 'gif creator'],
+    tags: ['Image', 'Media', 'Generator', 'Animation'],
+    category: 'Image & Media',
+    icon: '🎞️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'video-to-gif-converter',
+    title: 'Video to GIF Converter',
+    description: 'Upload a video clip, trim it with start/end time controls, extract frames at configurable intervals, and generate an animated GIF. Perfect for creating short looping animations from videos — all processed in your browser.',
+    keywords: ['video to gif', 'video clip to gif', 'trim video gif', 'extract gif from video', 'video animation converter', 'clip to gif', 'video screenshot gif'],
+    tags: ['Video', 'Image', 'Converter', 'Animation'],
+    category: 'Media',
+    icon: '🎬',
+    uiClass: 'ready'
+  },
+  {
+    id: 'spritesheet-generator',
+    title: 'Spritesheet Generator & Slicer',
+    description: 'Pack multiple images into a single spritesheet with configurable grid size and spacing. Also slice existing spritesheets back into individual frames. Perfect for game developers — all processed in your browser.',
+    keywords: ['spritesheet generator', 'sprite packer', 'image grid maker', 'game asset tool', 'frame manager', 'spritesheet slicer', 'animation frames'],
+    tags: ['Image', 'Media', 'Tool', 'Game Dev'],
+    category: 'Image & Media',
+    icon: '🎮',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-collage-grid-maker',
+    title: 'Image Collage / Grid Maker',
+    description: 'Combine multiple images into grids and collages with configurable layout, spacing, padding, and background color. Create beautiful photo mosaics and grid layouts — all processed in your browser.',
+    keywords: ['collage maker', 'image grid', 'photo mosaic', 'grid layout', 'photo grid maker', 'image collage', 'photo organizer'],
+    tags: ['Image', 'Media', 'Generator', 'Design'],
+    category: 'Image & Media',
+    icon: '🖼️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-photo-filters',
+    title: 'Photo Filters & Adjustments',
+    description: 'Apply brightness, contrast, saturation, blur, grayscale, sepia, and other filters to uploaded images with live preview sliders. Professional photo editing in your browser — all processed client-side.',
+    keywords: ['photo filter', 'image adjustment', 'brightness slider', 'contrast tool', 'saturation editor', 'blur effect', 'grayscale converter', 'sepia filter'],
+    tags: ['Image', 'Media', 'Tool', 'Editor'],
+    category: 'Image & Media',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-pixel-art-editor',
+    title: 'Pixel Art Editor',
+    description: 'Draw pixel art on a configurable grid with mouse/touch drawing, color palette selection, undo/redo, and export as PNG/SVG. Create retro-style pixel art directly in your browser.',
+    keywords: ['pixel art editor', 'pixel drawing', 'retro art creator', 'grid drawing tool', 'pixel canvas', '8-bit art', 'sprite creator'],
+    tags: ['Image', 'Media', 'Tool', 'Art'],
+    category: 'Image & Media',
+    icon: '🎮',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-blurhash-generator',
+    title: 'Blurhash / ThumbHash Generator',
+    description: 'Generate compact Blurhash and ThumbHash placeholders for images. Create lightweight, short placeholder strings that fade in as images load — perfect for progressive image loading UX.',
+    keywords: ['blurhash generator', 'thumbhash generator', 'placeholder hash', 'image placeholder', 'progressive loading', 'lazy load effect', 'compact image hash', 'blurhash online'],
+    tags: ['Image', 'Media', 'Tool', 'Generator'],
+    category: 'Image & Media',
+    icon: '🌫️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'image-exif-viewer',
+    title: 'Image Metadata (EXIF/GPS) Viewer Map',
+    description: 'Extract and display EXIF metadata from photos including GPS coordinates, camera settings, date/time taken. Plot photo locations on an interactive map with detailed image information.',
+    keywords: ['exif viewer', 'image metadata', 'gps location', 'photo gps', 'camera info', 'image inspector', 'photo data', 'location tracker'],
+    tags: ['Image', 'Media', 'Tool', 'Viewer'],
+    category: 'Image & Media',
+    icon: '📍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'favicon-spinner-maker',
+    title: 'Animated Favicon / Loading Spinner Maker',
+    description: 'Generate animated CSS/SVG loading spinners and custom animated favicons. Choose from multiple animation styles (spin, pulse, bounce) with color customization and instant preview.',
+    keywords: ['spinner maker', 'loading spinner', 'favicon generator', 'animated favicon', 'css spinner', 'svg spinner', 'loading animation', 'icon creator'],
+    tags: ['Design', 'CSS', 'SVG', 'Generator'],
+    category: 'Design & CSS',
+    icon: '⏳',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-animation-builder',
+    title: 'CSS Animation / Keyframe Builder',
+    description: 'Create professional CSS keyframe animations with a visual builder. Choose from preset Animista-style effects, customize timing and easing, preview in real-time, and export production-ready CSS code.',
+    keywords: ['css animation', 'keyframe builder', 'animista', 'css transitions', 'animation generator', 'hover effects', 'loading animation', 'motion design'],
+    tags: ['Design', 'CSS', 'Generator', 'Animation'],
+    category: 'Design & CSS',
+    icon: '✨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-cubic-bezier-editor',
+    title: 'CSS Cubic-Bezier Easing Editor',
+    description: 'Visually design and preview cubic-bezier easing curves for CSS animations. Choose from presets or drag control points to create custom ease-in-out effects with live curve visualization.',
+    keywords: ['cubic bezier editor', 'easing curve', 'css easing', 'animation easing', 'ease in out', 'bezier curve', 'motion design', 'visual easing'],
+    tags: ['Design', 'CSS', 'Generator', 'Animation'],
+    category: 'Design & CSS',
+    icon: '📈',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-clip-path-generator',
+    title: 'CSS Clip-Path / Shape Generator',
+    description: 'Visually create and preview CSS clip-path shapes using polygon points. Choose from preset shapes or drag control points to design custom polygons, with live preview and instant code export.',
+    keywords: ['clip path generator', 'css shape maker', 'polygon editor', 'css clip-path', 'shape designer', 'visual polygon', 'css mask generator'],
+    tags: ['Design', 'CSS', 'Generator', 'Shape'],
+    category: 'Design & CSS',
+    icon: '✂️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-neumorphism-generator',
+    title: 'CSS Neumorphism Generator',
+    description: 'Visually create neumorphic (soft UI) shadow effects with live preview. Adjust light/dark shadow positions, blur radius, and colors to generate production-ready CSS code.',
+    keywords: ['neumorphism generator', 'soft ui', 'neu design', 'css shadows', 'extruded shape', 'plastic effect', 'shadow maker', 'ui design'],
+    tags: ['Design', 'CSS', 'Generator', 'UI'],
+    category: 'Design & CSS',
+    icon: '🔮',
+    uiClass: 'ready'
+  },
+  {
     id: 'code-typing-video',
     title: 'Code Typing Animation Video Renderer',
     description: 'Turn a code snippet into a typewriter-style typing animation and export it as an MP4 or WebM video — rendered and encoded 100% locally with WebAssembly FFmpeg.',
@@ -1084,7 +1654,448 @@ export const TOOLS = [
     icon: '📸',
     uiClass: 'ready',
     adTopics: ['emoji maker', 'sticker design tools', 'photo editing apps', 'image generation']
-  }
+  },
+  {
+    id: 'css-border-radius-blob-generator',
+    title: 'CSS Border-Radius / Blob Generator',
+    description: 'Visually create organic blob shapes by adjusting border-radius percentages on each corner. Preview in real-time with live canvas rendering and export production-ready CSS code.',
+    keywords: ['blob generator', 'border radius editor', 'organic shape maker', 'css blob', 'rounded corners', 'morphology', 'shape designer', 'visual css'],
+    tags: ['Design', 'CSS', 'Generator', 'Shape'],
+    category: 'Design & CSS',
+    icon: '🫧',
+    uiClass: 'ready'
+  },
+  {
+    id: 'css-filter-playground',
+    title: 'CSS Filter Playground',
+    description: 'Visually apply and preview all CSS filter functions (blur, brightness, contrast, grayscale, hue-rotate, invert, opacity, saturate, sepia) with live canvas rendering. Adjust each filter independently and export production-ready CSS code.',
+    keywords: ['css filters', 'filter playground', 'image filters', 'brightness slider', 'contrast adjuster', 'grayscale effect', 'sepia filter', 'hue rotation', 'blur effect'],
+    tags: ['Design', 'CSS', 'Generator', 'Image'],
+    category: 'Design & CSS',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'mesh-gradient-generator',
+    title: 'Mesh Gradient Generator',
+    description: 'Create liquid-glass mesh gradient backgrounds with live preview. Position color blobs, adjust blur and opacity to generate production-ready CSS code for modern UI designs.',
+    keywords: ['mesh gradient', 'liquid glass', 'gradient background', 'blob gradient', 'glassmorphism', 'modern ui design', 'color blend', 'animated gradient'],
+    tags: ['Design', 'CSS', 'Generator', 'Background'],
+    category: 'Design & CSS',
+    icon: '🌈',
+    uiClass: 'ready'
+  },
+  {
+    id: 'tailwind-config-builder',
+    title: 'Tailwind Config / Theme Builder',
+    description: 'Visually build a tailwind.config.js theme with color scales, spacing, and typography settings. Preview colors in real-time and export production-ready Tailwind configuration code.',
+    keywords: ['tailwind config', 'tailwind theme', 'color scale generator', 'design system builder', 'tailwind setup', 'ui framework', 'css customization'],
+    tags: ['Design', 'CSS', 'Generator', 'Tailwind'],
+    category: 'Design & CSS',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'color-format-converter',
+    title: 'Color Format Converter',
+    description: 'Convert colors between HEX, RGB, HSL, OKLCH, and CMYK formats with live preview. Paste a color in any format and instantly see all representations.',
+    keywords: ['color converter', 'hex to rgb', 'rgb to hsl', 'hsl to hex', 'oklch converter', 'cmyk converter', 'color picker', 'color space'],
+    tags: ['Design', 'CSS', 'Converter', 'Color'],
+    category: 'Design & CSS',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'color-shade-tint-scale',
+    title: 'Color Shade / Tint Scale Generator',
+    description: 'Generate a complete 50–900 color scale (11 steps) from any base color. Perfect for design systems, Tailwind themes, and CSS custom properties.',
+    keywords: ['color scale', 'color palette generator', 'design system colors', 'tailwind colors', 'css variables', 'color shades'],
+    tags: ['Design', 'CSS', 'Generator', 'Color Palette'],
+    category: 'Design & CSS',
+    icon: '🌈',
+    uiClass: 'ready'
+  },
+  {
+    id: 'font-pairing-previewer',
+    title: 'Font Pairing Previewer',
+    description: 'Preview Google Font combinations live. Choose heading and body fonts, adjust sizes and weights, and export CSS with one click.',
+    keywords: ['font pairing', 'google fonts', 'typography preview', 'font combination', 'css font generator'],
+    tags: ['Design', 'CSS', 'Generator', 'Typography'],
+    category: 'Design & CSS',
+    icon: '🔤',
+    uiClass: 'ready'
+  },
+  {
+    id: 'type-scale-generator',
+    title: 'Type Scale / Modular Scale Generator',
+    description: 'Build a responsive typographic scale with modular ratios. Choose your base size, ratio, and generate a complete type scale for headings, body text, and everything in between.',
+    keywords: ['typography scale', 'modular scale', 'type scale generator', 'CSS typography', 'responsive fonts'],
+    tags: ['Design', 'CSS', 'Generator', 'Typography'],
+    category: 'Design & CSS',
+    icon: '📐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'favicon-safe-color-contrast-grid',
+    title: 'Favicon-Safe Color Contrast Grid',
+    description: 'Generate a full WCAG contrast matrix for any palette. Test text/background combinations at favicon sizes to ensure readability and accessibility compliance.',
+    keywords: ['wcag contrast', 'color contrast checker', 'favicon size', 'accessibility grid', 'contrast ratio'],
+    tags: ['Design', 'Color', 'Accessibility', 'Visualizer'],
+    category: 'Design & CSS',
+    icon: '🎨',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-commit-message-gen',
+    title: 'AI Commit Message Generator',
+    description: 'Paste a git diff and let the local Qwen2.5 AI model draft a clean, Conventional Commits-style commit message, 100% locally in your browser.',
+    keywords: ['commit message', 'git commit', 'conventional commits', 'ai commit generator', 'git diff', 'commit generator', 'qwen', 'commit log'],
+    tags: ['AI', 'Code', 'Generator'],
+    category: 'Developer',
+    icon: '📜',
+    uiClass: 'ready',
+    adTopics: ['developer tools', 'git hosting platforms', 'code review software', 'devops productivity']
+  },
+  {
+    id: 'ai-image-captioner',
+    title: 'AI Image Captioning',
+    description: 'Upload an image and generate descriptive captions using a local BLIP/ViT vision-language model — runs 100% in your browser with WebGPU or WASM acceleration.',
+    keywords: ['image caption', 'vision language model', 'BLIP', 'ViT', 'AI image description', 'alt text generator', 'accessibility'],
+    tags: ['AI', 'Image', 'Accessibility', 'Visualizer'],
+    category: 'Graphics',
+    icon: '🖼️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-depth-map-estimator',
+    title: 'AI Depth Map Estimator',
+    description: 'Generate a depth map from a single photo using a local MiDaS/DPT vision model — creates realistic parallax effects and 3D-like imagery entirely in your browser.',
+    keywords: ['depth map', 'depth estimation', 'parallax effect', 'MiDaS', 'DPT', 'AI depth', '3D photo'],
+    tags: ['AI', 'Image', 'Visualizer'],
+    category: 'Graphics',
+    icon: '🔮',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-zero-shot-image-classifier',
+    title: 'AI Zero-Shot Image Classifier',
+    description: 'Classify uploaded images against any custom labels using a local CLIP vision model — no API keys, runs entirely in your browser.',
+    keywords: ['zero shot classification', 'CLIP', 'image labeling', 'custom labels', 'AI classifier', 'vision model'],
+    tags: ['AI', 'Image', 'Classifier'],
+    category: 'Graphics',
+    icon: '🏷️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-grammar-spell-checker',
+    title: 'AI Grammar & Spell Checker',
+    description: 'Check grammar and spelling in your text using a local NLP model — no API keys, runs entirely in your browser.',
+    keywords: ['grammar checker', 'spell check', 'NLP', 'text correction', 'writing assistant', 'proofreading'],
+    tags: ['AI', 'Text', 'Checker'],
+    category: 'Grammar',
+    icon: '✏️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-text-paraphraser',
+    title: 'AI Text Paraphraser / Rewriter',
+    description: 'Reword and rephrase your text in different tones (formal, casual, creative) using a local seq2seq model — runs 100% client-side with WebGPU or WASM.',
+    keywords: ['paraphraser', 'text rewriter', 'rephrase', 'tone changer', 'Pegasus', 'T5', 'AI writing assistant', 'formal casual'],
+    tags: ['AI', 'Text', 'Rewriter', 'Writing Assistant'],
+    category: 'Grammar',
+    icon: '🔄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-named-entity-recognizer',
+    title: 'AI Named Entity Recognizer',
+    description: 'Extract people, places, organizations, and other entities from text using a local NER model — runs 100% client-side with WebGPU or WASM.',
+    keywords: ['NER', 'named entity recognition', 'entity extraction', 'people places organizations', 'NLP', 'text annotation', 'BERT'],
+    tags: ['AI', 'Text', 'Extractor', 'NLP'],
+    category: 'Grammar',
+    icon: '🏷️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-question-answering',
+    title: 'AI Question Answering (Context)',
+    description: 'Ask questions about pasted documents and get extractive answers using a local QA model — runs 100% client-side with WebGPU or WASM.',
+    keywords: ['question answering', 'QA', 'extractive QA', 'context comprehension', 'SQuAD', 'BERT', 'document Q&A'],
+    tags: ['AI', 'Text', 'QA', 'NLP'],
+    category: 'Grammar',
+    icon: '❓',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-zero-shot-text-classifier',
+    title: 'AI Zero-Shot Text Classifier',
+    description: 'Tag text against any custom categories without prior training — uses a local CLIP-based model to classify into arbitrary labels, runs 100% client-side.',
+    keywords: ['zero shot classification', 'text labeling', 'custom categories', 'CLIP', 'AI classifier', 'text categorization'],
+    tags: ['AI', 'Text', 'Classifier'],
+    category: 'Grammar',
+    icon: '🏷️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-code-comment-gen',
+    title: 'AI Code Comment / Docstring Generator',
+    description: 'Generate comments and docstrings for your code using a local code model — supports Python, JavaScript, Java, and more. Runs 100% client-side.',
+    keywords: ['code comments', 'docstring generator', 'code documentation', 'AI coding assistant', 'function docs', 'inline comments'],
+    tags: ['AI', 'Developer', 'Code Helper'],
+    category: 'Developer',
+    icon: '💬',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-speaker-diarization',
+    title: 'AI Speaker Diarization / Voice Activity',
+    description: 'Detect speech segments and identify different speakers in audio files using a local AI model — runs 100% client-side with WebGPU or WASM.',
+    keywords: ['speaker diarization', 'voice activity detection', 'audio segmentation', 'speech detection', 'who spoke when', 'audio analysis'],
+    tags: ['AI', 'Audio', 'Speech'],
+    category: 'Audio',
+    icon: '🎤',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-image-segmentation',
+    title: 'AI Image Segmentation (Click to Mask)',
+    description: 'Segment images by clicking on objects — uses a local segmentation model (SAM-style) to create masks around clicked areas. Runs 100% client-side.',
+    keywords: ['image segmentation', 'click to mask', 'object detection', 'mask generation', 'SAM', 'segment anything', 'image editing'],
+    tags: ['AI', 'Image', 'Segmentation'],
+    category: 'Image & Media',
+    icon: '✂️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-handwriting-recognition',
+    title: 'AI Handwriting / Sketch Recognition',
+    description: 'Draw digits or shapes on a canvas and let an in-browser model recognize what you wrote. Uses transformers.js for fully client-side handwriting recognition.',
+    keywords: ['handwriting recognition', 'sketch recognition', 'digit recognition', 'drawing to text', 'canvas drawing', 'AI recognition'],
+    tags: ['AI', 'Text', 'Recognition'],
+    category: 'Developer',
+    icon: '✏️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-smart-image-cropper',
+    title: 'AI Smart Image Cropper (Saliency-Based)',
+    description: 'Upload an image and let AI detect the most important focal point, then auto-crop to highlight it. Uses a saliency detection model running 100% client-side.',
+    keywords: ['smart crop', 'saliency detection', 'AI cropper', 'auto crop', 'focal point', 'image cropping'],
+    tags: ['AI', 'Image', 'Editor'],
+    category: 'Image & Media',
+    icon: '🖼️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'ai-text-embeddings-viz',
+    title: 'AI Text Embeddings Visualizer (2D Plot)',
+    description: 'Input multiple text samples and visualize their semantic similarity in 2D space using text embeddings. Uses transformers.js with PCA/t-SNE projection, runs 100% client-side.',
+    keywords: ['text embeddings', 'embedding visualization', 'semantic similarity', 'PCA plot', 'text clustering', 'NLP embedding'],
+    tags: ['AI', 'Text', 'Visualization'],
+    category: 'Developer',
+    icon: '📊',
+    uiClass: 'ready'
+  },
+  {
+    id: 'csv-viewer-editor',
+    title: 'CSV Viewer / Editor & Cleaner',
+    description: 'Spreadsheet-like CSV editing in the browser — upload, view, edit cells inline, sort columns, filter rows, and export cleaned data. Runs 100% client-side.',
+    keywords: ['csv editor', 'spreadsheet viewer', 'csv cleaner', 'data table editor', 'csv sort', 'csv filter', 'csv converter'],
+    tags: ['Data', 'Editor', 'Converter'],
+    category: 'Developer',
+    icon: '📄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'excel-converter',
+    title: 'Excel (XLSX) ↔ CSV/JSON Converter',
+    description: 'Parse Excel spreadsheets and convert between XLSX, CSV, and JSON formats entirely in the browser using SheetJS. Upload XLSX to preview and export as CSV or JSON.',
+    keywords: ['xlsx converter', 'excel to csv', 'json converter', 'spreadsheet parser', 'csv converter', 'data format converter'],
+    tags: ['Data', 'Converter', 'Developer'],
+    category: 'Developer',
+    icon: '📊',
+    uiClass: 'ready'
+  },
+  {
+    id: 'json-flattener',
+    title: 'JSON to CSV / Excel Flattener',
+    description: 'Flatten nested JSON objects into a tabular format suitable for CSV/Excel export. Supports dot-notation keys, array expansion, and configurable separators.',
+    keywords: ['json flattener', 'nested json to csv', 'json table converter', 'flatten json', 'json to excel', 'json transformer'],
+    tags: ['Data', 'Converter', 'Developer'],
+    category: 'Developer',
+    icon: '🔧',
+    uiClass: 'ready'
+  },
+  {
+    id: 'sql-json-generator',
+    title: 'SQL ↔ JSON / INSERT Generator',
+    description: 'Generate SQL INSERT statements from JSON data, or convert SQL queries to JSON format. Supports MySQL/PostgreSQL syntax with configurable table names and column selection.',
+    keywords: ['sql generator', 'json to sql', 'insert statement generator', 'sql converter', 'database query builder', 'json database export'],
+    tags: ['Data', 'Converter', 'Developer'],
+    category: 'Developer',
+    icon: '🗃️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'chart-graph-maker',
+    title: 'Chart / Graph Maker (Bar/Line/Pie)',
+    description: 'Build bar, line, and pie charts from pasted data with live preview. Customize colors, sizes, and export as PNG/SVG. Renders with Canvas API — no external libraries needed.',
+    keywords: ['chart maker', 'graph generator', 'bar chart', 'line chart', 'pie chart', 'data visualization', 'canvas chart'],
+    tags: ['Data', 'Visualizer', 'Developer'],
+    category: 'Developer',
+    icon: '📈',
+    uiClass: 'ready'
+  },
+  {
+    id: 'geojson-viewer',
+    title: 'GeoJSON Viewer & Editor',
+    description: 'View and edit GeoJSON data on an interactive Leaflet map. Add, modify, delete points, lines, and polygons with live preview. Export modified GeoJSON.',
+    keywords: ['geojson viewer', 'map editor', 'geospatial', 'leaflet', 'polygon editor', 'point editor', 'line editor'],
+    tags: ['Data', 'Map', 'Developer'],
+    category: 'Developer',
+    icon: '🗺️',
+    uiClass: 'ready'
+  },
+  {
+    id: 'protobuf-decoder',
+    title: 'Protobuf / MessagePack Decoder',
+    description: 'Decode Protocol Buffers and MessagePack binary data into readable JSON. Paste hex or base64 encoded protobuf/MessagePack bytes to inspect the structure.',
+    keywords: ['protobuf decoder', 'messagepack decoder', 'binary parser', 'protocol buffers', 'binary serialization'],
+    tags: ['Data', 'Decoder', 'Developer'],
+    category: 'Developer',
+    icon: '🔍',
+    uiClass: 'ready'
+  },
+  {
+    id: 'data-uri-inspector',
+    title: 'Data URI / Blob Inspector',
+    description: 'Decode and preview data URIs (data:image/png;base64,...) or blob URLs. Inspect metadata, view images, download files — all in your browser.',
+    keywords: ['data uri inspector', 'blob inspector', 'decode data uri', 'preview base64 image', 'data url decoder'],
+    tags: ['Data', 'Decoder', 'Developer'],
+    category: 'Developer',
+    icon: '🔎',
+    uiClass: 'ready'
+  },
+  {
+    id: 'currency-converter',
+    title: 'Currency Converter (Offline Rates)',
+    description: 'Convert between 30+ world currencies with built-in exchange rates. Works fully offline — no API needed. Override rates manually for custom conversions.',
+    keywords: ['currency converter', 'exchange rate calculator', 'money converter', 'offline currency', 'forex calculator'],
+    tags: ['Finance', 'Converter', 'Calculator'],
+    category: 'Finance & Calculators',
+    icon: '💱',
+    uiClass: 'ready'
+  },
+  {
+    id: 'loan-calculator',
+    title: 'Loan / Auto Payment Calculator',
+    description: 'Calculate monthly payments, total interest, and amortization schedule for car loans and personal loans. Visualize your payoff timeline.',
+    keywords: ['loan calculator', 'auto payment calculator', 'amortization schedule', 'car loan calculator', 'mortgage calculator'],
+    tags: ['Finance', 'Calculator'],
+    category: 'Finance & Calculators',
+    icon: '🏦',
+    uiClass: 'ready'
+  },
+  {
+    id: 'salary-calculator',
+    title: 'Salary / Hourly / Take-Home Calculator',
+    description: 'Convert between hourly, monthly, and annual salaries. Calculate take-home pay after federal taxes and FICA deductions.',
+    keywords: ['salary calculator', 'hourly to salary converter', 'take home pay calculator', 'net income calculator', 'tax calculator'],
+    tags: ['Finance', 'Calculator'],
+    category: 'Finance & Calculators',
+    icon: '💰',
+    uiClass: 'ready'
+  },
+  {
+    id: 'crypto-profit-dca',
+    title: 'Crypto Profit / DCA Calculator',
+    description: 'Track dollar-cost-averaged crypto purchases and calculate total profit, ROI, and cost basis.',
+    keywords: ['crypto calculator', 'dca calculator', 'cost basis calculator', 'bitcoin profit calculator', 'portfolio return'],
+    tags: ['Finance', 'Calculator'],
+    category: 'Finance & Calculators',
+    icon: '📈',
+    uiClass: 'ready'
+  },
+  {
+    id: 'invoice-generator',
+    title: 'Invoice / Quote Generator (PDF)',
+    description: 'Create professional invoices and quotes with your branding, then export as PDF.',
+    keywords: ['invoice generator', 'quote creator', 'PDF invoice', 'business document', 'billing'],
+    tags: ['Finance', 'Generator'],
+    category: 'Finance & Calculators',
+    icon: '📄',
+    uiClass: 'ready'
+  },
+  {
+    id: 'percentage-discount-calc',
+    title: 'Percentage & Discount Calculator',
+    description: 'All-in-one percentage math toolkit — calculate percentages, discounts, increases, and comparisons.',
+    keywords: ['percentage calculator', 'discount calculator', 'percent off', 'percentage increase', 'percentage of'],
+    tags: ['Finance', 'Calculator'],
+    category: 'Finance & Calculators',
+    icon: '🔢',
+    uiClass: 'ready'
+  },
+  {
+    id: 'calorie-macro-calc',
+    title: 'Calorie / Macro & Recipe Calculator',
+    description: 'Calculate daily calorie and macro targets, or compute nutrition per serving for recipes.',
+    keywords: ['calorie calculator', 'macro calculator', 'nutrition calculator', 'recipe nutrition', 'protein carbs fat'],
+    tags: ['Health', 'Calculator'],
+    category: 'Health & Lifestyle',
+    icon: '🥗',
+    uiClass: 'ready'
+  },
+  {
+    id: 'sleep-cycle-calc',
+    title: 'Sleep Cycle / Bedtime Calculator',
+    description: 'Calculate optimal bedtimes based on your wake-up time and sleep cycle science (90-min cycles).',
+    keywords: ['sleep calculator', 'bedtime calculator', 'wake up time', 'sleep cycles', 'when to go to bed'],
+    tags: ['Health', 'Calculator'],
+    category: 'Health & Lifestyle',
+    icon: '🌙',
+    uiClass: 'ready'
+  },
+  {
+    id: 'diceware-passphrase',
+    title: 'Diceware Passphrase Generator',
+    description: 'Generate strong, memorable passphrases using the Diceware method with a curated wordlist.',
+    keywords: ['passphrase generator', 'diceware', 'password generator', 'strong password', 'mnemonic phrase'],
+    tags: ['Security', 'Generator'],
+    category: 'Security, Network & Productivity',
+    icon: '🔑',
+    uiClass: 'ready'
+  },
+  {
+    id: 'totp-2fa-generator',
+    title: 'TOTP / 2FA Code Generator',
+    description: 'Generate time-based one-time passwords (TOTP) from a secret key for offline two-factor authentication.',
+    keywords: ['2FA generator', 'authenticator code', 'TOTP', 'two factor auth', 'offline authenticator'],
+    tags: ['Security', 'Generator'],
+    category: 'Security, Network & Productivity',
+    icon: '🔐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'dns-whois-header',
+    title: 'DNS / Whois / Header Lookup',
+    description: 'Inspect DNS records, HTTP response headers, and domain information using public APIs.',
+    keywords: ['dns lookup', 'whois lookup', 'header inspector', 'domain lookup', 'network tools'],
+    tags: ['Network', 'Inspector'],
+    category: 'Security, Network & Productivity',
+    icon: '🌐',
+    uiClass: 'ready'
+  },
+  {
+    id: 'kanban-markdown-board',
+    title: 'Kanban / Markdown Note Board (LocalStorage)',
+    description: 'Offline task board with markdown notes, drag-and-drop columns, and LocalStorage persistence.',
+    keywords: ['kanban board', 'task manager', 'markdown notes', 'offline board', 'todo list'],
+    tags: ['Productivity', 'Board'],
+    category: 'Security, Network & Productivity',
+    icon: '📋',
+    uiClass: 'ready'
+  },
 ];
 
 // --- IN-TOOL AD RELEVANCE STANDARD ---

@@ -2878,6 +2878,87 @@ div[style*="color: var(--danger)"] {
   padding: 0.5rem;
 }
 
+/* AI Baby Appearance Predictor Styles */
+.baby-gender-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.baby-gender-btn {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.baby-gender-btn:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.baby-gender-btn.active {
+  background: var(--primary-glow);
+  border-color: var(--primary);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px var(--primary) inset;
+}
+
+.baby-results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (max-width: 560px) {
+  .baby-results-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.baby-result-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  transition: var(--transition);
+}
+
+.baby-result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.baby-result-age {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.baby-result-canvas {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: #000;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
 /* --- AI Image Upscaler: before/after comparison slider --- */
 .upscale-compare {
   position: relative;
@@ -3335,3 +3416,255 @@ div[style*="color: var(--danger)"] {
   border: 1px solid var(--border);
 }
 
+
+/* cURL Converter styles */
+.btn-convert-direction,
+.btn-target-lang {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+.btn-convert-direction.active,
+.btn-target-lang.active {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--primary-light);
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.3);
+}
+
+.btn-convert-direction:hover:not(.active),
+.btn-target-lang:hover:not([disabled]):not(.active) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.btn-convert-direction[disabled],
+.btn-target-lang[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.curl-convert-output {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Syntax highlighting for cURL converter output */
+.hl-comment { color: #6b7280; font-style: italic; }
+.hl-string { color: #a5d6ff; }
+.hl-number { color: #ff7b72; }
+.hl-keyword { color: #ff7b72; font-weight: 600; }
+.hl-identifier { color: var(--text-primary); }
+.hl-builtin { color: #d2a8ff; }
+.hl-operator { color: var(--text-secondary); }
+.hl-punctuation { color: var(--text-secondary); }
+
+/* ==========================================
+   Shared tool-view kit
+   The newer batch of tool views (calorie/sleep calculators, AI text
+   tools, converters, generators, …) is authored against this class
+   family: .glass-card panels split by .tool-body-split, .form-group
+   controls, .btn button variants, and .summary-card result tiles.
+   ========================================== */
+
+.glass-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Header variant: .tool-view-header > .header-text (.header-title +
+   .header-desc). Scoped under .tool-view-header so the site header's
+   own .header-title/.header-text keep their compact sizing. */
+.tool-view-header.glass-card {
+  padding: 1.1rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.tool-view-header .header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: inherit;
+}
+
+.tool-view-header .header-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.tool-view-header .header-desc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Two (or more) side-by-side panels; panels carry inline flex weights. */
+.tool-body-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.tool-body-split > * {
+  flex: 1 1 340px;
+  min-width: 0;
+}
+
+.controls-panel,
+.output-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Form controls */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-group input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+.form-group select,
+.form-group textarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 0.65rem 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.form-row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Buttons. :where() keeps the base at zero specificity so the existing
+   single-class variants (.btn-primary, .btn-secondary, …) still win
+   when combined as class="btn btn-primary". */
+:where(.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border);
+}
+
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-secondary);
+}
+
+.btn-sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+}
+
+.btn-block {
+  width: 100%;
+  display: flex;
+}
+
+/* Result widgets */
+.empty-state-text {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.salary-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1rem;
+}
+
+.summary-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+}
+
+.summary-profit {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary-glow);
+}

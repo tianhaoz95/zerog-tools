@@ -5,7 +5,8 @@
 // Slack, Medium) and search engines read raw HTML. Serving a static page per
 // tool — each with its own title/description/OG image — gives every tool URL
 // (/tools/<id>) a unique, crawlable preview without any runtime server.
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, copyFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
@@ -13,6 +14,11 @@ import { TOOLS } from '../src/tools.data.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = join(ROOT, 'dist');
+// PNG rendering is by far the slowest step (~90s for 206 images), and this
+// script now runs on every build — including watch-mode rebuilds, which empty
+// dist/ first. Cache rendered PNGs outside dist, keyed by the SVG content, so
+// an unchanged tool is a file copy instead of a re-render.
+const OG_CACHE = join(ROOT, 'node_modules', '.cache', 'zerog-og');
 const SITE = 'https://zerog-toolbox.web.app';
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -117,17 +123,18 @@ function ogSvg(tool) {
 
 function renderOg(tool, outPath) {
   mkdirSync(dirname(outPath), { recursive: true });
-  const resvg = new Resvg(ogSvg(tool), {
-    fitTo: { mode: 'width', value: 1200 },
-    font: { loadSystemFonts: true },
-  });
-  try {
-    writeFileSync(outPath, resvg.render().asPng());
-  } catch (err) {
-    console.error(`Error writing to ${outPath}`);
-    console.error(`Directory exists?`, existsSync(dirname(outPath)));
-    throw err;
+  const svg = ogSvg(tool);
+  const hash = createHash('sha256').update(svg).digest('hex').slice(0, 12);
+  const cached = join(OG_CACHE, `${tool.id}-${hash}.png`);
+  if (!existsSync(cached)) {
+    mkdirSync(OG_CACHE, { recursive: true });
+    const resvg = new Resvg(svg, {
+      fitTo: { mode: 'width', value: 1200 },
+      font: { loadSystemFonts: true },
+    });
+    writeFileSync(cached, resvg.render().asPng());
   }
+  copyFileSync(cached, outPath);
 }
 
 // --- Main ---
