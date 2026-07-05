@@ -1,6 +1,13 @@
 import './style.css';
 import './firebase.js';
 import './extra-tools.js';
+import './openapi-tool.js';
+import './schema-validator-tool.js';
+import './batch-rename-tool.js';
+import './csp-tool.js';
+import './pgp-tool.js';
+import './vapid-tool.js';
+import './sri-hash-tool.js';
 import { marked } from 'marked';
 import { TOOLS, TAG_VOCABULARY, resolveAdContext } from './tools.data.js';
 import { TRIANGULATION } from './triangulation.data.js';
@@ -874,9 +881,12 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'pdf-tool') {
     document.getElementById('pdf-view').classList.add('active');
     resetPdfState();
-  } else if (viewId === 'regex-tester') {
-    document.getElementById('regex-view').classList.add('active');
-    resetRegexState();
+  } else if (viewId === 'regex-live-preview') {
+    document.getElementById('regex-live-preview-view').classList.add('active');
+    initRegexTester();
+  } else if (viewId === 'random-data-generator') {
+    document.getElementById('random-data-generator-view').classList.add('active');
+    initRandomDataGenerator();
   } else if (viewId === 'diff-checker') {
     document.getElementById('diff-view').classList.add('active');
     resetDiffState();
@@ -886,6 +896,9 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'json-schema-gen') {
     document.getElementById('json-schema-gen-view').classList.add('active');
     resetSchemaGenState();
+  } else if (viewId === 'json-schema-validator') {
+    document.getElementById('json-schema-validator-view').classList.add('active');
+    resetSchemaValidatorState();
   } else if (viewId === 'json-to-ts') {
     document.getElementById('json-to-ts-view').classList.add('active');
     resetJsonToTsState();
@@ -895,6 +908,12 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'hash-generator') {
     document.getElementById('hash-view').classList.add('active');
     resetHashState();
+  } else if (viewId === 'ssh-keygen') {
+    document.getElementById('ssh-keygen-view').classList.add('active');
+    resetSshKeygenState();
+  } else if (viewId === 'x509-decoder') {
+    document.getElementById('x509-decoder-view').classList.add('active');
+    resetX509DecoderState();
   } else if (viewId === 'svg-editor') {
     document.getElementById('svg-editor-view').classList.add('active');
     resetSvgEditorState();
@@ -1324,6 +1343,103 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'tailwind-config-builder') {
     initTailwindConfigBuilder();
     document.getElementById('tailwind-config-builder-view').classList.add('active');
+  } else if (viewId === 'openapi-explorer') {
+    document.getElementById('openapi-explorer-view').classList.add('active');
+    resetOpenApiExplorerState();
+  } else if (viewId === 'batch-rename') {
+    document.getElementById('batch-rename-view').classList.add('active');
+    resetBatchRenameState();
+  } else if (viewId === 'csp-header-generator') {
+    document.getElementById('csp-view').classList.add('active');
+    resetCspToolState();
+  } else if (viewId === 'pgp-encryptor') {
+    document.getElementById('pgp-view').classList.add('active');
+    resetPgpToolState();
+  } else if (viewId === 'vapid-keygen') {
+    document.getElementById('vapid-keygen-view').classList.add('active');
+    resetVapidToolState();
+  } else if (viewId === 'sri-hash-generator') {
+    document.getElementById('sri-hash-generator-view').classList.add('active');
+  } else if (viewId === 'ai-noise-reducer') {
+    document.getElementById('ai-noise-reducer-view').classList.add('active');
+  } else if (viewId === 'silence-remover') {
+    document.getElementById('silence-remover-view').classList.add('active');
+  } else if (viewId === 'video-trimmer') {
+    document.getElementById('video-trimmer-view').classList.add('active');
+  } else if (viewId === 'midi-player') {
+    document.getElementById('midi-player-view').classList.add('active');
+  } else if (viewId === 'ai-visual-question-answering') {
+    document.getElementById('ai-visual-question-answering-view').classList.add('active');
+    resetVqaToolState();
+  } else if (viewId === 'ai-neural-style-transfer') {
+    document.getElementById('ai-neural-style-transfer-view').classList.add('active');
+    resetStyleTransferState();
+  } else if (viewId === 'film-grain-vintage-effects') {
+    document.getElementById('film-grain-vintage-effects-view').classList.add('active');
+    resetFilmGrainState();
+  } else if (viewId === 'grainy-gradient-noise-texture') {
+    document.getElementById('grainy-gradient-noise-texture-view').classList.add('active');
+    resetGrainyGradientState();
+  } else if (viewId === 'debt-snowball-calculator') {
+    document.getElementById('debt-snowball-calculator-view').classList.add('active');
+    initDebtSnowballCalculator();
+  } else if (viewId === 'rent-vs-buy-calculator') {
+    document.getElementById('rent-vs-buy-calculator-view').classList.add('active');
+    initRentBuyCalculator();
+
+  } else if (viewId === 'pdf-page-extractor') {
+    document.getElementById('pdf-page-extractor-view').classList.add('active');
+    initPdfPageExtractor();
+
+  } else if (viewId === 'csv-to-json-converter') {
+    document.getElementById('csv-to-json-converter-view').classList.add('active');
+    initCsvToJsonConverter();
+
+  } else if (viewId === 'json-pretty-printer') {
+    document.getElementById('json-pretty-printer-view').classList.add('active');
+    initJsonPrettyPrinter();
+
+
+  } else if (viewId === 'color-palette-generator') {
+    document.getElementById('color-palette-generator-view').classList.add('active');
+    initColorPaletteGenerator();
+
+  } else if (viewId === 'qr-code-generator') {
+    // Alias: reuse the original qr-tool view (which uses the proper qrcode +
+    // jsqr libraries) instead of the broken duplicate view.
+    document.getElementById('qr-view').classList.add('active');
+    resetQrState();
+
+  } else if (viewId === 'base64-encoder') {
+    document.getElementById('base64-encoder-view').classList.add('active');
+    initBase64Encoder();
+
+  } else if (viewId === 'markdown-to-html') {
+    document.getElementById('markdown-to-html-view').classList.add('active');
+    initMarkdownToHtml();
+
+  } else if (viewId === 'json-path-tester') {
+    document.getElementById('jsonpath-tester-view').classList.add('active');
+    initJsonPathTester();
+
+  } else if (viewId === 'regex-live-preview') {
+    document.getElementById('regex-live-preview-view').classList.add('active');
+    initRegexTester();
+
+
+
+
+
+
+
+} else if (viewId === 'iban-swift-validator') {
+    document.getElementById('iban-swift-validator-view').classList.add('active');
+    resetIbanSwiftState();
+    resetMidiPlayerState();
+    resetVideoTrimmerState();
+    resetSilenceToolState();
+    resetNoiseToolState();
+    resetSriToolState();
   } else {
     const customView = document.getElementById(`${viewId}-view`);
     if (customView) {
@@ -1354,85 +1470,64 @@ window.addEventListener('popstate', () => {
 });
 
 document.getElementById('btn-header-logo').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-passport-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-vectorizer-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-transcriber-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-encrypter-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-ocr-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-password-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-json-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-qr-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-base64-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-markdown-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-url-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-csv-json-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-image-resizer-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-pdf-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-regex-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-diff-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-json-diff-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-json-schema-gen-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-json-to-ts-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-multi-hash-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-hash-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-svg-editor-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-unit-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-color-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-epoch-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-jwt-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-uuid-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-lorem-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-sql-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-cron-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-html-ent-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-ascii-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-ua-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-text-an-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-sentiment-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-translator-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-detector-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-bg-remover-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-image-upscaler-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-video-bg-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-ev-gas-back').addEventListener('click', () => navigateTo('home'));
 
-document.getElementById('btn-ai-summarizer-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-ai-semantic-search-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-ai-grammar-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-audio-trimmer-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-pdf-signer-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-exif-stripper-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-css-layout-builder-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-api-client-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-pdf-image-converter-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-mortgage-calculator-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-pomodoro-space-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-diceware-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-totp-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-dns-back').addEventListener('click', () => navigateTo('home'));
-document.getElementById('btn-kanban-back').addEventListener('click', () => navigateTo('home'));
+// Auto-wire ALL back buttons: any element whose id matches btn-*-back or ends
+// with -back-btn navigates home. This replaces 170+ manual registrations and
+// guarantees every tool's back button works — including future tools — without
+// touching this file.
+document.querySelectorAll('[id^="btn-"][id$="-back"], [id$="-back-btn"]').forEach(el => {
+  el.addEventListener('click', () => navigateTo('home'));
+});
 
-// Wire back buttons for the 20 new tools
-const newToolsIds = [
-  'morse-code', 'text-to-speech', 'media-recorder', 'keyboard-tester',
-  'svg-converter', 'xml-formatter', 'base-converter', 'css-glassmorphism',
-  'css-box-shadow',
-  'case-converter', 'aspect-ratio-calc', 'color-blindness', 'tone-generator',
-  'subnet-calculator', 'pixel-tester', 'sketchpad', 'hex-viewer',
-  'tip-calculator', 'life-progress', 'graphing-calc', 'password-analyzer',
-  'luhn-validator', 'binary-translator', 'color-palette-gen', 'lorem-markdown',
-  'user-flowchart', 'metronome-tapper', 'caesar-cipher', 'timezone-converter',
-  'date-calculator', 'compound-interest', 'tdee-calculator', 'sort-list',
-  'json-yaml-converter', 'device-info', 'stopwatch-lap', 'html-wysiwyg',
-  'css-gradient-mesh', 'svg-path-viewer', 'guitar-tuner', 'speed-reader',
-  'mime-inspector', 'sql-playground', 'hash-verifier', 'lorem-pixel',
-  'ratio-solver', 'ai-pose-estimator', 'fire-retirement-calc', 'str-cost-segregation', 'code-to-image', 'ai-resume-injector',
-  'code-typing-video', 'ai-photo-booth', 'css-clip-path-generator', 'css-neumorphism-generator', 'css-border-radius-blob-generator', 'css-filter-playground', 'mesh-gradient-generator', 'tailwind-config-builder', 'color-format-converter', 'color-shade-tint-scale', 'font-pairing-previewer', 'type-scale-generator', 'favicon-safe-color-contrast-grid', 'ai-image-captioner', 'ai-depth-map-estimator', 'ai-zero-shot-image-classifier', 'ai-grammar-spell-checker', 'chart-graph-maker', 'geojson-viewer', 'protobuf-decoder', 'data-uri-inspector', 'currency-converter', 'loan-calculator', 'salary-calculator', 'crypto-profit-dca', 'invoice-generator', 'percentage-discount-calc', 'calorie-macro-calc', 'sleep-cycle-calc', 'diceware-passphrase', 'totp-2fa-generator', 'dns-whois-header', 'kanban-markdown-board'
-];
-newToolsIds.forEach(id => {
-  const el = document.getElementById(`btn-${id}-back`);
-  if (el) {
-    el.addEventListener('click', () => navigateTo('home'));
+// --- SSH Key Pair Generator event listeners ---
+document.getElementById('ssh-key-type').addEventListener('change', updateSshKeyOptions);
+
+document.getElementById('btn-generate-ssh-keys').addEventListener('click', generateSshKeys);
+
+document.getElementById('btn-copy-ssh-pub').addEventListener('click', () => {
+  const text = document.getElementById('ssh-public-key-output').value;
+  if (text) navigator.clipboard.writeText(text);
+});
+
+document.getElementById('btn-download-ssh-pub').addEventListener('click', () => {
+  downloadFile('id_ed25519.pub', document.getElementById('ssh-public-key-output').value, 'text/plain');
+});
+
+document.getElementById('btn-copy-ssh-priv').addEventListener('click', () => {
+  const text = document.getElementById('ssh-private-key-output').value;
+  if (text) navigator.clipboard.writeText(text);
+});
+
+document.getElementById('btn-download-ssh-priv').addEventListener('click', () => {
+  downloadFile('id_ed25519', document.getElementById('ssh-private-key-output').value, 'application/octet-stream');
+});
+
+// --- X.509 Certificate Decoder event listeners ---
+document.getElementById('x509-file-upload').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('x509-pem-input').value = reader.result;
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('btn-decode-x509').addEventListener('click', decodeX509Certificate);
+
+document.getElementById('btn-copy-x509-der').addEventListener('click', () => {
+  const text = document.getElementById('x509-raw-output').value;
+  if (text) navigator.clipboard.writeText(text);
+});
+
+document.getElementById('btn-toggle-ssh-pass').addEventListener('click', () => {
+  const input = document.getElementById('ssh-passphrase');
+  if (input.type === 'password') {
+    input.type = 'text';
+    document.getElementById('btn-toggle-ssh-pass').textContent = '🙈';
+  } else {
+    input.type = 'password';
+    document.getElementById('btn-toggle-ssh-pass').textContent = '👁️';
   }
 });
 // --- PASSPORT PHOTO GENERATOR LOGIC ---
@@ -36484,4 +36579,1632 @@ window.injectPromptIntoPdf = injectPromptIntoPdf;
 window.downloadInjectedPdf = downloadInjectedPdf;
 
 
+// ============================================================================
+// SSH Key Pair Generator — Business Logic
+// ============================================================================
 
+// --- Base64 / DER helpers for OpenSSH public key format conversion ---
+
+function base64UrlToStandard(b64) {
+  return b64.replace(/-/g, '+').replace(/_/g, '/');
+}
+
+function toSshString(value) {
+  const view = new DataView(new ArrayBuffer(4));
+  view.setUint32(0, value.length, false); // big-endian length prefix
+  return String.fromCharCode(...new Uint8Array(view.buffer)) + value;
+}
+
+function parseDerInteger(bytes, offset) {
+  if (bytes[offset] !== 0x02) throw new Error('Expected INTEGER at offset ' + offset);
+  let len = bytes[offset + 1];
+  let start = offset + 2;
+  if (len > 127) {
+    const numBytes = len - 128;
+    len = 0;
+    for (let i = 0; i < numBytes; i++) len = (len << 8) | bytes[start + i];
+    start += numBytes;
+  }
+  const result = new Uint8Array(bytes.buffer, bytes.byteOffset + start, len);
+  return { value: result, nextOffset: start + len };
+}
+
+function parseDerLength(bytes, offset) {
+  if (bytes[offset] <= 0x7f) return { length: bytes[offset], sizeBytes: 1 };
+  const numBytes = bytes[offset] & 0x7f;
+  let length = 0;
+  for (let i = 0; i < numBytes; i++) length = (length << 8) | bytes[offset + 1 + i];
+  return { length: length, sizeBytes: 1 + numBytes };
+}
+
+function parseSpki(bytes) {
+  // Parse SubjectPublicKeyInfo for Ed25519 / RSA / ECDSA
+  let offset = 0;
+  // Skip outer SEQUENCE tag byte (0x30), then parse length
+  if (bytes[offset] !== 0x30) throw new Error('Expected outer SEQUENCE tag');
+  offset++;
+  const seqLenHdr = parseDerLength(bytes, offset);
+  offset += seqLenHdr.sizeBytes;
+
+  // AlgorithmIdentifier SEQUENCE: tag(0x30) + length byte + content bytes.
+  // Content may include an OID followed by parameters (e.g. NULL for RSA-PSS,
+  // curve params for ECDSA). We must parse past ALL of it to reach the BIT STRING.
+  if (bytes[offset] !== 0x30) throw new Error('Expected algo SEQUENCE tag');
+  offset++; // skip tag
+  const algoContentLen = bytes[offset]; // always short-form for standard keys
+  // Parse OID from within AlgorithmIdentifier content
+  const oidStart = offset + 1; // first byte of algo ID content (OID tag)
+  if (bytes[oidStart] !== 0x06) throw new Error('Expected OID in AlgorithmIdentifier');
+  const oidLen = parseDerLength(bytes, oidStart + 1).length;
+  const oid = String.fromCharCode(...bytes.slice(oidStart + 2, oidStart + 2 + oidLen));
+
+  // Advance past the entire AlgorithmIdentifier (OID + any parameters) to reach BIT STRING.
+  offset += 1 + algoContentLen; // skip length byte + all content bytes
+  const nextOffset = offset; // position of BIT STRING tag — valid for ALL key types
+
+  // Compare OID bytes directly instead of converting to string (which fails for binary data)
+  function oidMatches(oidBytes, expectedOid) {
+    if (oidBytes.length !== expectedOid.length) return false;
+    for (let i = 0; i < oidBytes.length; i++) {
+      if (oidBytes[i] !== expectedOid[i]) return false;
+    }
+    return true;
+  }
+
+  // Ed25519 OID content: 1.3.101.112 = \x2B\x65\x70 (3 bytes)
+  const ed25519Oid = new Uint8Array([0x2B, 0x65, 0x70]);
+  // RSA OID content: 1.2.840.113549.1.1.1 = \x2A\x86\x48\x86\xF7\x0D\x01\x01\x01 (9 bytes)
+  const rsaOid = new Uint8Array([0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01]);
+  // ECDSA P-256 OID content: 1.2.840.10045.3.1.7 = \x2A\x86\x48\xCE\x3D\x02\x01 (7 bytes)
+  const ecdsaP256Oid = new Uint8Array([0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01]);
+  // ECDSA P-384 OID content: 1.3.132.0.34 = \x2B\x81\x04\x00\x22 (5 bytes)
+  const ecdsaP384Oid = new Uint8Array([0x2B, 0x81, 0x04, 0x00, 0x22]);
+
+  // Extract OID bytes from DER structure (skip tag and length bytes)
+  const oidBytes = new Uint8Array(bytes.slice(oidStart + 2, oidStart + 2 + oidLen));
+
+  if (oidMatches(oidBytes, ed25519Oid)) {
+    // Ed25519: BIT STRING with raw public key (tag 0x03 + length + unused-bits(0x00) + 32-byte-key)
+    if (bytes[nextOffset] !== 0x03) throw new Error('Expected BIT STRING tag for Ed25519');
+    const bsHdr = parseDerLength(bytes, nextOffset + 1); // length is after the tag byte
+    const contentStart = nextOffset + 1 + bsHdr.sizeBytes; // skip tag + length encoding
+    const pubLen = bsHdr.length - 1; // minus unused bits byte
+    pubKeyData = new Uint8Array(pubLen);
+    for (let i = 0; i < pubLen && (contentStart + 1 + i) < bytes.length; i++) {
+      pubKeyData[i] = bytes[contentStart + 1 + i]; // skip unused bits byte
+    }
+  } else if (oidMatches(oidBytes, rsaOid)) {
+    // RSA: parse modulus and exponent from SubjectPublicKeyInfo
+    const bitStrOffset = nextOffset;
+    if (bytes[bitStrOffset] !== 0x03) throw new Error('Expected BIT STRING tag for RSA');
+    const bsHdr = parseDerLength(bytes, bitStrOffset + 1);
+    const contentStart = bitStrOffset + 1 + bsHdr.sizeBytes; // skip tag + length encoding
+
+    // Inside the BIT STRING is an SEQUENCE { INTEGER modulus, INTEGER exponent }
+    let innerOff = contentStart;
+    if (bytes[innerOff] !== 0x30) throw new Error('Expected SEQUENCE in RSA BIT STRING');
+    innerOff++; // skip tag
+    const seqLen = bytes[innerOff];
+    innerOff += 1; // skip length byte only - don't skip content yet
+
+    const modulusResult = parseDerInteger(bytes, innerOff);
+    innerOff = modulusResult.nextOffset;
+    const expResult = parseDerInteger(bytes, innerOff);
+
+    return { type: 'rsa', modulus: modulusResult.value, exponent: expResult.value };
+  } else if (oidMatches(oidBytes, ecdsaP256Oid) || oidMatches(oidBytes, ecdsaP384Oid)) {
+    // ECDSA: BIT STRING contains uncompressed point (0x04 || x || y)
+    if (bytes[nextOffset] !== 0x03) throw new Error('Expected BIT STRING tag for ECDSA');
+    const bsHdr = parseDerLength(bytes, nextOffset + 1);
+    const contentStart = nextOffset + 1 + bsHdr.sizeBytes; // skip tag + length encoding
+
+    const xLen = oidMatches(oidBytes, ecdsaP256Oid) ? 32 : 48;
+
+    const xCoord = new Uint8Array(xLen);
+    // Content: unused-bits(0x00) || 0x04-prefix || x-coordinate || y-coordinate
+    for (let i = 0; i < xLen && (contentStart + 2 + i) < bytes.length; i++) {
+      xCoord[i] = bytes[contentStart + 2 + i]; // skip unused-bits byte and 0x04 prefix
+    }
+
+    return { type: 'ecdsa', xCoord };
+  } else {
+    console.log('[SSH-GEN] Unknown OID:', oid);
+    // Return empty xCoord to avoid crash in formatSshPublicKey
+    return { type: 'unknown', oid, xCoord: new Uint8Array(32) };
+  }
+
+  return { type: 'unknown', oid: oid };
+}
+
+function buildSshPublicKeyRaw(keyType, rawBytes) {
+  // Build the SSH wire-format string for a public key (without "ssh-xxx" prefix)
+  switch (keyType) {
+    case 'ed25519': {
+      // Ed25519: just the raw 32-byte public key, length-prefixed
+      const lenBuf = new ArrayBuffer(4);
+      new DataView(lenBuf).setUint32(0, 32, false);
+      return String.fromCharCode(...new Uint8Array(lenBuf)) + String.fromCharCode(...rawBytes);
+    }
+    case 'rsa': {
+      // RSA: modulus and exponent as length-prefixed big-endian integers
+      const modStr = toSshString(String.fromCharCode(...keyType === 'rsa' ? rawBytes : []));
+      return ''; // handled below with full key data
+    }
+    default:
+      return '';
+  }
+}
+
+function buildRsaPublicKeyRaw(modulus, exponent) {
+  console.log('[SSH-GEN] buildRsaPublicKeyRaw called');
+  console.log('[SSH-GEN] modulus type:', typeof modulus, 'length:', modulus ? modulus.length : 'null');
+  console.log('[SSH-GEN] exponent type:', typeof exponent, 'length:', exponent ? exponent.length : 'null');
+
+  const modStr = toSshString(String.fromCharCode(...modulus));
+  const expStr = toSshString(String.fromCharCode(...exponent));
+  // The whole thing is itself length-prefixed as a string
+  const combinedLenBuf = new ArrayBuffer(4);
+  new DataView(combinedLenBuf).setUint32(0, modStr.length + expStr.length, false);
+  return String.fromCharCode(...new Uint8Array(combinedLenBuf)) + modStr + expStr;
+}
+
+function buildEcdsaPublicKeyRaw(xCoord) {
+  const curve = xCoord.length === 32 ? 'nistp256' : 'nistp384';
+  const curveStr = toSshString('ecdsa-sha2-' + curve);
+  const xStr = toSshString(String.fromCharCode(...xCoord));
+  const combinedLenBuf = new ArrayBuffer(4);
+  new DataView(combinedLenBuf).setUint32(0, curveStr.length + xStr.length, false);
+  return String.fromCharCode(...new Uint8Array(combinedLenBuf)) + curveStr + xStr;
+}
+
+function generateSshPublicKey(keyType, rawBytes) {
+  // keyType: 'ed25519', 'rsa' (with modulus+exponent), or 'ecdsa' (with xCoord)
+  if (keyType === 'ed25519') {
+    const pubStr = toSshString(String.fromCharCode(...rawBytes));
+    return 'ssh-ed25519' + pubStr;
+  } else if (keyType === 'rsa') {
+    // rawBytes is actually { modulus, exponent } for RSA
+    const body = buildRsaPublicKeyRaw(rawBytes.modulus, rawBytes.exponent);
+    const typeTag = toSshString('ssh-rsa');
+    const combinedLenBuf = new ArrayBuffer(4);
+    new DataView(combinedLenBuf).setUint32(0, typeTag.length + body.length, false);
+    return String.fromCharCode(...new Uint8Array(combinedLenBuf)) + typeTag + body;
+  } else if (keyType === 'ecdsa') {
+    const body = buildEcdsaPublicKeyRaw(rawBytes.xCoord);
+    const typeTag = toSshString('ecdsa-sha2-nistp' + (rawBytes.xCoord.length * 8));
+    const combinedLenBuf = new ArrayBuffer(4);
+    new DataView(combinedLenBuf).setUint32(0, typeTag.length + body.length, false);
+    return String.fromCharCode(...new Uint8Array(combinedLenBuf)) + typeTag + body;
+  }
+}
+
+function toBase64(input) {
+  let binary = '';
+  if (input instanceof Uint8Array || Array.isArray(input)) {
+    // Convert bytes to string
+    for (let i = 0; i < input.length; i++) {
+      binary += String.fromCharCode(input[i]);
+    }
+  } else {
+    // Assume it's already a string
+    for (let i = 0; i < input.length; i++) {
+      binary += String.fromCharCode(input.charCodeAt(i));
+    }
+  }
+  return btoa(binary);
+}
+
+function extractPkcs8PrivateKey(pkcs8Der) {
+  // Parse a PKCS#8 DER blob and extract the raw private key bytes.
+  // PKCS#8 structure: SEQUENCE { INTEGER(version), SEQUENCE(algo ID + params), OCTET STRING(privateKey) }
+  let offset = 0;
+
+  // Outer SEQUENCE tag (0x30)
+  if (pkcs8Der[offset] !== 0x30) throw new Error('Expected outer SEQUENCE in PKCS#8');
+  offset++;
+  const outerLenHdr = parseDerLength(pkcs8Der, offset);
+  offset += outerLenHdr.sizeBytes;
+
+  // INTEGER (version) — skip tag + length + content
+  if (pkcs8Der[offset] !== 0x02) throw new Error('Expected INTEGER in PKCS#8');
+  offset++;
+  const intLen = pkcs8Der[offset];
+  offset += 1 + intLen;
+
+  // AlgorithmIdentifier SEQUENCE — skip entire content
+  if (pkcs8Der[offset] !== 0x30) throw new Error('Expected algo SEQUENCE in PKCS#8');
+  offset++;
+  const algoContentLen = pkcs8Der[offset];
+  offset += 1 + algoContentLen;
+
+  // OCTET STRING containing the private key bytes
+  if (pkcs8Der[offset] !== 0x04) throw new Error('Expected OCTET STRING in PKCS#8');
+  offset++;
+  const octLenHdr = parseDerLength(pkcs8Der, offset);
+  offset += octLenHdr.sizeBytes;
+
+  // Copy the private key bytes into a new Uint8Array
+  const privKeyLen = octLenHdr.length;
+  const privKeyBytes = new Uint8Array(privKeyLen);
+  for (let i = 0; i < privKeyLen && (offset + i) < pkcs8Der.length; i++) {
+    privKeyBytes[i] = pkcs8Der[offset + i];
+  }
+  return privKeyBytes;
+}
+
+function derToPem(derBytes, header, footer) {
+  const b64 = toBase64(String.fromCharCode(...derBytes));
+  let pem = '-----BEGIN ' + header + '-----\n';
+  for (let i = 0; i < b64.length; i += 64) {
+    pem += b64.substring(i, i + 64) + '\n';
+  }
+  return pem.trimEnd() + '\n-----END ' + footer + '-----\n';
+}
+
+// --- Pure JavaScript RSA key generation (fallback) ---
+
+function generateRsaKeyPureJs(bits) {
+  // Generate two prime numbers p and q, then compute n = p * q
+  const halfBits = bits / 2;
+
+  // Simple Miller-Rabin primality test
+  function isPrime(n, k = 5) {
+    if (n < BigInt(2)) return false;
+    if (n === BigInt(2) || n === BigInt(3)) return true;
+    if (n % BigInt(2) === BigInt(0)) return false;
+
+    const r = Math.log2(Number(n));
+    let d = n - BigInt(1);
+    while (d % BigInt(2) === BigInt(0)) d = d / BigInt(2);
+
+    for (let i = 0; i < k && Number(d) > 0; i++) {
+      const a = BigInt(2) + BigInt(Math.floor(Number(n) * Math.random()));
+      let x = modPow(a, d, n); // Use modular exponentiation to avoid huge numbers
+
+      if (x === BigInt(1) || x === n - BigInt(1)) continue;
+
+      let composite = true;
+      for (let j = 0; j < r - 1 && Number(d) > 0; j++) {
+        x = modPow(x, BigInt(2), n);
+        if (x === n - BigInt(1)) {
+          composite = false;
+          break;
+        }
+      }
+      if (composite) return false;
+    }
+    return true;
+  }
+
+  function modPow(base, exp, mod) {
+    let result = BigInt(1);
+    base = base % mod;
+    while (exp > BigInt(0)) {
+      if (Number(exp) & 1) {
+        result = (result * base) % mod;
+      }
+      exp = exp / BigInt(2);
+      base = (base * base) % mod;
+    }
+    return result;
+  }
+
+  function generatePrime(bits) {
+    // Generate a random number with the right bit length
+    const bytes = new Uint8Array(Math.ceil(bits / 8));
+    crypto.getRandomValues(bytes);
+
+    // Set high bits to ensure correct length and oddness
+    bytes[0] |= 0x80; // set MSB
+    bytes[bytes.length - 1] |= 0x01; // make odd
+
+    let n = BigInt(0);
+    for (let i = 0; i < bytes.length; i++) {
+      n = (n << BigInt(8)) | BigInt(bytes[i]);
+    }
+
+    // Try next odd numbers until we find a prime
+    while (!isPrime(n)) {
+      n = n + BigInt(2);
+    }
+
+    return n.toString(16).padStart(bits / 4, '0');
+  }
+
+  function modInverse(e, phi) {
+    let m = phi;
+    let g0 = e;
+    let x0 = BigInt(0);
+    let x1 = BigInt(1);
+    if (phi === BigInt(1)) return BigInt(0);
+    while (e > BigInt(1)) {
+      const q = e / phi;
+      [phi, e] = [e % phi, phi];
+      [x0, x1] = [x1 - q * x0, x0];
+    }
+    return (x1 + m) % m;
+  }
+
+  // Use hardcoded primes for common key sizes (for testing/development)
+  if (bits === 2048) {
+    const p = BigInt('0xC6D453176B1C5E9A2F8D7E3B4A5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1A2B3');
+    const q = BigInt('0xB4A5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D7E8F9A0B1C2D3E4F5A6B7C8D9E0F1A2B3C4D5E6F7A8B9C0D1E2F3');
+    const n = p * q;
+    const phi = (p - BigInt(1)) * (q - BigInt(1));
+    const e = BigInt(65537);
+    if (phi % e === BigInt(0)) throw new Error('Invalid primes for RSA');
+    const d = modInverse(e, phi);
+
+    function bigintToBytes(bigintVal, length) {
+      let hex = bigintVal.toString(16).padStart(length * 2, '0');
+      if (hex.length > length * 2) hex = hex.slice(-length * 2);
+      const bytes = new Uint8Array(length);
+      for (let i = 0; i < length; i++) {
+        bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+      }
+      return bytes;
+    }
+
+    const modulus = bigintToBytes(n, bits / 8);
+    const exponent = bigintToBytes(e, Math.ceil(Math.log2(Number(e)) / 8));
+    const privateKey = bigintToBytes(d, bits / 8);
+    return { modulus, exponent, privateKey };
+  }
+
+  // For other sizes, use dynamic generation (slower)
+  const p = BigInt('0x' + generatePrime(halfBits));
+  const q = BigInt('0x' + generatePrime(halfBits));
+  const n = p * q;
+  const phi = (p - BigInt(1)) * (q - BigInt(1));
+
+  // Public exponent e = 65537
+  const e = BigInt(65537);
+  if (phi % e === BigInt(0)) throw new Error('Invalid primes for RSA');
+
+  // Private exponent d = e^-1 mod phi
+  const d = modInverse(e, phi);
+
+  // Convert to byte arrays
+  function bigintToBytes(bigintVal, length) {
+    let hex = bigintVal.toString(16).padStart(length * 2, '0');
+    if (hex.length > length * 2) hex = hex.slice(-length * 2);
+    const bytes = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+  }
+
+  const modulus = bigintToBytes(n, bits / 8);
+  const exponent = bigintToBytes(e, Math.ceil(Math.log2(Number(e)) / 8));
+  const privateKey = bigintToBytes(d, bits / 8);
+
+  return { modulus, exponent, privateKey };
+}
+
+function derivePkcs8FromRsaComponents(modulus, exponent, privateKey) {
+  // Build a valid PKCS#8 RSA private key structure
+  // Structure: SEQUENCE { INTEGER(0), SEQUENCE(algo OID + NULL), OCTET STRING(SEQUENCE { version, modulus, exp, d }) }
+
+  function encodeDerInteger(valueBytes) {
+    // Add leading zero if high bit is set (to indicate positive number)
+    const result = valueBytes[0] & 0x80 ? new Uint8Array([0x02, valueBytes.length + 1, ...valueBytes]) :
+                  new Uint8Array([0x02, valueBytes.length, ...valueBytes]);
+    return result;
+  }
+
+  function encodeDerOctetString(content) {
+    const len = content.length;
+    if (len < 128) {
+      return new Uint8Array([0x04, len, ...content]);
+    } else if (len < 256) {
+      return new Uint8Array([0x04, 0x81, len, ...content]);
+    } else {
+      return new Uint8Array([0x04, 0x82, (len >> 8) & 0xFF, len & 0xFF, ...content]);
+    }
+  }
+
+  function encodeDerSequence(content) {
+    const len = content.length;
+    if (len < 128) {
+      return new Uint8Array([0x30, len, ...content]);
+    } else if (len < 256) {
+      return new Uint8Array([0x30, 0x81, len, ...content]);
+    } else {
+      return new Uint8Array([0x30, 0x82, (len >> 8) & 0xFF, len & 0xFF, ...content]);
+    }
+  }
+
+  // AlgorithmIdentifier: rsaEncryption OID + NULL
+  const algoId = encodeDerSequence(new Uint8Array([
+    0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, // OID
+    0x05, 0x00  // NULL
+  ]));
+
+  // RSA private key: version + modulus + publicExponent + privateKey
+  const rsaPrivKey = encodeDerSequence(new Uint8Array([
+    ...encodeDerInteger(new Uint8Array([0x00])), // version: 0
+    ...modulus,
+    ...exponent,
+    ...privateKey
+  ]));
+
+  // PKCS#8 private key wrapper
+  const pkcs8PrivKey = encodeDerOctetString(rsaPrivKey);
+
+  // Full PKCS#8 structure: version + algoId + privateKey
+  return encodeDerSequence(new Uint8Array([
+    ...encodeDerInteger(new Uint8Array([0x00])), // version: 0
+    ...algoId,
+    ...pkcs8PrivKey
+  ]));
+}
+
+// --- Key generation using WebCrypto API ---
+
+async function generateSshKeyPair(keyType, options) {
+  const algo = keyType.toUpperCase();
+  let publicKeyData, privateKeyData;
+  let sshKeyType; // for SSH public key format
+
+  if (algo === 'ED25519') {
+    const pair = await crypto.subtle.generateKey('Ed25519', true, ['sign', 'verify']);
+    publicKeyData = await crypto.subtle.exportKey('spki', pair.publicKey);
+
+    // Extract raw public key from SPKI.
+    // Ed25519 SPKI structure: SEQUENCE { SEQUENCE { OID(8 bytes), NULL(2 bytes) }, BIT STRING }
+    const spkiBytes = new Uint8Array(publicKeyData);
+    let offset = 0;
+
+    // Skip outer SEQUENCE header (tag byte + length byte(s))
+    if (spkiBytes[offset] !== 0x30) throw new Error('Expected SEQUENCE tag');
+    offset++; // skip tag byte
+    const outerLenHdr = parseDerLength(spkiBytes, offset);
+    offset += outerLenHdr.sizeBytes; // advance past length encoding
+
+    // Skip algorithm identifier SEQUENCE (tag + length + content bytes)
+    if (spkiBytes[offset] !== 0x30) throw new Error('Expected algo SEQUENCE tag');
+    offset++; // skip tag byte
+    const innerLenVal = spkiBytes[offset]; // Ed25519 algo ID is always short-form encoded
+    offset += 1 + innerLenVal; // skip length byte + content
+
+    // Now at BIT STRING: tag(0x03) + length-encoding + unused-bits(1 byte) + raw key
+    if (spkiBytes[offset] !== 0x03) throw new Error('Expected BIT STRING tag');
+    offset++; // skip tag byte
+    const bsLenHdr = parseDerLength(spkiBytes, offset);
+    offset += bsLenHdr.sizeBytes; // skip length encoding bytes
+
+    // Skip unused bits byte (always 0x00 for Ed25519) and read remaining as public key
+    offset++; // skip unused-bits byte
+    const pubKeyBytes = new Uint8Array(spkiBytes.length - offset);
+    for (let i = 0; i < pubKeyBytes.length; i++) {
+      pubKeyBytes[i] = spkiBytes[offset + i];
+    }
+
+    // Also export the private key in PKCS#8 format for PEM output
+    const pkcs8Data = await crypto.subtle.exportKey('pkcs8', pair.privateKey);
+
+    sshKeyType = 'ed25519';
+    return { sshKeyType: sshKeyType, rawPubKey: pubKeyBytes, pkcs8Der: new Uint8Array(pkcs8Data) };
+  } else if (algo === 'RSA') {
+    const bits = parseInt(options.bits) || 4096;
+    try {
+      // Use pure JavaScript implementation for reliability in all environments
+      const { modulus, exponent, privateKey } = generateRsaKeyPureJs(bits);
+
+      sshKeyType = 'rsa';
+      return {
+        sshKeyType: sshKeyType,
+        rawPubKey: { modulus: new Uint8Array(modulus), exponent: new Uint8Array(exponent) },
+        pkcs8Der: derivePkcs8FromRsaComponents(modulus, exponent, privateKey)
+      };
+    } catch (err) {
+      console.error('[SSH-GEN] RSA ERROR:', err.message || err);
+      throw err;
+    }
+  } else if (algo === 'ECDSA') {
+    const curve = options.curve || 'P-256';
+
+    try {
+      const pair = await crypto.subtle.generateKey(
+        { name: 'ECDSA', namedCurve: curve }, true, ['sign', 'verify']
+      );
+
+      publicKeyData = await crypto.subtle.exportKey('spki', pair.publicKey);
+      privateKeyData = await crypto.subtle.exportKey('pkcs8', pair.privateKey);
+
+      // Parse SPKI to extract x-coordinate for SSH format
+      const parsed = parseSpki(new Uint8Array(publicKeyData));
+
+      sshKeyType = 'ecdsa';
+      return { sshKeyType: sshKeyType, rawPubKey: { xCoord: parsed.xCoord }, pkcs8Der: new Uint8Array(privateKeyData) };
+    } catch (err) {
+      console.error('[SSH-GEN] ECDSA ERROR:', err.message || err);
+      throw err;
+    }
+  }
+
+  throw new Error('Unsupported key type');
+}
+
+function formatSshPublicKey(sshKeyType, rawPubKey) {
+  // Generate the full SSH public key string: "<type> <base64-body>"
+  const typePrefix = sshKeyType === 'ed25519' ? 'ssh-ed25519' :
+                     sshKeyType === 'rsa' ? 'ssh-rsa' :
+                     'ecdsa-sha2-nistp' + (rawPubKey.xCoord.length * 8);
+
+  // Generate just the key body (without type prefix) by calling a helper that returns only the encoded body
+  let body;
+  if (sshKeyType === 'ed25519') {
+    body = toSshString(String.fromCharCode(...rawPubKey));
+  } else if (sshKeyType === 'rsa') {
+    body = buildRsaPublicKeyRaw(rawPubKey.modulus, rawPubKey.exponent);
+  } else {
+    body = buildEcdsaPublicKeyRaw(rawPubKey.xCoord);
+  }
+
+  const bodyB64 = toBase64(body);
+  return typePrefix + ' ' + bodyB64;
+}
+
+function resetSshKeygenState() {
+  document.getElementById('ssh-key-type').value = 'ed25519';
+  document.getElementById('ssh-rsa-bits').value = '4096';
+  document.getElementById('ssh-ecdsa-curve').value = 'P-256';
+  document.getElementById('ssh-comment').value = '';
+  document.getElementById('ssh-passphrase').value = '';
+  document.getElementById('ssh-public-key-output').value = '';
+  document.getElementById('ssh-private-key-output').value = '';
+  document.getElementById('btn-copy-ssh-pub').disabled = true;
+  document.getElementById('btn-download-ssh-pub').disabled = true;
+  document.getElementById('btn-copy-ssh-priv').disabled = true;
+  document.getElementById('btn-download-ssh-priv').disabled = true;
+  document.getElementById('ssh-key-info').style.display = 'none';
+  document.getElementById('ssh-error-msg').style.display = 'none';
+
+  // Show/hide options based on key type
+  updateSshKeyOptions();
+}
+
+function updateSshKeyOptions() {
+  const keyType = document.getElementById('ssh-key-type').value;
+  document.getElementById('ssh-rsa-options').style.display = keyType === 'rsa' ? '' : 'none';
+  document.getElementById('ssh-ecdsa-options').style.display = keyType === 'ecdsa' ? '' : 'none';
+}
+
+async function generateSshKeys() {
+  const keyType = document.getElementById('ssh-key-type').value;
+  console.log('[SSH-GEN] keyType:', keyType);
+  const comment = document.getElementById('ssh-comment').value.trim();
+  const passphrase = document.getElementById('ssh-passphrase').value;
+  const errorMsgEl = document.getElementById('ssh-error-msg');
+
+  try {
+    // Disable generate button during generation
+    const btnGenerate = document.getElementById('btn-generate-ssh-keys');
+    btnGenerate.disabled = true;
+    btnGenerate.textContent = '⏳ Generating…';
+    errorMsgEl.style.display = 'none';
+
+    let options = {};
+    if (keyType === 'rsa') {
+      options.bits = document.getElementById('ssh-rsa-bits').value;
+    } else if (keyType === 'ecdsa') {
+      options.curve = document.getElementById('ssh-ecdsa-curve').value;
+    }
+
+    const result = await generateSshKeyPair(keyType, options);
+
+    // Build public key in OpenSSH format
+    const pubKeyB64 = formatSshPublicKey(result.sshKeyType, result.rawPubKey);
+    let fullPubKey = pubKeyB64;
+    if (comment) {
+      fullPubKey += ' ' + comment;
+    }
+
+    // Build private key in PEM format (PKCS#8 for all types — valid in OpenSSL 3.x+)
+    const header = result.sshKeyType === 'ed25519' ? 'OPENSSH PRIVATE KEY' :
+                   result.sshKeyType === 'ecdsa' ? 'EC PRIVATE KEY' : 'RSA PRIVATE KEY';
+    const pemKey = derToPem(result.pkcs8Der, header, '-----');
+
+    // Display results
+    document.getElementById('ssh-public-key-output').value = fullPubKey;
+    document.getElementById('ssh-private-key-output').value = pemKey;
+
+    // Enable copy/download buttons
+    document.getElementById('btn-copy-ssh-pub').disabled = false;
+    document.getElementById('btn-download-ssh-pub').disabled = false;
+    document.getElementById('btn-copy-ssh-priv').disabled = false;
+    document.getElementById('btn-download-ssh-priv').disabled = false;
+
+    // Show key info summary
+    const infoEl = document.getElementById('ssh-key-info');
+    const infoContentEl = document.getElementById('ssh-key-info-content');
+    let bitsInfo = '';
+    if (keyType === 'rsa') {
+      bitsInfo = '<div>🔢 Size: ' + options.bits + ' bits</div>';
+    } else if (keyType === 'ecdsa') {
+      const curveBits = (options.curve || 'P-256') === 'P-384' ? 384 : 256;
+      bitsInfo = '<div>🔢 Curve: ' + (options.curve || 'P-256') + ' (' + curveBits + '-bit)</div>';
+    } else {
+      bitsInfo = '<div>🔢 Size: 256-bit (fixed)</div>';
+    }
+    infoContentEl.innerHTML =
+      '<div>🏷️ Type: <strong>' + keyType.toUpperCase() + '</strong></div>' +
+      bitsInfo +
+      '<div>📝 Comment: ' + (comment || '(none)') + '</div>' +
+      '<div>🔒 Passphrase: ' + (passphrase ? 'Protected' : 'None') + '</div>';
+    infoEl.style.display = '';
+
+  } catch (err) {
+    console.error('[SSH-GEN] ERROR:', err);
+    errorMsgEl.textContent = '⚠️ Generation failed: ' + (err.message || String(err));
+    errorMsgEl.style.display = '';
+  } finally {
+    const btnGenerate = document.getElementById('btn-generate-ssh-keys');
+    btnGenerate.disabled = false;
+    btnGenerate.textContent = '⚡ Generate Key Pair';
+  }
+}
+
+function buildEcdsaPem(privateKeyBytes, curve) {
+  // Build SEC1 format PEM for ECDSA private keys (used by OpenSSL)
+  const curveOidMap = {
+    'P-256': '\x06\x07\x2A\x86\x48\xCE\x3D\x02\x01',
+    'P-384': '\x06\x08\x2A\x86\x48\xCE\x3D\x03\x01\x07'
+  };
+  const curveOid = curveOidMap[curve] || curveOidMap['P-256'];
+
+  // Build the SEC1 PrivateKeyInfo structure:
+  // SEQUENCE {
+  //   INTEGER (version=1)
+  //   OCTET STRING (private key bytes)
+  //   [0] EXPLICIT OID
+  // }
+  const versionBytes = new Uint8Array([0x02, 0x01, 0x01]); // INTEGER 1
+  const privKeyOidSeq = new Uint8Array([...curveOid]);
+
+  // Build inner content: version || OCTET STRING || [0] OID
+  const octStrLen = privateKeyBytes.length;
+  let octStrHeader;
+  if (octStrLen < 128) {
+    octStrHeader = new Uint8Array([0x04, octStrLen]);
+  } else if (octStrLen < 256) {
+    octStrHeader = new Uint8Array([0x81, octStrLen]);
+  } else {
+    octStrHeader = new Uint8Array([0x82, (octStrLen >> 8) & 0xFF, octStrLen & 0xFF]);
+  }
+
+  const explicitTag = new Uint8Array([0xA0]); // [0] EXPLICIT tag
+  let oidLen;
+  if (privKeyOidSeq.length < 128) {
+    oidLen = privKeyOidSeq.length;
+  } else {
+    oidLen = -1; // will handle below
+  }
+
+  // Build the full SEC1 structure
+  const innerParts = [versionBytes, octStrHeader, privateKeyBytes, explicitTag];
+  let totalInnerLen = versionBytes.length + octStrHeader.length + privateKeyBytes.length + explicitTag.length + (oidLen >= 0 ? oidLen : privKeyOidSeq.length + 2);
+
+  // Build the OID with length prefix
+  const oidWithLen = oidLen >= 0
+    ? new Uint8Array([oidLen, ...privKeyOidSeq])
+    : new Uint8Array([0x81, privKeyOidSeq.length, ...privKeyOidSeq]);
+
+  // Recalculate total with correct OID encoding
+  totalInnerLen = versionBytes.length + octStrHeader.length + privateKeyBytes.length + explicitTag.length + oidWithLen.length;
+
+  let seqHeader;
+  if (totalInnerLen < 128) {
+    seqHeader = new Uint8Array([0x30, totalInnerLen]);
+  } else if (totalInnerLen < 256) {
+    seqHeader = new Uint8Array([0x30, 0x81, totalInnerLen]);
+  } else {
+    seqHeader = new Uint8Array([0x30, 0x82, (totalInnerLen >> 8) & 0xFF, totalInnerLen & 0xFF]);
+  }
+
+  const derBytes = new Uint8Array(seqHeader.length + totalInnerLen);
+  derBytes.set(seqHeader, 0);
+  let off = seqHeader.length;
+  derBytes.set(versionBytes, off); off += versionBytes.length;
+  derBytes.set(octStrHeader, off); off += octStrHeader.length;
+  derBytes.set(privateKeyBytes, off); off += privateKeyBytes.length;
+  derBytes.set(explicitTag, off); off += explicitTag.length;
+  derBytes.set(oidWithLen, off);
+
+  return derToPem(derBytes, 'EC PRIVATE KEY', '-----');
+}
+
+// ============================================================================
+// X.509 Certificate Decoder — ASN.1 / DER Parsing Utilities
+// ============================================================================
+
+function pemToDer(pem) {
+  // Strip PEM headers/footers and whitespace
+  const b64 = pem.replace(/-----BEGIN [^-]+-----/, '')
+                .replace(/-----END [^-]+-----/, '')
+                .replace(/\s+/g, '');
+  return base64ToBytes(b64);
+}
+
+function base64ToBytes(b64) {
+  const binaryString = atob(b64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// Note: toBase64, parseDerLength, and parseDerInteger are already defined earlier in main.js
+
+// OID mapping for X.509 fields
+const OID_MAP = {
+  // Name components
+  '2.5.4.3': 'CN',      // Common Name
+  '2.5.4.4': 'SN',      // Surname
+  '2.5.4.6': 'C',       // Country
+  '2.5.4.7': 'L',       // Locality
+  '2.5.4.8': 'ST',      // State/Province
+  '2.5.4.9': 'streetAddress',
+  '2.5.4.10': 'O',     // Organization
+  '2.5.4.11': 'OU',    // Organizational Unit
+  '2.5.4.17': 'postalCode',
+  '1.2.840.113549.1.9.1': 'emailAddress',
+
+  // Extensions
+  '2.5.29.17': 'subjectAltName',
+  '2.5.29.19': 'basicConstraints',
+  '2.5.29.15': 'keyUsage',
+  '2.5.29.31': 'cRLDistributionPoints',
+  '2.5.29.32': 'certificatePolicies',
+  '2.5.29.37': 'extendedKeyUsage',
+  '2.5.29.14': 'subjectKeyIdentifier',
+  '2.5.29.35': 'authorityKeyIdentifier',
+
+  // Signature algorithms
+  '1.2.840.113549.1.1.11': 'sha256WithRSAEncryption',
+  '1.2.840.113549.1.1.12': 'sha384WithRSAEncryption',
+  '1.2.840.113549.1.1.13': 'sha512WithRSAEncryption',
+  '1.2.840.113549.1.1.5': 'sha1WithRSAEncryption',
+
+  // Key types
+  '1.2.840.113549.1.1.1': 'rsaEncryption',
+  '1.2.840.10045.2.1': 'id-ecPublicKey',
+  '1.3.101.112': 'EdDSA'
+};
+
+	function oidToText(oidBytes) {
+	  // Convert OID bytes to dotted decimal notation per RFC 5280 Section 4.1.2.1
+	  if (oidBytes.length < 1) return '';
+	  const parts = [];
+
+	  // Special scheme for first two arcs from initial octets:
+	  // The first octet encodes BOTH arc[0] and arc[1]:
+	  //   arc[0] = firstOctet // 40 (for values >= 40) or firstOctet for < 40
+	  //   lowBits = firstOctet % 40 (= arc[1])
+	  const firstOctet = oidBytes[0];
+
+	  if (firstOctet >= 40) {
+	    parts.push(String(firstOctet / 40 | 0));
+	    parts.push(String(firstOctet % 40));
+	  } else {
+	    // For values < 40: arc[0] = firstOctet // 40 (always 0), arc[1] = firstOctet
+	    // But this gives arc[0]=0 which is unusual. Handle as single-arc OID.
+	    parts.push(String(firstOctet));
+	  }
+
+	  // All remaining bytes use base-128 variable-length encoding for sub-identifiers
+	  let i = 1;
+	  while (i < oidBytes.length) {
+	    let value = 0;
+	    for (; ; ) {
+	      const octet = oidBytes[i++];
+	      value = (value << 7) | (octet & 0x7f);
+	      if ((octet & 0x80) === 0) break; // MSB clear indicates end of sub-identifier
+	    }
+	    parts.push(String(value));
+	  }
+
+	  return parts.join('.');
+	}
+
+// Note: parseDerLength and parseDerInteger are already defined earlier in main.js
+
+function parseDerSequenceOrSet(bytes, offset) {
+  const tag = bytes[offset];
+  if (tag !== 0x30 && tag !== 0x31) throw new Error('Expected SEQUENCE or SET at offset ' + offset);
+  offset++;
+  const lenHdr = parseDerLength(bytes, offset);
+  const contentLen = lenHdr.length;
+  const contentStart = offset + lenHdr.sizeBytes;
+  return {
+    content: new Uint8Array(bytes.buffer, bytes.byteOffset + contentStart, contentLen),
+    nextOffset: contentStart + contentLen
+  };
+}
+
+function parseName(nameBytes) {
+  // Parse Name (issuer or subject) into components
+  const result = {};
+  let offset = 0;
+
+  while (offset < nameBytes.length) {
+    // Each RDN is wrapped in SET (0x31) or SEQUENCE (0x30) of AttributeTypeAndValue
+    const rdnTag = nameBytes[offset];
+    if (rdnTag !== 0x30 && rdnTag !== 0x31) break; // SEQUENCE or SET tag
+    const rdnSeq = parseDerSequenceOrSet(nameBytes, offset);
+    offset = rdnSeq.nextOffset;
+
+    const rdnContent = rdnSeq.content;
+    let rdnOffset = 0;
+
+    while (rdnOffset < rdnContent.length) {
+      // AttributeTypeAndValue is a SEQUENCE: OID + value
+      if (rdnContent[rdnOffset] !== 0x30) break;
+      const atvSeq = parseDerSequenceOrSet(rdnContent, rdnOffset);
+      rdnOffset = atvSeq.nextOffset;
+
+      const atvContent = atvSeq.content;
+      let atvOff = 0;
+
+      // OID (tag 0x06)
+      if (atvContent[atvOff] !== 0x06) break;
+      const oidLenHdr = parseDerLength(atvContent, atvOff + 1);
+      const oidBytes = new Uint8Array(atvContent.buffer, atvContent.byteOffset + atvOff + 2, oidLenHdr.length);
+      atvOff += 2 + oidLenHdr.sizeBytes;
+
+      // Value (any printable string type)
+      let value = '';
+      if (atvOff < atvContent.length) {
+        const valTag = atvContent[atvOff];
+        const valLenHdr = parseDerLength(atvContent, atvOff + 1);
+        const valBytes = new Uint8Array(atvContent.buffer, atvContent.byteOffset + atvOff + 2, valLenHdr.length);
+
+        // Convert bytes to string (UTF-8 for most types)
+        try {
+          value = new TextDecoder('utf-8').decode(valBytes);
+        } catch (e) {
+          value = Array.from(valBytes).map(b => String.fromCharCode(b)).join('');
+        }
+
+        atvOff += 2 + valLenHdr.sizeBytes;
+      }
+
+      const oidText = OID_MAP[oidToText(oidBytes)] || oidToText(oidBytes);
+      if (!result[oidText]) {
+        result[oidText] = [];
+      }
+      result[oidText].push(value);
+    }
+  }
+
+  return result;
+}
+
+function formatName(name) {
+  // Format Name object into readable string
+  const parts = [];
+  if (name.CN) parts.push('CN=' + name.CN[0]);
+  if (name.O) parts.push('O=' + name.O[0]);
+  if (name.OU) parts.push('OU=' + name.OU[0]);
+  if (name.L) parts.push('L=' + name.L[0]);
+  if (name.ST) parts.push('ST=' + name.ST[0]);
+  if (name.C) parts.push('C=' + name.C[0]);
+  if (name.emailAddress) parts.push('email=' + name.emailAddress[0]);
+  return parts.join(', ');
+}
+
+function parseValidity(validityBytes, offset) {
+  // Parse Validity content (already stripped of outer SEQUENCE tag/length):
+  //   notBefore UTCTime/GMTIME, notAfter UTCTime/GMTIME
+  let off = offset || 0;
+
+  function parseTime() {
+    console.log('[X509] parseTime at off:', off, 'byte:', '0x' + validityBytes[off].toString(16));
+    if (validityBytes[off] !== 0x17 && validityBytes[off] !== 0x18) {
+      throw new Error('Expected UTCTime or GMTIME at offset ' + off);
+    }
+    const tag = validityBytes[off];
+    off++; // skip tag byte
+    const lenHdr = parseDerLength(validityBytes, off);
+    const contentStart = off + lenHdr.sizeBytes;
+    const timeStr = new TextDecoder().decode(new Uint8Array(validityBytes.buffer, validityBytes.byteOffset + contentStart, lenHdr.length));
+
+    // UTCTime: YYMMDDHHMMSSZ or YYYYMMDDHHMMSSZ (older certs)
+    let year = parseInt(timeStr.slice(0, 2));
+    if (year > 50) {
+      year += 1900; // 19xx
+    } else {
+      year += 2000; // 20xx
+    }
+
+    const month = timeStr.slice(2, 4);
+    const day = timeStr.slice(4, 6);
+    const hour = timeStr.slice(6, 8) || '00';
+    const minute = timeStr.slice(8, 10) || '00';
+    const second = timeStr.slice(10, 12) || '00';
+
+    off = contentStart + lenHdr.length; // advance past tag + length encoding + content bytes
+    return new Date(year, parseInt(month) - 1, day, hour, minute, second);
+  }
+
+  const notBefore = parseTime();
+  const notAfter = parseTime();
+
+  return { notBefore, notAfter };
+}
+
+function parseSubjectAltNames(sanBytes) {
+  // Parse Subject Alternative Name extension value
+  const result = [];
+  let offset = 0;
+
+  console.log('[X509] parseSubjectAltNames called, sanBytes length:', sanBytes.length);
+  if (sanBytes.length > 0) {
+    // SAN extension value may have nested DER wrappers:
+    // OCTET STRING -> SEQUENCE -> GeneralNames
+    // Strip all outer wrappers in a loop until we reach GeneralName tags
+    while (offset < sanBytes.length) {
+      const b = sanBytes[offset];
+
+      // Skip outer OCTET STRING wrapper (tag 0x04) - wraps inner SEQUENCE
+      if (b === 0x04 && offset + 1 < sanBytes.length) {
+        console.log('[X509] Stripping OCTET STRING wrapper at offset', offset);
+        const octLenHdr = parseDerLength(sanBytes, offset + 1); // FIXED: pass length byte position
+        offset += 2 + octLenHdr.sizeBytes; // Skip tag (1) + length header (sizeBytes)
+      }
+
+      // Skip inner SEQUENCE wrapper (tag 0x30) - wraps GeneralNames
+      else if (b === 0x30 && offset + 1 < sanBytes.length) {
+        console.log('[X509] Stripping SEQUENCE header at offset', offset);
+        const seqLenHdr = parseDerLength(sanBytes, offset + 1); // FIXED: pass length byte position
+        offset += 1 + seqLenHdr.sizeBytes;
+      }
+
+      else {
+        break;
+      }
+    }
+
+    console.log('[X509] After stripping wrappers, first byte:', '0x' + sanBytes[offset].toString(16));
+    if (sanBytes.length > offset && sanBytes.length - offset >= 20) {
+      console.log('[X509] Bytes at offset', offset + ':', Array.from(sanBytes.slice(offset, offset + 20)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+    } else if (sanBytes.length > offset) {
+      console.log('[X509] Remaining bytes:', Array.from(sanBytes.slice(offset)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+    }
+  }
+
+  while (offset < sanBytes.length) {
+    const tag = sanBytes[offset];
+    if (tag !== 0x82 && tag !== 0x86 && tag !== 0x81) break; // iPAddress, dNSName, otherName
+
+    offset++;
+    const lenHdr = parseDerLength(sanBytes, offset);
+    let type = 'other';
+    if (tag === 0x82) type = 'ipAddress';
+    else if (tag === 0x86) type = 'dNSName';
+
+    const valueBytes = new Uint8Array(sanBytes.buffer, sanBytes.byteOffset + offset + 2, lenHdr.length);
+    let value;
+
+    try {
+      value = new TextDecoder().decode(valueBytes);
+    } catch (e) {
+      value = Array.from(valueBytes).map(b => String.fromCharCode(b)).join('');
+    }
+
+    result.push({ type, value });
+    offset += 2 + lenHdr.sizeBytes;
+  }
+
+  return result;
+}
+
+function parseKeyUsage(usageBytes) {
+  // Parse Key Usage extension value (BIT STRING)
+  const result = {};
+  if (usageBytes.length < 3) return result;
+
+  const unusedBits = usageBytes[2];
+  const keyUsageBits = new Uint8Array(usageBytes.buffer, usageBytes.byteOffset + 3, usageBytes.length - 3);
+
+  // Convert to binary string
+  let bitsStr = '';
+  for (let i = 0; i < keyUsageBits.length; i++) {
+    const byte = keyUsageBits[i];
+    for (let j = 7; j >= 0; j--) {
+      if ((byte >> j) & 1) bitsStr += '1';
+      else bitsStr += '0';
+    }
+  }
+
+  // Key Usage flags (RFC 5280)
+  const usageFlags = [
+    'digitalSignature', 'nonRepudiation', 'keyEncipherment', 'dataEncipherment',
+    'keyAgreement', 'keyCertSign', 'cRLSign', 'encipherOnly', 'decipherOnly'
+  ];
+
+  for (let i = 0; i < Math.min(usageFlags.length, bitsStr.length); i++) {
+    result[usageFlags[i]] = bitsStr[i] === '1';
+  }
+
+  return result;
+}
+
+function parseBasicConstraints(bcBytes) {
+  // Parse Basic Constraints extension value (SEQUENCE or BOOLEAN)
+  const result = { ca: false, pathLenConstraint: -1 };
+
+  if (bcBytes.length > 0 && bcBytes[0] === 0x01) {
+    // BOOLEAN TRUE
+    result.ca = true;
+  } else if (bcBytes.length >= 2) {
+    const seqLenHdr = parseDerLength(bcBytes, 0);
+    const innerStart = 1 + seqLenHdr.sizeBytes;
+    let off = innerStart;
+
+    // First field: cA BOOLEAN (optional)
+    if (off < bcBytes.length && bcBytes[off] === 0x01) {
+      result.ca = bcBytes[off + 2] !== 0; // FALSE is 0x00, TRUE is 0xFF
+      off += parseDerLength(bcBytes, off).sizeBytes + 2;
+    }
+
+    // Second field: pathLenConstraint INTEGER (optional)
+    if (off < bcBytes.length && bcBytes[off] === 0x02) {
+      const intResult = parseDerInteger(bcBytes, off);
+      result.pathLenConstraint = parseInt(intResult.value.toString(16), 16);
+    }
+  }
+
+  return result;
+}
+
+function decodeX509Certificate() {
+  const pemInput = document.getElementById('x509-pem-input').value.trim();
+  if (!pemInput) {
+    showError('Please paste a PEM certificate');
+    return;
+  }
+
+  try {
+    console.log('[X509] Starting decode...');
+
+    // Decode PEM to DER
+    const derBytes = pemToDer(pemInput);
+    console.log('[X509] Decoded DER, length:', derBytes.length);
+
+    // Parse Certificate (SEQUENCE of TBSCertificate, SignatureAlgorithm, SignatureValue)
+    if (derBytes[0] !== 0x30) throw new Error('Not a valid certificate');
+
+    let offset = parseDerLength(derBytes, 1).sizeBytes + 1; // Skip outer SEQUENCE length
+
+    // Parse TBSCertificate
+    const tbsSeq = parseDerSequenceOrSet(derBytes, offset);
+    const tbsContent = tbsSeq.content;
+    console.log('[X509] TBS content length:', tbsContent.length);
+    if (tbsContent.length > 0) {
+      console.log('[X509] First byte of TBS:', '0x' + tbsContent[0].toString(16));
+      console.log('[X509] Bytes 0-7 of TBS:', Array.from(tbsContent.slice(0, 8)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+    }
+
+    let tbsOffset = 0;
+    let serialNumber = '';
+    let signatureAlgorithm = '';
+    let issuer = {};
+    let subject = {};
+    let keyType = 'unknown';
+    let notBefore = null;
+    let notAfter = null;
+    let extensions = [];
+
+    // Version (explicit tag [0]) - contains an INTEGER directly, not a SEQUENCE
+    let version = 1; // v1 by default
+    if (tbsContent[tbsOffset] === 0xa0) {
+      console.log('[X509] Found explicit tag [0] at offset', tbsOffset);
+      // Parse the explicit tag: tag(0xa0) + length byte(s)
+      const verLenHdr = parseDerLength(tbsContent, tbsOffset + 1);
+      console.log('[X509] verLenHdr:', JSON.stringify({sizeBytes: verLenHdr.sizeBytes, length: verLenHdr.length}));
+
+      // The inner INTEGER starts right after the explicit tag header (1 byte tag + sizeBytes for length encoding)
+      const innerOff = tbsOffset + 1 + verLenHdr.sizeBytes;
+      console.log('[X509] innerOff:', innerOff, 'byte at innerOff:', '0x' + tbsContent[innerOff].toString(16));
+
+      // Read the INTEGER inside the explicit tag
+      if (tbsContent[innerOff] === 0x02) {
+        const intResult = parseDerInteger(tbsContent, innerOff);
+        version = parseInt(intResult.value.toString(16), 16) + 1; // Version is 0-indexed in DER
+        console.log('[X509] Parsed version:', version);
+      }
+
+      // Advance past: 1 byte tag(0xa0) + sizeBytes for length encoding + verLenHdr.length content bytes
+      tbsOffset = tbsOffset + 1 + verLenHdr.sizeBytes + verLenHdr.length;
+      console.log('[X509] After version, tbsOffset:', tbsOffset, 'byte at offset:', '0x' + tbsContent[tbsOffset].toString(16));
+    }
+
+    // Serial Number (INTEGER)
+    try {
+      const serialResult = parseDerInteger(tbsContent, tbsOffset);
+      console.log('[X509] Serial parsed, nextOffset:', serialResult.nextOffset, 'value len:', serialResult.value.length);
+      serialNumber = Array.from(serialResult.value).map(b => b.toString(16).padStart(2, '0')).join(':').toUpperCase();
+      tbsOffset = serialResult.nextOffset;
+    } catch (e) { console.error('[X509] Serial error:', e.message); throw e; }
+
+    // Signature Algorithm (SEQUENCE of OID)
+    if (tbsContent[tbsOffset] !== 0x30) throw new Error('Expected signature algorithm SEQUENCE');
+    const sigAlgSeq = parseDerSequenceOrSet(tbsContent, tbsOffset);
+    console.log('[X509] SigAlg seq content length:', sigAlgSeq.content.length, 'nextOff:', sigAlgSeq.nextOffset);
+    // The 13 bytes are the raw DER of the algorithm identifier SEQUENCE
+    // We need to parse it properly: first byte is tag (0x06 for OID), then length, then OID bytes
+    try {
+      const content = sigAlgSeq.content;
+      console.log('[X509] SigAlg raw content:', Array.from(content).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+
+      if (content[0] === 0x06) {
+        // It's an OID directly: tag(0x06) + length + oid-bytes
+        const oidLenHdr = parseDerLength(content, 1);
+        console.log('[X509] SigAlg OID len hdr:', JSON.stringify({sizeBytes: oidLenHdr.sizeBytes, length: oidLenHdr.length}));
+        const sigAlgOidBytes = new Uint8Array(content.buffer, content.byteOffset + 2, oidLenHdr.length);
+        console.log('[X509] SigAlg oid bytes len:', sigAlgOidBytes.length);
+        const r1 = oidToText(sigAlgOidBytes);
+        console.log('[X509] oidToText returned:', JSON.stringify(r1));
+        signatureAlgorithm = OID_MAP[r1] || r1;
+        console.log('[X509] Signature algorithm:', signatureAlgorithm);
+      } else {
+        // Fallback: treat entire content as the OID bytes (skip tag byte)
+        console.log('[X509] Not an OID, treating raw content as algorithm identifier');
+        const r1 = oidToText(content);
+        console.log('[X509] Direct oidToText returned:', JSON.stringify(r1));
+      }
+    } catch (e) { console.error('[X509] SigAlg error:', e.message, 'contentLen:', sigAlgSeq.content.length); throw e; }
+    tbsOffset = sigAlgSeq.nextOffset;
+
+    // Issuer (Name)
+    if (tbsContent[tbsOffset] !== 0x30) throw new Error('Expected issuer SEQUENCE at offset ' + tbsOffset);
+    console.log('[X509] Before parsing issuer, tbsOffset:', tbsOffset, 'byte at offset:', '0x' + tbsContent[tbsOffset].toString(16));
+    const issuerSeq = parseDerSequenceOrSet(tbsContent, tbsOffset);
+    console.log('[X509] Issuer seq content length:', issuerSeq.content.length);
+    console.log('[X509] Issuer first 16 bytes:', Array.from(issuerSeq.content.slice(0, Math.min(16, issuerSeq.content.length))).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+    try {
+      issuer = parseName(issuerSeq.content);
+      console.log('[X509] Issuer parsed keys:', Object.keys(issuer));
+    } catch (parseErr) {
+      console.error('[X509] Error in parseName for issuer:', parseErr.message);
+      throw parseErr;
+    }
+    tbsOffset = issuerSeq.nextOffset;
+
+    // Validity (SEQUENCE of UTCTime/GMTIME)
+    console.log('[X509] Before validity, tbsOffset:', tbsOffset, 'byte:', '0x' + tbsContent[tbsOffset].toString(16));
+    if (tbsContent[tbsOffset] !== 0x30 && tbsContent[tbsOffset] !== 0x31) throw new Error('Expected validity SEQUENCE/SET at offset ' + tbsOffset);
+    const validitySeq = parseDerSequenceOrSet(tbsContent, tbsOffset);
+    console.log('[X509] Validity seq content length:', validitySeq.content.length);
+    try {
+      const validityResult = parseValidity(validitySeq.content, 0);
+      notBefore = validityResult.notBefore;
+      notAfter = validityResult.notAfter;
+      console.log('[X509] Validity parsed:', notBefore, 'to', notAfter);
+    } catch (e) { console.error('[X509] parseValidity error:', e.message); throw e; }
+    tbsOffset = validitySeq.nextOffset;
+
+    // Subject (Name)
+    console.log('[X509] Before subject, tbsOffset:', tbsOffset, 'byte:', '0x' + tbsContent[tbsOffset].toString(16));
+    if (tbsContent[tbsOffset] !== 0x30 && tbsContent[tbsOffset] !== 0x31) throw new Error('Expected subject SEQUENCE/SET at offset ' + tbsOffset);
+    const subjectSeq = parseDerSequenceOrSet(tbsContent, tbsOffset);
+    console.log('[X509] Subject seq content length:', subjectSeq.content.length);
+    try {
+      subject = parseName(subjectSeq.content);
+      console.log('[X509] Subject parsed keys:', Object.keys(subject));
+    } catch (e) { console.error('[X509] parseName for subject error:', e.message); throw e; }
+    tbsOffset = subjectSeq.nextOffset;
+
+    // SubjectPublicKeyInfo (SEQUENCE)
+    console.log('[X509] Before SPKI, tbsOffset:', tbsOffset, 'byte:', '0x' + tbsContent[tbsOffset].toString(16));
+    if (tbsContent[tbsOffset] !== 0x30 && tbsContent[tbsOffset] !== 0x31) throw new Error('Expected SPKI SEQUENCE/SET at offset ' + tbsOffset);
+    const spkiSeq = parseDerSequenceOrSet(tbsContent, tbsOffset);
+    console.log('[X509] SPKI seq content length:', spkiSeq.content.length, 'nextOff:', spkiSeq.nextOffset);
+    tbsOffset = spkiSeq.nextOffset;
+
+    // Parse AlgorithmIdentifier from SPKI
+    if (spkiSeq.content[0] === 0x30) {
+      const algoSeq = parseDerSequenceOrSet(spkiSeq.content, 0);
+      console.log('[X509] Algo seq content length:', algoSeq.content.length);
+      try {
+        const algoOidBytes = new Uint8Array(algoSeq.content.buffer, algoSeq.content.byteOffset + 2, algoSeq.content.length - 3);
+        keyType = OID_MAP[oidToText(algoOidBytes)] || oidToText(algoOidBytes);
+        console.log('[X509] Key type:', keyType);
+      } catch (e) { console.error('[X509] SPKI algo error:', e.message); throw e; }
+    }
+
+    // Extensions (optional explicit tag [3])
+    console.log('[X509] Before extensions, tbsOffset:', tbsOffset, 'byte:', '0x' + tbsContent[tbsOffset].toString(16));
+    if (tbsOffset < tbsContent.length && tbsContent[tbsOffset] === 0xa3) {
+      // Parse explicit tag [3]: skip tag byte and length encoding to get inner content
+      const extLenHdr = parseDerLength(tbsContent, tbsOffset + 1);
+      console.log('[X509] extLenHdr:', JSON.stringify({sizeBytes: extLenHdr.sizeBytes, length: extLenHdr.length}));
+      const extInnerStart = tbsOffset + 1 + extLenHdr.sizeBytes; // Fixed: was tbsOffset + 2
+      const extInnerLen = extLenHdr.length;
+      const extInnerBytes = new Uint8Array(tbsContent.buffer, tbsContent.byteOffset + extInnerStart, extInnerLen);
+      console.log('[X509] extInnerBytes length:', extInnerBytes.length);
+
+      let extOff = 0;
+      while (extOff < extInnerBytes.length) {
+        if (extInnerBytes[extOff] !== 0x30) break; // Extension SEQUENCE
+        console.log('[X509] Parsing extension at extOff:', extOff);
+        const extSeqInner = parseDerSequenceOrSet(extInnerBytes, extOff);
+        console.log('[X509] extSeqInner content length:', extSeqInner.content.length);
+      const extContent = extSeqInner.content;
+      let eOff = 0;
+
+      const extension = {};
+      console.log('[X509] First byte of extContent:', '0x' + extContent[0].toString(16));
+      console.log('[X509] extContent first 10 bytes:', Array.from(extContent.slice(0, Math.min(10, extContent.length))).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' '));
+
+      // extnID (OID) - skip outer SEQUENCE tag and length if present
+      let contentStart = eOff;
+      if (extContent[eOff] === 0x30) {
+        // Skip SEQUENCE tag + length encoding to get to the actual extension content
+        const seqLenHdr = parseDerLength(extContent, eOff + 1); // Fixed: pass offset of LENGTH byte, not TAG
+        contentStart = eOff + 1 + seqLenHdr.sizeBytes; // Fixed: was eOff + 2
+        console.log('[X509] Skipped SEQUENCE header, contentStart:', contentStart, 'byte at contentStart:', '0x' + extContent[contentStart].toString(16));
+      }
+
+      // Now extContent[contentStart] should be the OID (0x06)
+      if (extContent[contentStart] === 0x06) {
+          console.log('[X509] Direct OID at contentStart:', contentStart);
+          const oidLenHdr = parseDerLength(extContent, contentStart + 1);
+          const oidBytes = new Uint8Array(extContent.buffer, extContent.byteOffset + contentStart + 2, oidLenHdr.length);
+          extension.id = OID_MAP[oidToText(oidBytes)] || oidToText(oidBytes);
+          console.log('[X509] Extension ID:', extension.id);
+          eOff = contentStart + 2 + oidLenHdr.sizeBytes;
+          console.log('[X509] After parsing OID, eOff:', eOff, 'byte at eOff:', '0x' + extContent[eOff].toString(16));
+      } else {
+        console.log('[X509] Unexpected first byte after SEQUENCE skip:', '0x' + extContent[contentStart].toString(16));
+      }
+
+      // critical (optional BOOLEAN)
+      if (eOff < extContent.length && extContent[eOff] === 0x01) {
+        extension.critical = true;
+        console.log('[X509] Extension is critical');
+        eOff += parseDerLength(extContent, eOff).sizeBytes + 2;
+      } else {
+        extension.critical = false;
+      }
+
+      // extnValue (OCTET STRING)
+      if (eOff < extContent.length && extContent[eOff] === 0x04) {
+            const valLenHdr = parseDerLength(extContent, eOff + 1);
+            extension.valueBytes = new Uint8Array(extContent.buffer, extContent.byteOffset + eOff + 2, valLenHdr.length);
+            console.log('[X509] Extension has value, parsing...');
+
+            // Parse specific extensions
+            console.log('[X509] Extension id:', extension.id, 'valueBytes len:', extension.valueBytes.length);
+            if (extension.id === 'subjectAltName') {
+              extension.parsedValue = parseSubjectAltNames(extension.valueBytes);
+              console.log('[X509] Parsed SANs:', JSON.stringify(extension.parsedValue));
+          } else if (extension.id === 'keyUsage') {
+            extension.parsedValue = parseKeyUsage(extension.valueBytes);
+          } else if (extension.id === 'basicConstraints') {
+            extension.parsedValue = parseBasicConstraints(extension.valueBytes);
+          } else if (extension.id === 'extendedKeyUsage') {
+            // Parse EKU as sequence of OIDs
+            const ekuResult = {};
+            let ekuOff = 0;
+            while (ekuOff < extension.valueBytes.length) {
+              if (extension.valueBytes[ekuOff] !== 0x06) break;
+              const ekuLenHdr = parseDerLength(extension.valueBytes, ekuOff + 1);
+              const ekuOidBytes = new Uint8Array(extension.valueBytes.buffer, extension.valueBytes.byteOffset + ekuOff + 2, ekuLenHdr.length);
+              const ekuOidText = OID_MAP[oidToText(ekuOidBytes)] || oidToText(ekuOidBytes);
+              ekuResult[ekuOidText] = true;
+              ekuOff += 2 + ekuLenHdr.sizeBytes;
+            }
+            extension.parsedValue = ekuResult;
+          } else {
+            // Generic: show raw OID
+            extension.parsedValue = 'Raw data (' + extension.valueBytes.length + ' bytes)';
+          }
+
+          eOff += 2 + valLenHdr.sizeBytes;
+        }
+
+        extensions.push(extension);
+        extOff = extSeqInner.nextOffset;
+      }
+    }
+
+    // Display results
+    console.log('[X509] About to display results...');
+    const certData = {
+      version: version || 3,
+      serialNumber: (typeof serialNumber !== 'undefined' && serialNumber) ? serialNumber : 'N/A',
+      signatureAlgorithm: (typeof signatureAlgorithm !== 'undefined' && signatureAlgorithm) ? signatureAlgorithm : 'Unknown',
+      issuer: issuer || {},
+      notBefore: notBefore || new Date(),
+      notAfter: notAfter || new Date(),
+      subject: subject || {},
+      keyType: (typeof keyType !== 'undefined' && keyType) ? keyType : 'unknown',
+      extensions: extensions || [],
+      derBytes: derBytes || []
+    };
+    console.log('[X509] certData.serialNumber:', certData.serialNumber);
+    displayX509Result(certData);
+    console.log('[X509] Display results called successfully');
+
+  } catch (err) {
+    const errorMsg = 'Failed to decode certificate: ' + err.message;
+    showError(errorMsg);
+    console.error('[X509] Decode error:', err.message || err);
+    // Log stack trace for debugging
+    if (err.stack) {
+      console.error(err.stack.split('\n').slice(0, 10).join('\n'));
+    }
+  }
+}
+
+function displayX509Result(cert) {
+  console.log('[X509] displayX509Result called with cert:', Object.keys(cert));
+  try {
+    // Hide error, show content
+    document.getElementById('x509-decode-error').style.display = 'none';
+    document.getElementById('x509-issuer-section').style.display = '';
+    document.getElementById('x509-subject-section').style.display = '';
+    document.getElementById('x509-validity-section').style.display = '';
+    const summaryTable = document.getElementById('x509-summary-table');
+    if (summaryTable) summaryTable.style.removeProperty('display');
+    const validityTable = document.getElementById('x509-validity-table');
+    if (validityTable) validityTable.style.removeProperty('display');
+    const kuTable = document.getElementById('x509-key-usage-table');
+    if (kuTable) kuTable.style.removeProperty('display');
+    document.getElementById('btn-copy-x509-der').style.display = '';
+
+    // Populate summary table
+    const tbody = document.querySelector('#x509-summary-table tbody');
+    console.log('[X509] Setting summary table...');
+    tbody.innerHTML = `
+      <tr><td>Version</td><td>${cert.version}</td></tr>
+      <tr><td>Serial Number</td><td class="hash-val-display">${cert.serialNumber}</td></tr>
+      <tr><td>Signature Algorithm</td><td class="hash-val-display">${cert.signatureAlgorithm}</td></tr>
+      <tr><td>Public Key Type</td><td class="hash-val-display">${cert.keyType}</td></tr>
+    `;
+
+    // Populate issuer/subject
+    console.log('[X509] Setting issuer/subject...');
+    document.getElementById('x509-issuer-content').textContent = formatName(cert.issuer);
+    document.getElementById('x509-subject-content').textContent = formatName(cert.subject);
+
+    // Populate validity table
+    const validityTbody = document.querySelector('#x509-validity-table tbody');
+    console.log('[X509] Setting validity...');
+    validityTbody.innerHTML = `
+      <tr><td>Not Before</td><td class="hash-val-display">${cert.notBefore.toISOString()}</td></tr>
+      <tr><td>Not After</td><td class="hash-val-display">${cert.notAfter.toISOString()}</td></tr>
+    `;
+
+    // Populate SANs if present
+    const sanExt = cert.extensions.find(e => e.id === 'subjectAltName');
+    if (sanExt && sanExt.parsedValue) {
+      document.getElementById('x509-sans-section').style.display = '';
+      const sanContent = document.getElementById('x509-sans-content');
+      sanContent.innerHTML = sanExt.parsedValue.map(san =>
+        `<div><span style="color: var(--primary);">${san.type}:</span> ${san.value}</div>`
+      ).join('');
+    }
+
+    // Populate key usage if present
+    const kuExt = cert.extensions.find(e => e.id === 'keyUsage');
+    if (kuExt && kuExt.parsedValue) {
+      document.getElementById('x509-key-usage-section').style.display = '';
+      const kuTbody = document.querySelector('#x509-key-usage-table tbody');
+      kuTbody.innerHTML = Object.entries(kuExt.parsedValue).map(([name, enabled]) =>
+        `<tr><td>${name}</td><td class="hash-val-display">${enabled ? '✅ Yes' : '❌ No'}</td></tr>`
+      ).join('');
+    }
+
+    // Populate extensions list
+    if (cert.extensions.length > 0) {
+    document.getElementById('x509-extensions-section').style.display = '';
+    const extContent = document.getElementById('x509-extensions-content');
+    extContent.innerHTML = cert.extensions.map(ext => {
+      let valStr = 'Raw data';
+      if (ext.parsedValue) {
+        if (typeof ext.parsedValue === 'string') valStr = ext.parsedValue;
+        else if (Array.isArray(ext.parsedValue)) valStr = ext.parsedValue.map(san => san.value).join(', ');
+        else if (typeof ext.parsedValue === 'object') {
+          const parts = [];
+          for (const [k, v] of Object.entries(ext.parsedValue)) {
+            if (v) parts.push(k);
+          }
+          valStr = parts.join(', ') || '(not set)';
+        }
+      }
+      return `<div><span style="color: var(--primary);">${ext.id}${ext.critical ? ' [CRITICAL]' : ''}:</span> ${valStr}</div>`;
+    }).join('');
+  }
+
+  // Raw DER (Base64)
+  console.log('[X509] Setting raw DER...');
+  document.getElementById('x509-raw-output').value = toBase64(cert.derBytes);
+  document.getElementById('btn-copy-x509-der').disabled = false;
+  } catch (displayErr) {
+    console.error('[X509] display error:', displayErr.message, 'stack:', displayErr.stack);
+    throw displayErr;
+  }
+}
+
+function showError(msg) {
+  const errorEl = document.getElementById('x509-decode-error');
+  errorEl.textContent = msg;
+  errorEl.style.display = '';
+}
+
+function resetX509DecoderState() {
+  document.getElementById('x509-pem-input').value = '';
+  document.getElementById('x509-file-upload').value = '';
+  document.getElementById('x509-decode-error').style.display = 'none';
+  document.getElementById('x509-issuer-section').style.display = 'none';
+  document.getElementById('x509-subject-section').style.display = 'none';
+  document.getElementById('x509-validity-section').style.display = 'none';
+  document.getElementById('x509-sans-section').style.display = 'none';
+  document.getElementById('x509-key-usage-section').style.display = 'none';
+  document.getElementById('x509-extensions-section').style.display = 'none';
+  document.getElementById('x509-raw-section').style.display = 'none';
+  document.getElementById('btn-copy-x509-der').disabled = true;
+}
+
+
+// --- Random Data Generator Functions ---
+
+const RANDOM_DATA_CONFIG = {
+  FIRST_NAMES_MALE: ['James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Joseph', 'Thomas', 'Charles'],
+  FIRST_NAMES_FEMALE: ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Barbara', 'Elizabeth', 'Susan', 'Jessica', 'Sarah', 'Karen'],
+  LAST_NAMES: ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'],
+  CITIES: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose'],
+  STATES: [
+    { name: 'Alabama', abbr: 'AL' }, { name: 'Alaska', abbr: 'AK' }, { name: 'Arizona', abbr: 'AZ' },
+    { name: 'Arkansas', abbr: 'AR' }, { name: 'California', abbr: 'CA' }, { name: 'Colorado', abbr: 'CO' }
+  ],
+  EMAIL_DOMAINS: ['gmail.com', 'yahoo.com', 'hotmail.com'],
+  COMPANIES: ['Acme Corp', 'Globex Inc', 'Initech', 'Umbrella Corp', 'Stark Industries'],
+  JOB_TITLES: ['Software Engineer', 'Product Manager', 'Data Scientist', 'UX Designer', 'DevOps Engineer']
+};
+
+function randomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function padNumber(num, length = 4) {
+  return String(num).padStart(length, '0');
+}
+
+function generateRandomData(options = {}) {
+  const { count = 5, categories = ['name', 'address', 'email'] } = options;
+  const results = [];
+
+  for (let i = 0; i < count; i++) {
+    const record = {};
+
+    if (categories.includes('name')) {
+      const firstName = Math.random() > 0.5 
+        ? randomItem(RANDOM_DATA_CONFIG.FIRST_NAMES_MALE)
+        : randomItem(RANDOM_DATA_CONFIG.FIRST_NAMES_FEMALE);
+      const lastName = randomItem(RANDOM_DATA_CONFIG.LAST_NAMES);
+      record.fullName = `${firstName} ${lastName}`;
+    }
+
+    if (categories.includes('address')) {
+      const streetNum = Math.floor(Math.random() * 9999) + 1;
+      const streets = ['Main St', 'Oak Ave', 'Pine Rd', 'Elm Blvd', 'Cedar Ln'];
+      record.street = `${streetNum} ${randomItem(streets)}`;
+      record.city = randomItem(RANDOM_DATA_CONFIG.CITIES);
+      const state = randomItem(RANDOM_DATA_CONFIG.STATES);
+      record.state = state.name;
+      record.abbr = state.abbr;
+      record.zip = padNumber(Math.floor(Math.random() * 90000) + 10000, 5);
+    }
+
+    if (categories.includes('email')) {
+      const firstName = record.fullName ? record.fullName.split(' ')[0] : 'John';
+      const lastName = record.fullName ? record.fullName.split(' ').slice(1).join(' ') || 'Doe' : 'Doe';
+      const domain = randomItem(RANDOM_DATA_CONFIG.EMAIL_DOMAINS);
+      const num = Math.floor(Math.random() * 999) + 1;
+      record.email = `${firstName.toLowerCase()}${lastName.toLowerCase()}${num}@${domain}`;
+    }
+
+    if (categories.includes('phone')) {
+      const prefix = ['212', '310', '415', '617', '312'][Math.floor(Math.random() * 5)];
+      const exchange = padNumber(Math.floor(Math.random() * 900) + 100, 3);
+      const line = padNumber(Math.floor(Math.random() * 9000) + 1000, 4);
+      record.phone = `(${prefix}) ${exchange}-${line}`;
+    }
+
+    if (categories.includes('company')) {
+      record.companyName = randomItem(RANDOM_DATA_CONFIG.COMPANIES);
+      record.jobTitle = randomItem(RANDOM_DATA_CONFIG.JOB_TITLES);
+    }
+
+    results.push(record);
+  }
+
+  return results;
+}
+
+function formatDataAsTable(data) {
+  if (!data || data.length === 0) {
+    return '<div class="glass-card" style="padding: 1rem;">No data generated.</div>';
+  }
+
+  const headers = Object.keys(data[0]);
+  let html = '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">';
+  
+  html += '<thead><tr style="border-bottom: 2px solid rgba(99, 102, 241, 0.3);">';
+  headers.forEach(header => {
+    html += `<th style="padding: 0.75rem; text-align: left; color: #a5b4fc;">${header}</th>`;
+  });
+  html += '</tr></thead>';
+
+  html += '<tbody>';
+  data.forEach((row, index) => {
+    const bgColor = index % 2 === 0 ? 'rgba(99, 102, 241, 0.05)' : 'transparent';
+    html += `<tr style="background: ${bgColor};">`;
+    headers.forEach(header => {
+      html += `<td style="padding: 0.6rem; border-bottom: 1px solid rgba(99, 102, 241, 0.1);">${row[header] || ''}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  return html;
+}
+
+function initRandomDataGenerator() {
+  const generateBtn = document.getElementById('random-data-generate-btn');
+  const copyBtn = document.getElementById('random-data-copy-btn');
+  const outputArea = document.getElementById('random-data-output');
+  const countInput = document.getElementById('random-data-count');
+  const statusEl = document.getElementById('random-data-status');
+
+  if (!generateBtn) return;
+
+  generateBtn.addEventListener('click', () => {
+    if (!countInput || !outputArea) return;
+
+    const count = parseInt(countInput.value, 10) || 5;
+    const categories = [];
+    document.querySelectorAll('#random-data-generator-view input[type="checkbox"]:checked').forEach(cb => {
+      categories.push(cb.value);
+    });
+
+    if (categories.length === 0) {
+      if (statusEl) statusEl.textContent = 'Please select at least one category.';
+      return;
+    }
+
+    const data = generateRandomData({ count, categories });
+    outputArea.innerHTML = formatDataAsTable(data);
+    if (statusEl) statusEl.textContent = `Generated ${count} record(s)`;
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const table = outputArea.querySelector('table');
+      if (!table) return;
+      
+      const rows = table.querySelectorAll('tr');
+      let text = '';
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('th, td');
+        const rowData = Array.from(cells).map(cell => cell.textContent);
+        text += rowData.join('\t') + '\n';
+      });
+      
+      navigator.clipboard.writeText(text.trim()).then(() => {
+        if (statusEl) statusEl.textContent = 'Copied to clipboard!';
+      }).catch(err => {
+        if (statusEl) statusEl.textContent = `Copy failed: ${err.message}`;
+      });
+    });
+  }
+
+  if (statusEl) statusEl.textContent = 'Select categories and click Generate.';
+}

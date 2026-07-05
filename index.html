@@ -1305,6 +1305,79 @@
         </div>
       </main>
 
+      <!-- VIEW: JSON SCHEMA VALIDATOR -->
+      <main id="json-schema-validator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-json-schema-validator-back" class="btn btn-ghost btn-sm">← Back</button>
+          <div class="header-text">
+            <h1 class="header-title">JSON Schema Validator</h1>
+            <p class="header-desc">Paste a JSON Schema plus a data instance, validate the instance against the schema and list path-level errors.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace" style="display: flex; gap: 1.5rem; padding: 1.5rem;">
+          <!-- Left Panel: Schema Input -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem;">JSON Schema</label>
+              <textarea id="json-schema-validator-schema" class="input-custom glass-card" style="height: 220px; font-family: 'SF Mono', monospace; font-size: 0.85rem; resize: vertical;" placeholder='{
+  "type": "object",
+  "properties": {
+    "id": { "type": "integer" },
+    "name": { "type": "string" }
+  },
+  "required": ["id", "name"]
+}'></textarea>
+            </div>
+
+            <!-- Quick Templates -->
+            <div>
+              <label style="display: block; margin-bottom: 0.4rem; font-size: 0.8rem; color: var(--text-secondary);">Quick Templates</label>
+              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                <button class="btn btn-ghost btn-sm schema-template-btn" data-template="user">User Object</button>
+                <button class="btn btn-ghost btn-sm schema-template-btn" data-template="array">Array of Items</button>
+                <button class="btn btn-ghost btn-sm schema-template-btn" data-template="nested">Nested Object</button>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <button id="btn-validate-schema" class="btn btn-primary">🔍 Validate</button>
+              <button id="btn-clear-validator" class="btn btn-ghost">Clear</button>
+            </div>
+
+            <!-- Status Banner -->
+            <div id="json-schema-validator-status-banner" style="display: none; padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;"></div>
+
+          </div>
+
+          <!-- Right Panel: Data Instance + Results -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem;">Data Instance</label>
+              <textarea id="json-schema-validator-data" class="input-custom glass-card" style="height: 220px; font-family: 'SF Mono', monospace; font-size: 0.85rem; resize: vertical;" placeholder='{
+  "id": 1,
+  "name": "Alice",
+  "email": "alice@example.com"
+}'></textarea>
+            </div>
+
+            <!-- Error Display -->
+            <div id="json-schema-validator-error-display" style="display: none;"></div>
+
+            <!-- Validation Output -->
+            <div class="glass-card" style="flex: 1; padding: 1rem; overflow-y: auto;">
+              <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; font-size: 0.9rem;">Validation Result</label>
+              <pre id="json-schema-validator-code-display" class="tool-output-content" style="font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; margin: 0; color: var(--text-secondary);">Paste schema and data, then click "Validate"</pre>
+            </div>
+
+            <!-- Copy Button -->
+            <button id="btn-copy-validator" class="btn btn-ghost" disabled>📋 Copy Result</button>
+
+          </div>
+        </div>
+      </main>
+
       <!-- VIEW 8.875: JSON TO TYPESCRIPT GENERATOR -->
       <main id="json-to-ts-view" class="view">
         <div class="tool-view-header">
@@ -2014,6 +2087,187 @@ Supported browsers:
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW 19: SSH KEY PAIR GENERATOR -->
+      <main id="ssh-keygen-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-ssh-keygen-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>SSH Key Pair Generator</h2>
+            <p>Generate Ed25519, RSA (up to 8192-bit), and ECDSA key pairs entirely in your browser. Export OpenSSH-format public keys and PEM private keys.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 40%; overflow-y: auto;">
+            <div class="control-group">
+              <label for="ssh-key-type">Key Type</label>
+              <select id="ssh-key-type" class="select-custom">
+                <option value="ed25519">Ed25519 (Recommended)</option>
+                <option value="rsa">RSA</option>
+                <option value="ecdsa">ECDSA</option>
+              </select>
+            </div>
+
+            <!-- RSA Options -->
+            <div id="ssh-rsa-options" style="display: none;">
+              <div class="control-group">
+                <label for="ssh-rsa-bits">RSA Key Size (bits)</label>
+                <select id="ssh-rsa-bits" class="select-custom">
+                  <option value="2048">2048 bits</option>
+                  <option value="4096" selected>4096 bits</option>
+                  <option value="8192">8192 bits</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- ECDSA Options -->
+            <div id="ssh-ecdsa-options" style="display: none;">
+              <div class="control-group">
+                <label for="ssh-ecdsa-curve">ECDSA Curve</label>
+                <select id="ssh-ecdsa-curve" class="select-custom">
+                  <option value="P-256">P-256 (SHA-256)</option>
+                  <option value="P-384">P-384 (SHA-384)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label for="ssh-comment">Comment (optional)</label>
+              <input type="text" id="ssh-comment" class="input-custom" placeholder="user@host" style="font-family: monospace;" />
+            </div>
+
+            <div class="control-group">
+              <label for="ssh-passphrase">Passphrase (optional, leave empty for no passphrase)</label>
+              <div style="position: relative;">
+                <input type="password" id="ssh-passphrase" class="input-custom" placeholder="Enter passphrase…" style="font-family: monospace; padding-right: 2.5rem;" />
+                <button id="btn-toggle-ssh-pass" type="button" class="ssh-eye-btn" title="Toggle visibility">👁️</button>
+              </div>
+            </div>
+
+            <button id="btn-generate-ssh-keys" class="btn-primary" style="width: 100%; margin-top: 0.5rem;">⚡ Generate Key Pair</button>
+
+            <div id="ssh-key-info" style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-secondary); display: none;">
+              <div id="ssh-key-info-content"></div>
+            </div>
+          </div>
+
+          <!-- Right Panel: Output -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 60%; height: 100%;">
+            <div style="width: 100%; display: flex; flex-direction: column; gap: 1rem; height: 100%;">
+              <!-- Public Key Output -->
+              <div style="flex: 1; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                  <label>Public Key (OpenSSH Format)</label>
+                  <div class="btn-group-row">
+                    <button id="btn-copy-ssh-pub" class="btn-secondary btn-sm" disabled>📋 Copy</button>
+                    <button id="btn-download-ssh-pub" class="btn-secondary btn-sm" disabled>⬇️ Download</button>
+                  </div>
+                </div>
+                <textarea id="ssh-public-key-output" readonly class="input-custom ssh-output-area" style="flex: 1; font-family: monospace; font-size: 0.8rem; resize: none; min-height: 80px;" placeholder="Generated public key will appear here…"></textarea>
+              </div>
+
+              <!-- Private Key Output -->
+              <div style="flex: 1; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                  <label>Private Key (PEM Format)</label>
+                  <div class="btn-group-row">
+                    <button id="btn-copy-ssh-priv" class="btn-secondary btn-sm" disabled>📋 Copy</button>
+                    <button id="btn-download-ssh-priv" class="btn-secondary btn-sm" disabled>⬇️ Download</button>
+                  </div>
+                </div>
+                <textarea id="ssh-private-key-output" readonly class="input-custom ssh-output-area" style="flex: 1; font-family: monospace; font-size: 0.8rem; resize: none; min-height: 80px;" placeholder="Generated private key will appear here…"></textarea>
+              </div>
+
+              <div id="ssh-error-msg" class="ssh-error-box" style="display: none;"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: X.509 CERTIFICATE DECODER -->
+      <main id="x509-decoder-view" class="view">
+        <div class="tool-view-header">
+          <button class="btn-back" id="btn-x509-decoder-back">← Back to Tools</button>
+          <div class="tool-view-title">
+            <h2>X.509 Certificate Decoder &amp; Viewer</h2>
+            <p>Paste or upload a PEM certificate to decode and visualize its contents: issuer, subject, validity window, SANs, key usage, and extensions — all client-side.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace">
+          <!-- Left Panel: Input -->
+          <div class="panel-controls" style="flex-grow: 1; max-width: 40%; overflow-y: auto;">
+            <div class="control-group">
+              <label for="x509-pem-input">PEM Certificate</label>
+              <textarea id="x509-pem-input" class="input-custom" style="height: 180px; font-family: monospace; font-size: 0.8rem;" placeholder="Paste your PEM certificate here (-----BEGIN CERTIFICATE----- ... -----END CERTIFICATE-----)"></textarea>
+            </div>
+
+            <div class="control-group">
+              <label for="x509-file-upload">Or Upload File</label>
+              <input type="file" id="x509-file-upload" accept=".pem,.crt,.cer,.cert,.p7b,.p7s,.der" style="font-size: 0.85rem; color: var(--text-secondary);" />
+            </div>
+
+            <button id="btn-decode-x509" class="btn-primary" style="width: 100%; margin-top: 0.5rem;">🔍 Decode Certificate</button>
+          </div>
+
+          <!-- Right Panel: Output -->
+          <div class="panel-workspace" style="flex-grow: 1; max-width: 60%; height: 100%;">
+            <div id="x509-decode-error" class="ssh-error-box" style="display: none;"></div>
+            <div id="x509-decoded-content" style="width: 100%; display: flex; flex-direction: column; gap: 1rem;">
+              <!-- Decoded certificate fields will be rendered here -->
+              <div class="control-group">
+                <label>Certificate Summary</label>
+                <table id="x509-summary-table" class="hash-table" style="display: none;">
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <div class="control-group" style="display: none;" id="x509-issuer-section">
+                <label>Issuer</label>
+                <div id="x509-issuer-content" style="font-family: monospace; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem;"></div>
+              </div>
+
+              <div class="control-group" style="display: none;" id="x509-subject-section">
+                <label>Subject</label>
+                <div id="x509-subject-content" style="font-family: monospace; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem;"></div>
+              </div>
+
+              <div class="control-group" style="display: none;" id="x509-validity-section">
+                <label>Validity Period</label>
+                <table id="x509-validity-table" class="hash-table" style="display: none;">
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <div class="control-group" style="display: none;" id="x509-sans-section">
+                <label>Subject Alternative Names (SANs)</label>
+                <div id="x509-sans-content" style="font-family: monospace; font-size: 0.85rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem;"></div>
+              </div>
+
+              <div class="control-group" style="display: none;" id="x509-key-usage-section">
+                <label>Key Usage</label>
+                <table id="x509-key-usage-table" class="hash-table" style="display: none;">
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <div class="control-group" style="display: none;" id="x509-extensions-section">
+                <label>Extensions</label>
+                <div id="x509-extensions-content" style="font-family: monospace; font-size: 0.8rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem;"></div>
+              </div>
+
+              <div class="control-group" style="display: none;" id="x509-raw-section">
+                <label>Raw DER Data (Base64)</label>
+                <textarea id="x509-raw-output" readonly class="input-custom" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none; min-height: 80px;"></textarea>
+              </div>
+
+              <button id="btn-copy-x509-der" class="btn-secondary btn-sm" style="display: none;" disabled>📋 Copy DER (Base64)</button>
             </div>
           </div>
         </div>
@@ -14855,13 +15109,1754 @@ Supported browsers:
         </details>
       </main>
 
-    </div>
+      <!-- VIEW: OPENAPI / SWAGGER SPEC EXPLORER -->
+      <main id="openapi-explorer-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-openapi-explorer-back" class="btn btn-ghost btn-sm">← Back</button>
+          <div class="header-text">
+            <h1 class="header-title">OpenAPI / Swagger Spec Explorer &amp; Validator</h1>
+            <p class="header-desc">Paste or upload an OpenAPI 3.x YAML/JSON spec to validate its structure, browse endpoints in a collapsible tree, and simulate requests with the built-in try-it builder.</p>
+          </div>
+        </div>
 
-    <!-- Privacy Policy Modal -->
-    <div id="modal-privacy" class="modal-overlay-custom" style="display: none;">
-      <div class="modal-content-custom">
-        <div class="modal-header-custom">
-          <h3>🔒 Privacy Policy</h3>
+        <div class="tool-workspace" style="display: flex; gap: 1.5rem; padding: 1.5rem;">
+          <!-- Left Panel: Input & Validation -->
+          <div class="panel-controls" style="flex: 0 0 380px; display: flex; flex-direction: column; gap: 1rem;">
+
+            <!-- File Upload Drop Zone -->
+            <div>
+              <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem;">Load OpenAPI Spec</label>
+              <div id="openapi-drop-zone" class="glass-card" style="min-height: 90px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--border, #2a2a2e); border-radius: var(--radius-md); cursor: pointer; transition: border-color 0.2s;">
+                <div style="text-align: center; color: var(--text-secondary, #8b8d97);">
+                  <p style="margin: 0 0 0.25rem; font-size: 0.85rem;">Drag &amp; drop a .yaml/.json file</p>
+                  <small style="font-size: 0.75rem;">or click to browse · OpenAPI 3.0.x / 3.1.x</small>
+                </div>
+              </div>
+              <input type="file" id="openapi-file-input" accept=".yaml,.yml,.json,application/json,text/yaml" style="display: none;">
+            </div>
+
+            <!-- Or Paste Directly -->
+            <div>
+              <button id="btn-openapi-paste-toggle" class="btn btn-ghost" style="width: 100%; font-size: 0.8rem;">Or paste spec directly</button>
+              <textarea id="openapi-input-textarea" class="glass-card input-custom" style="height: 200px; display: none; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; resize: vertical;" placeholder='{"openapi": "3.0.0", "info": {...}, "paths": {...}}'></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <button id="btn-openapi-validate" class="btn btn-primary" disabled>🔍 Validate</button>
+              <button id="btn-openapi-clear" class="btn btn-ghost">Clear</button>
+            </div>
+
+            <!-- Validation Results -->
+            <div id="openapi-validation-panel" style="display: none; flex-direction: column; gap: 0.5rem;">
+              <label style="font-size: 0.85rem; font-weight: 600;">Validation Results</label>
+              <div id="openapi-validation-summary" class="glass-card" style="padding: 0.75rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.85rem;"></div>
+              <div id="openapi-validation-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8rem;"></div>
+            </div>
+
+            <!-- Spec Info Summary -->
+            <div id="openapi-info-panel" style="display: none; flex-direction: column; gap: 0.4rem;">
+              <label style="font-size: 0.85rem; font-weight: 600;">Spec Information</label>
+              <div id="openapi-spec-info" class="glass-card" style="padding: 0.75rem; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.35rem;"></div>
+            </div>
+
+            <!-- Endpoint Tree -->
+            <div id="openapi-tree-panel" style="display: none; flex: 1;">
+              <label style="display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 600;">Endpoints (<span id="openapi-endpoint-count">0</span>)</label>
+              <div id="openapi-endpoint-tree" class="glass-card" style="max-height: 400px; overflow-y: auto; padding: 0.5rem;"></div>
+            </div>
+
+          </div>
+
+          <!-- Right Panel: Try-It Builder -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <div id="openapi-main-output" class="glass-card" style="flex: 1; padding: 1rem; overflow-y: auto;">
+              <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; font-size: 0.9rem;">Endpoint Tree</label>
+              <div id="openapi-tree-display" style="color: var(--text-secondary, #8b8d97); font-size: 0.85rem;">Load a spec to see endpoints…</div>
+            </div>
+
+            <!-- Try-It Request Builder (hidden until endpoint selected) -->
+            <div id="openapi-tryit-builder" class="glass-card" style="display: none; flex-direction: column; gap: 0.75rem; padding: 1rem;">
+              <label style="font-size: 0.9rem; font-weight: 600;">🧪 Request Builder</label>
+
+              <!-- Method + URL row -->
+              <div class="control-group" style="display: flex; gap: 0.5rem; align-items: stretch;">
+                <select id="openapi-tryit-method-select" class="input-custom glass-card" style="width: 120px; font-weight: 600;"></select>
+                <input type="text" id="openapi-tryit-full-url" class="input-custom glass-card" readonly placeholder="https://api.example.com/v1/users/{id}" />
+              </div>
+
+              <!-- Server Override -->
+              <div class="control-group">
+                <label for="openapi-server-url" style="font-size: 0.8rem; color: var(--text-secondary);">Server Override (optional)</label>
+                <input type="text" id="openapi-server-url" class="input-custom glass-card" placeholder="https://api.example.com/v1" />
+              </div>
+
+              <!-- Path Parameters -->
+              <div id="openapi-path-params-section" style="display: none;">
+                <label style="font-size: 0.8rem; font-weight: 600;">Path Parameters</label>
+                <div id="openapi-path-params-list" style="display: flex; flex-direction: column; gap: 0.4rem;"></div>
+              </div>
+
+              <!-- Query Parameters -->
+              <div id="openapi-query-params-section" style="display: none;">
+                <label for="openapi-query-params" style="font-size: 0.8rem; font-weight: 600;">Query Parameters (JSON)</label>
+                <textarea id="openapi-query-params" class="input-custom glass-card" style="height: 70px; font-family: 'SF Mono', monospace; font-size: 0.8rem;"></textarea>
+              </div>
+
+              <!-- Headers -->
+              <div class="control-group">
+                <label for="openapi-tryit-headers" style="font-size: 0.8rem; font-weight: 600;">Headers (JSON)</label>
+                <textarea id="openapi-tryit-headers" class="input-custom glass-card" style="height: 70px; font-family: 'SF Mono', monospace; font-size: 0.8rem;" placeholder='{ "Content-Type": "application/json", "Authorization": "Bearer ..." }'></textarea>
+              </div>
+
+              <!-- Request Body -->
+              <div id="openapi-tryit-body-wrapper" style="display: none;">
+                <label for="openapi-tryit-body" style="font-size: 0.8rem; font-weight: 600;">Request Body (JSON)</label>
+                <textarea id="openapi-tryit-body" class="input-custom glass-card" style="height: 150px; font-family: 'SF Mono', monospace; font-size: 0.8rem;"></textarea>
+              </div>
+
+              <!-- Actions -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                <button id="btn-openapi-tryit-send" class="btn btn-primary">🧪 Simulate</button>
+                <button id="btn-openapi-copy-curl" class="btn btn-ghost">📋 Copy cURL</button>
+                <button id="btn-openapi-copy-fetch" class="btn btn-ghost">📋 Copy fetch()</button>
+              </div>
+
+              <!-- Simulated Result -->
+              <div id="openapi-sim-result" style="display: none;">
+                <label style="font-size: 0.8rem; font-weight: 600;">Built Request (what would be sent)</label>
+                <pre id="openapi-curl-output" class="glass-card" style="padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; margin: 0; color: var(--success, #22c55e);"></pre>
+              </div>
+
+              <!-- Response Schema -->
+              <div id="openapi-response-section" style="display: none;">
+                <label style="font-size: 0.8rem; font-weight: 600;">Response Schema</label>
+                <pre id="openapi-response-schema-full" class="glass-card" style="padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; margin: 0;"></pre>
+              </div>
+
+              <!-- Endpoint Details -->
+              <div id="openapi-endpoint-details" style="display: none;">
+                <label style="font-size: 0.8rem; font-weight: 600;">Description</label>
+                <p id="openapi-endpoint-desc" style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;"></p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: LOCAL FOLDER BATCH RENAMER -->
+      <main id="batch-rename-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-batch-rename-back" class="btn btn-ghost btn-sm">← Back</button>
+          <div class="header-text">
+            <h1 class="header-title">Local Folder Batch Renamer</h1>
+            <p class="header-desc">Pick a folder, preview find/replace or sequential-numbering rename patterns across all files, then rename in place.</p>
+          </div>
+        </div>
+
+        <div class="tool-workspace" style="display: flex; gap: 1.5rem; padding: 1.5rem;">
+          <!-- Left Panel: Controls -->
+          <div class="panel-controls" style="flex: 0 0 350px; display: flex; flex-direction: column; gap: 1.2rem;">
+            <!-- Folder Picker -->
+            <div>
+              <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem;">Step 1: Pick a folder</label>
+              <div style="display: flex; gap: 0.4rem;">
+                <button id="btn-batch-rename-pick-folder" class="btn btn-primary">📂 Pick Folder</button>
+                <button id="btn-batch-rename-fallback" class="btn btn-ghost">📁 Fallback</button>
+              </div>
+              <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem;">
+                "Pick Folder" uses the File System Access API (Chrome/Edge). "Fallback" selects files individually.
+              </p>
+            </div>
+
+            <!-- Rename Mode Tabs -->
+            <div>
+              <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem;">Step 2: Choose rename mode</label>
+              <div class="mode-tabs" style="display: flex; gap: 0.3rem; margin-bottom: 0.8rem;">
+                <button class="mode-tab btn btn-ghost btn-sm active" data-mode="find-replace">Find & Replace</button>
+                <button class="mode-tab btn btn-ghost btn-sm" data-mode="sequential">Sequential</button>
+              </div>
+
+              <!-- Find & Replace Options -->
+              <div id="batch-rename-find-replace-options">
+                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                  <input type="text" id="batch-rename-find" class="input-custom glass-card" placeholder="Find..." style="flex: 1;" />
+                  <span style="font-size: 0.85rem;">→</span>
+                  <input type="text" id="batch-rename-replace" class="input-custom glass-card" placeholder="Replace with..." style="flex: 1;" />
+                </div>
+              </div>
+
+              <!-- Sequential Options -->
+              <div id="batch-rename-sequential-options" style="display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                  <input type="text" id="batch-rename-prefix" class="input-custom glass-card" placeholder="Prefix (optional)" />
+                  <input type="text" id="batch-rename-suffix" class="input-custom glass-card" placeholder="Suffix (optional)" />
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.4rem;">
+                  <input type="number" id="batch-rename-start-at" class="input-custom glass-card" value="1" placeholder="Start at" />
+                  <input type="number" id="batch-rename-pad-width" class="input-custom glass-card" value="3" placeholder="Pad width" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <button id="btn-batch-rename-execute" class="btn btn-primary">✅ Execute Rename</button>
+              <button id="btn-batch-rename-zip" class="btn btn-ghost">📦 Zip Download</button>
+            </div>
+
+            <!-- Status Banner -->
+            <div id="batch-rename-status" class="batch-rename-banner" style="display: none; padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;"></div>
+
+          </div>
+
+          <!-- Right Panel: Preview + Results -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <!-- File List Preview -->
+            <div>
+              <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem;">Preview (files that will change)</label>
+              <div id="batch-rename-preview-table" class="glass-card" style="padding: 1rem; overflow-y: auto; max-height: 400px;"></div>
+            </div>
+
+            <!-- Zip Download Fallback Area -->
+            <div id="batch-rename-zip-fallback" style="display: none;">
+              <label style="display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem;">Download renamed files (one at a time)</label>
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      <!-- VIEW: CSP HEADER GENERATOR & ANALYZER -->
+      <main id="csp-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-csp-back" class="btn btn-ghost btn-sm">← Back</button>
+          <div class="header-text">
+            <h1 class="header-title">CSP Header Generator & Analyzer</h1>
+            <p class="header-desc">Build a Content-Security-Policy string from directive inputs, or paste an existing CSP to flag security risks.</p>
+          </div>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div style="padding: 0 1.5rem; margin-top: 1rem;">
+          <div class="mode-tabs" style="display: flex; gap: 0.3rem;">
+            <button class="csp-mode-tab btn btn-ghost btn-sm active" data-mode="builder">Builder</button>
+            <button class="csp-mode-tab btn btn-ghost btn-sm" data-mode="analyzer">Analyzer</button>
+          </div>
+        </div>
+
+        <!-- Builder Mode -->
+        <div id="csp-builder-panel" style="display: flex; gap: 1.5rem; padding: 1.5rem;">
+          <!-- Left Panel: Directive Inputs -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1rem;">
+            <div id="csp-builder-directives"></div>
+
+            <!-- Special Directives (no value) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border, #2a2a2e);">
+              <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem;">
+                <input type="checkbox" id="csp-upgrade-insecure" /> Upgrade Insecure Requests
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem;">
+                <input type="checkbox" id="csp-block-mixed-content" /> Block Mixed Content
+              </label>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="btn-csp-generate" class="btn btn-primary">🔧 Generate CSP</button>
+              <button id="btn-csp-copy" class="btn btn-ghost" disabled>📋 Copy</button>
+            </div>
+
+          </div>
+
+          <!-- Right Panel: Preview -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Generated CSP Header</label>
+            <pre id="csp-preview-output" class="glass-card" style="padding: 1rem; border-radius: var(--radius-sm); flex: 1; overflow-x: auto; white-space: pre-wrap; word-break: break-word; margin: 0; font-size: 0.85rem; color: var(--text-secondary);">// No directives configured</pre>
+
+            <div style="padding: 0.75rem; background: rgba(139,92,246,.1); border-radius: var(--radius-sm); font-size: 0.8rem; color: #a78bfa;">
+              💡 Tip: Use this CSP in your server headers or meta tag: <code>&lt;meta http-equiv="Content-Security-Policy" content="..."&gt;</code>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Analyzer Mode -->
+        <div id="csp-analyzer-panel" style="display: none; gap: 1.5rem; padding: 1.5rem;">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Paste your CSP header</label>
+            <textarea id="csp-analyzer-input" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.85rem; resize: vertical;" placeholder='default-src "self"; script-src "self" https://cdn.example.com; style-src "self" "unsafe-inline"'></textarea>
+
+            <button id="btn-csp-analyze" class="btn btn-primary">🔍 Analyze CSP</button>
+          </div>
+
+          <div style="flex: 1; display: flex; flex-direction: column;">
+            <label style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">Analysis Results</label>
+            <div id="csp-analysis-output" class="glass-card" style="padding: 1rem; border-radius: var(--radius-sm); flex: 1; overflow-y: auto;"></div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- VIEW: PGP/GPG MESSAGE ENCRYPTOR & DECRYPTOR -->
+      <main id="pgp-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-pgp-back" class="btn btn-ghost btn-sm">← Back</button>
+          <div class="header-text">
+            <h1 class="header-title">PGP/GPG Message Encryptor & Decryptor</h1>
+            <p class="header-desc">Generate PGP key pairs and encrypt/decrypt/sign text messages entirely in your browser using WebCrypto.</p>
+          </div>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div style="padding: 0 1.5rem; margin-top: 1rem;">
+          <div class="mode-tabs" style="display: flex; gap: 0.3rem; overflow-x: auto;">
+            <button class="pgp-mode-tab btn btn-ghost btn-sm active" data-mode="keygen">Key Gen</button>
+            <button class="pgp-mode-tab btn btn-ghost btn-sm" data-mode="encrypt">Encrypt</button>
+            <button class="pgp-mode-tab btn btn-ghost btn-sm" data-mode="decrypt">Decrypt</button>
+            <button class="pgp-mode-tab btn btn-ghost btn-sm" data-mode="sign">Sign</button>
+            <button class="pgp-mode-tab btn btn-ghost btn-sm" data-mode="verify">Verify</button>
+          </div>
+        </div>
+
+        <!-- Key Generation Panel -->
+        <div id="keygen-panel" style="display: flex; gap: 1.5rem; padding: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 40%; display: flex; flex-direction: column; gap: 1rem;">
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Generate a new RSA key pair for PGP operations.</p>
+
+            <button id="btn-pgp-keygen" class="btn btn-primary">🔑 Generate Key Pair</button>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+              <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('pgp-public-key-output').value)">📋 Copy Public</button>
+              <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('pgp-private-key-output').value)">📋 Copy Private</button>
+            </div>
+
+          </div>
+
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Public Key (Share with others)</label>
+            <textarea id="pgp-public-key-output" readonly class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Generated public key will appear here…"></textarea>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">Private Key (Keep secret!)</label>
+            <textarea id="pgp-private-key-output" readonly class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Generated private key will appear here…"></textarea>
+
+          </div>
+        </div>
+
+        <!-- Encryption Panel -->
+        <div id="encrypt-panel" style="display: none; gap: 1.5rem; padding: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Recipient's Public Key (Base64)</label>
+            <textarea id="pgp-encrypt-public-key" class="input-custom glass-card" style="height: 100px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Paste recipient's public key here…"></textarea>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">Message to Encrypt</label>
+            <textarea id="pgp-encrypt-message" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.85rem; resize: vertical;" placeholder="Enter your message…"></textarea>
+
+            <button id="btn-pgp-encrypt" class="btn btn-primary">🔒 Encrypt Message</button>
+          </div>
+
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Encrypted Output (Base64)</label>
+            <textarea id="pgp-encrypt-output" readonly class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Encrypted message will appear here…"></textarea>
+          </div>
+        </div>
+
+        <!-- Decryption Panel -->
+        <div id="decrypt-panel" style="display: none; gap: 1.5rem; padding: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Your Private Key (Base64)</label>
+            <textarea id="pgp-decrypt-private-key" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Paste your private key here…"></textarea>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">Encrypted Message (Base64)</label>
+            <textarea id="pgp-decrypt-input" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Paste encrypted message here…"></textarea>
+
+            <button id="btn-pgp-decrypt" class="btn btn-primary">🔓 Decrypt Message</button>
+          </div>
+
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Decrypted Output</label>
+            <textarea id="pgp-decrypt-output" readonly class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Decrypted message will appear here…"></textarea>
+          </div>
+        </div>
+
+        <!-- Signing Panel -->
+        <div id="sign-panel" style="display: none; gap: 1.5rem; padding: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Your Private Key (Base64)</label>
+            <textarea id="pgp-sign-private-key" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Paste your private key here…"></textarea>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">Message to Sign</label>
+            <textarea id="pgp-sign-message" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Enter your message…"></textarea>
+
+            <button id="btn-pgp-sign" class="btn btn-primary">✍️ Sign Message</button>
+          </div>
+
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Signed Message (Base64)</label>
+            <textarea id="pgp-sign-message-output" readonly class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;"></textarea>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">Signature (Base64)</label>
+            <textarea id="pgp-sign-signature-output" readonly class="input-custom glass-card" style="height: 100px; font-family: monospace; font-size: 0.75rem; resize: none;"></textarea>
+          </div>
+        </div>
+
+        <!-- Verification Panel -->
+        <div id="verify-panel" style="display: none; gap: 1.5rem; padding: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Sender's Public Key (Base64)</label>
+            <textarea id="pgp-verify-public-key" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Paste sender's public key here…"></textarea>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">Message (Base64)</label>
+            <textarea id="pgp-verify-message" class="input-custom glass-card" style="height: 120px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Paste signed message here…"></textarea>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">Signature (Base64)</label>
+            <textarea id="pgp-verify-signature" class="input-custom glass-card" style="height: 100px; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Paste signature here…"></textarea>
+
+            <button id="btn-pgp-verify" class="btn btn-primary">✓ Verify Signature</button>
+          </div>
+
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Verification Result</label>
+            <div id="pgp-verify-result" class="glass-card" style="padding: 2rem; text-align: center; font-size: 1.2rem; font-weight: 600;"></div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Web Push VAPID Key Pair Generator -->
+      <main id="vapid-keygen-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-vapid-keygen-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Web Push VAPID Key Pair Generator</h1>
+          <p class="header-desc">Generate P-256 ECDH key pairs for Web Push notifications. Output URL-safe base64 public/private keys ready for server-side push setup.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="vapid-status" class="glass-card vapid-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 0 1.5rem; display: flex; gap: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 35%; display: flex; flex-direction: column; gap: 1rem;">
+
+            <!-- Generate Button -->
+            <button id="btn-vapid-generate" class="btn btn-primary">🔑 Generate VAPID Key Pair</button>
+
+            <!-- Instructions -->
+            <div style="background: rgba(59,130,246,.08); padding: 1rem; border-radius: var(--radius-md); font-size: 0.8rem;">
+              <h4 style="margin: 0 0 0.5rem 0; color: #3b82f6;">📋 How to use VAPID keys</h4>
+              <p style="margin: 0 0 0.5rem 0;"><strong>Public Key:</strong> Register with your Web Push service (e.g., Firebase FCM, OneSignal).</p>
+              <p style="margin: 0 0 0.5rem 0;"><strong>Private Key:</strong> Use on your server to sign push messages.</p>
+            </div>
+
+          </div>
+
+          <!-- Output Area -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">🔓 Public Key (URL-safe Base64)</label>
+            <textarea id="vapid-public-key-output" readonly class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Your public VAPID key will appear here…"></textarea>
+
+            <!-- Copy Button -->
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="btn-vapid-copy-pub" class="btn btn-ghost btn-sm">📋 Copy Public Key</button>
+            </div>
+
+            <label style="font-weight: 600; font-size: 0.85rem;">🔒 Private Key (URL-safe Base64)</label>
+            <textarea id="vapid-private-key-output" readonly class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="Your private VAPID key will appear here…"></textarea>
+
+            <!-- Copy Button -->
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="btn-vapid-copy-priv" class="btn btn-ghost btn-sm">📋 Copy Private Key</button>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Subresource Integrity (SRI) Hash Generator -->
+      <main id="sri-hash-generator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-sri-hash-generator-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Subresource Integrity (SRI) Hash Generator</h1>
+          <p class="header-desc">Compute SHA-384/512 hashes for JS/CSS files and generate ready-to-paste integrity attributes.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="sri-status" class="glass-card sri-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Mode Tabs -->
+        <div style="padding: 0 1.5rem; margin-top: 1rem;">
+          <div class="mode-tabs" style="display: flex; gap: 0.3rem; overflow-x: auto;">
+            <button class="sri-mode-tab btn btn-ghost btn-sm active" data-mode="paste">Paste Content</button>
+            <button class="sri-mode-tab btn btn-ghost btn-sm" data-mode="upload">Upload File</button>
+          </div>
+        </div>
+
+        <!-- Paste Mode Panel -->
+        <div id="sri-paste-panel" style="padding: 1.5rem; display: flex; gap: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 40%; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Paste JavaScript or CSS Content</label>
+            <textarea id="sri-paste-input" class="input-custom glass-card" style="flex: 1; font-family: monospace; font-size: 0.75rem; resize: none;" placeholder="// Paste your JS/CSS content here…"></textarea>
+
+            <button id="btn-sri-generate" class="btn btn-primary">🔐 Generate SRI Hash</button>
+          </div>
+
+        <!-- Upload Mode Panel -->
+        <div id="sri-upload-panel" style="display: none; padding: 1.5rem;">
+          <div class="panel-controls" style="flex: 0 0 40%; display: flex; flex-direction: column; gap: 1rem;">
+            <label style="font-weight: 600; font-size: 0.85rem;">Select File</label>
+            <input type="file" id="sri-file-upload" class="input-custom glass-card" accept=".js,.css,.txt" />
+
+            <div id="sri-filename-display" style="font-size: 0.85rem; color: var(--text-secondary);">No file selected</div>
+
+            <button id="btn-sri-generate-upload" class="btn btn-primary">🔐 Generate SRI Hash</button>
+          </div>
+        </div>
+
+        <!-- Output Area (always visible) -->
+        <div style="padding: 1.5rem;">
+          <label style="font-weight: 600; font-size: 0.85rem;">Generated HTML Snippets</label>
+          <div id="sri-snippet-output" class="glass-card" style="padding: 1rem; min-height: 200px;"></div>
+        </div>
+
+      </main>
+
+      <!-- AI Noise Reducer / Audio Denoiser -->
+      <main id="ai-noise-reducer-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-ai-noise-reducer-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">AI Noise Reducer / Audio Denoiser</h1>
+          <p class="header-desc">Upload an audio clip and apply intelligent noise reduction filters to remove rumble, mains hum (50/60Hz), and background hiss — all processed locally in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="noise-status" class="glass-card noise-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Upload & Controls -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Upload Audio File</label>
+              <input type="file" id="noise-file-input" class="input-custom glass-card" accept=".wav,.mp3,.ogg,.m4a,.flac,.aac,.webm" />
+              <div id="noise-filename-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">No file selected</div>
+            </div>
+
+            <!-- Filter Options -->
+            <div style="background: rgba(139, 92, 246, 0.08); padding: 1rem; border-radius: var(--radius-md);">
+              <h4 style="margin: 0 0 1rem 0; color: #8b5cf6;">Noise Reduction Filters</h4>
+
+              <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="noise-remove-rumble" checked />
+                  <span>Remove Low-Frequency Rumble (&lt;80Hz)</span>
+                </label>
+
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="noise-remove-hum" checked />
+                  <span>Remove Mains Hum (50/60Hz)</span>
+                </label>
+
+                <label class="checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                  <input type="checkbox" id="noise-reduce-hiss" />
+                  <span>Reduce Background Hiss</span>
+                </label>
+
+                <div style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                  <label for="noise-hiss-level" style="font-size: 0.8rem; color: var(--text-secondary);">Hiss Reduction Level:</label>
+                  <input type="range" id="noise-hiss-level" min="0" max="1" step="0.1" value="0.5" style="width: 100%; margin-top: 0.3rem;" />
+                  <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary);">
+                    <span>Light</span>
+                    <span id="noise-hiss-level-value">50%</span>
+                    <span>Heavy</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Action Buttons -->
+            <button id="btn-noise-generate" class="btn btn-primary">🎵 Process Audio</button>
+
+            <!-- Playback & Export Controls -->
+            <div id="noise-controls" style="padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+              <p style="color: var(--text-secondary); font-size: 0.85rem;">Processed audio will appear here</p>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Info & Tips -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">How It Works</h3>
+
+            <div class="glass-card" style="padding: 1.2rem; flex: 1;">
+              <p style="margin: 0 0 1rem 0; line-height: 1.6;">This tool uses advanced audio processing to clean up your recordings:</p>
+
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #3b82f6;">🔇 Remove Rumble</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Cuts frequencies below 80Hz to eliminate low-frequency noise from air conditioning, traffic, or handling.</p>
+                </div>
+
+                <div style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #ef4444;">⚡ Remove Hum</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Targets 50/60Hz mains hum from electrical interference — common in recordings near power lines or fluorescent lights.</p>
+                </div>
+
+                <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #22c55e;">🌬️ Reduce Hiss</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Applies spectral processing to reduce high-frequency hiss while preserving vocal clarity.</p>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">💡 Tip: For best results, process audio in a quiet environment and use the filters gradually.</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Silence Remover & Auto-Trim for Podcasts -->
+      <main id="silence-remover-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-silence-remover-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Silence Remover & Auto-Trim for Podcasts</h1>
+          <p class="header-desc">Analyze waveform amplitude to detect silent gaps, auto-cut them below a configurable threshold, and export the shortened audio.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="silence-status" class="glass-card silence-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Upload & Controls -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Upload Audio File</label>
+              <input type="file" id="silence-file-input" class="input-custom glass-card" accept=".wav,.mp3,.ogg,.m4a,.flac,.aac,.webm" />
+              <div id="silence-filename-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">No file selected</div>
+            </div>
+
+            <!-- Silence Detection Options -->
+            <div style="background: rgba(139, 92, 246, 0.08); padding: 1rem; border-radius: var(--radius-md);">
+              <h4 style="margin: 0 0 1rem 0; color: #8b5cf6;">Silence Detection Settings</h4>
+
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                  <label for="silence-threshold" style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Silence Threshold (dB):</label>
+                  <input type="range" id="silence-threshold" min="-60" max="-10" step="1" value="-40" style="width: 100%;" />
+                  <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary);">
+                    <span>-60 dB (Quiet)</span>
+                    <span id="silence-threshold-value">-40 dB</span>
+                    <span>-10 dB (Loud)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="silence-min-duration" style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Minimum Silence Duration (seconds):</label>
+                  <input type="range" id="silence-min-duration" min="0.1" max="2.0" step="0.1" value="0.5" style="width: 100%;" />
+                  <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary);">
+                    <span>0.1s</span>
+                    <span id="silence-min-duration-value">0.5s</span>
+                    <span>2.0s</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Action Buttons -->
+            <button id="btn-silence-generate" class="btn btn-primary">✂️ Remove Silence</button>
+
+            <!-- Playback & Export Controls -->
+            <div id="silence-controls" style="padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+              <p style="color: var(--text-secondary); font-size: 0.85rem;">Processed audio will appear here</p>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Info & Tips -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">How It Works</h3>
+
+            <div class="glass-card" style="padding: 1.2rem; flex: 1;">
+              <p style="margin: 0 0 1rem 0; line-height: 1.6;">This tool automatically detects and removes silent gaps from your audio recordings:</p>
+
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #3b82f6;">🔍 Detect Silence</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Analyzes waveform amplitude to identify regions below your configured threshold.</p>
+                </div>
+
+                <div style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #ef4444;">✂️ Remove Gaps</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Cuts detected silent regions shorter than your minimum duration setting.</p>
+                </div>
+
+                <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #22c55e;">💾 Export Cleaned Audio</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Downloads the processed audio as a WAV file ready for your podcast or video.</p>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">💡 Tip: Start with -40 dB threshold and 0.5s minimum duration for best results.</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Video Trimmer & Compressor (WebCodecs) -->
+      <main id="video-trimmer-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-video-trimmer-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Video Trimmer & Compressor (WebCodecs)</h1>
+          <p class="header-desc">Upload a video clip, trim it by start/end times via visual timeline, re-encode at target bitrate/resolution using WebCodecs API, and export as MP4/WebM.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="video-status" class="glass-card video-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Upload & Controls -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Upload Video File</label>
+              <input type="file" id="video-file-input" class="input-custom glass-card" accept=".mp4,.webm,.mov,.avi,.mkv,.flv,.wmv" />
+              <div id="video-filename-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">No file selected</div>
+            </div>
+
+            <!-- Video Preview -->
+            <div class="glass-card" style="padding: 1rem; background: rgba(0,0,0,0.3);">
+              <video id="video-preview" controls style="width: 100%; max-height: 400px; border-radius: var(--radius-sm);"></video>
+            </div>
+
+            <!-- Trim Controls -->
+            <div style="background: rgba(139, 92, 246, 0.08); padding: 1rem; border-radius: var(--radius-md);">
+              <h4 style="margin: 0 0 1rem 0; color: #8b5cf6;">Trim Settings</h4>
+
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                  <label for="video-start-time" style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Start Time (seconds):</label>
+                  <input type="number" id="video-start-time" min="0" step="0.1" value="0" style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: var(--radius-sm);" />
+                </div>
+
+                <div>
+                  <label for="video-end-time" style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">End Time (seconds):</label>
+                  <input type="number" id="video-end-time" min="0" step="0.1" value="0" style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: var(--radius-sm);" />
+                </div>
+
+                <div>
+                  <label for="video-bitrate" style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Target Bitrate (kbps):</label>
+                  <input type="range" id="video-bitrate" min="500" max="10000" step="100" value="2000" style="width: 100%;" />
+                  <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary);">
+                    <span>500 kbps</span>
+                    <span id="video-bitrate-value">2000 kbps</span>
+                    <span>10 Mbps</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="video-resolution" style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Resolution:</label>
+                  <select id="video-resolution" style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: var(--radius-sm);">
+                    <option value="1920x1080">1920×1080 (Full HD)</option>
+                    <option value="1280x720" selected>1280×720 (HD)</option>
+                    <option value="854x480">854×480 (SD)</option>
+                    <option value="640x360">640×360 (Small)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="video-format" style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 0.3rem;">Export Format:</label>
+                  <select id="video-format" style="width: 100%; padding: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary); border-radius: var(--radius-sm);">
+                    <option value="webm" selected>WebM (VP8/VP9)</option>
+                    <option value="mp4">MP4 (H.264)</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Action Buttons -->
+            <button id="btn-video-generate" class="btn btn-primary">✂️ Trim & Encode Video</button>
+
+            <!-- Export Controls -->
+            <div id="video-controls" style="padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+              <p style="color: var(--text-secondary); font-size: 0.85rem;">Processed video will appear here</p>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Info & Tips -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">How It Works</h3>
+
+            <div class="glass-card" style="padding: 1.2rem; flex: 1;">
+              <p style="margin: 0 0 1rem 0; line-height: 1.6;">This tool uses the WebCodecs API to process video entirely in your browser:</p>
+
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #3b82f6;">🎬 Upload Video</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Supports MP4, WebM, MOV, AVI, MKV, FLV, and WMV formats.</p>
+                </div>
+
+                <div style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #ef4444;">✂️ Trim & Compress</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Set start/end times and target bitrate/resolution for compression.</p>
+                </div>
+
+                <div style="background: rgba(34, 197, 94, 0.1); padding: 1rem; border-radius: var(--radius-sm);">
+                  <h4 style="margin: 0 0 0.5rem 0; color: #22c55e;">💾 Export</h4>
+                  <p style="margin: 0; font-size: 0.85rem; line-height: 1.5;">Download as WebM or MP4 with your chosen settings.</p>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0;">💡 Tip: WebCodecs provides hardware-accelerated encoding for faster processing.</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- MIDI File Player & Piano-Roll Visualizer -->
+      <main id="midi-player-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-midi-player-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">MIDI File Player & Piano-Roll Visualizer</h1>
+          <p class="header-desc">Parse an uploaded .mid file, play it back via Web Audio API, and render a scrolling piano-roll visualization showing notes on a grid with time and pitch axes.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="midi-status" class="glass-card midi-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Upload & Controls -->
+          <div class="panel-controls" style="flex: 0 0 40%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Upload MIDI File</label>
+              <input type="file" id="midi-file-input" class="input-custom glass-card" accept=".mid,.midi" />
+              <div id="midi-filename-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">No file selected</div>
+            </div>
+
+            <!-- Playback Controls -->
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <button id="btn-midi-play" class="btn btn-primary">▶ Play</button>
+              <p style="color: var(--text-secondary); font-size: 0.85rem;">MIDI files play using synthesized tones via Web Audio API.</p>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Piano Roll Visualization -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">Piano Roll Visualization</h3>
+
+            <div class="glass-card" style="padding: 1rem; flex: 1; overflow: auto;">
+              <canvas id="piano-roll-canvas" width="800" height="400" style="width: 100%; height: auto; background: #1a1a2e; border-radius: var(--radius-sm);"></canvas>
+
+              <div style="margin-top: 1rem; padding: 1rem; background: rgba(139, 92, 246, 0.08); border-radius: var(--radius-sm);">
+                <h4 style="margin: 0 0 0.5rem 0; color: #8b5cf6;">How It Works</h4>
+                <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
+                  <li><strong>Vertical axis:</strong> Pitch (note number, with piano keyboard on left)</li>
+                  <li><strong>Horizontal axis:</strong> Time (scrolling as music plays)</li>
+                  <li><strong>Note colors:</strong> Different channels are color-coded</li>
+                </ul>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- IBAN & SWIFT/BIC Validator -->
+      <main id="iban-swift-validator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-iban-swift-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">IBAN & SWIFT/BIC Validator</h1>
+          <p class="header-desc">Validate an IBAN's mod-97 checksum and decode its country/bank/account segments; separately validate SWIFT/BIC code structure for international bank transfers.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="iban-swift-status" class="glass-card iban-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 2rem;">
+          <!-- IBAN Validation Section -->
+          <div class="glass-card" style="padding: 1.5rem;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">IBAN Validator</h3>
+            <div class="flex gap-2" style="display: flex; gap: 1rem; align-items: start;">
+              <input type="text" id="iban-input" class="input-custom glass-card" placeholder="e.g., DE89370400440532013000 or GB29NWBK60161331926819" style="flex: 1; padding: 0.75rem;" />
+              <button id="btn-iban-validate" class="btn btn-primary">✓ Validate IBAN</button>
+            </div>
+
+            <!-- IBAN Output -->
+            <div id="iban-output-container" class="glass-card mt-2" style="padding: 1.5rem; margin-top: 1rem;">
+              <p style="color: var(--text-secondary); font-size: 0.85rem;">Enter an IBAN and click "Validate" to check it.</p>
+            </div>
+
+          </div>
+
+          <!-- SWIFT/BIC Validation Section -->
+          <div class="glass-card" style="padding: 1.5rem;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">SWIFT/BIC Validator</h3>
+            <div class="flex gap-2" style="display: flex; gap: 1rem; align-items: start;">
+              <input type="text" id="swift-input" class="input-custom glass-card" placeholder="e.g., DEUTDEFF or SWIFTBICXX" style="flex: 1; padding: 0.75rem;" />
+              <button id="btn-swift-validate" class="btn btn-primary">✓ Validate SWIFT</button>
+            </div>
+
+            <!-- SWIFT Output -->
+            <div id="swift-output-container" class="glass-card mt-2" style="padding: 1.5rem; margin-top: 1rem;">
+              <p style="color: var(--text-secondary); font-size: 0.85rem;">Enter a SWIFT/BIC code and click "Validate" to check it.</p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+
+      <!-- Debt Snowball vs. Avalanche Payoff Calculator -->
+      <main id="debt-snowball-calculator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-debt-snowball-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Debt Snowball vs. Avalanche Payoff Calculator</h1>
+          <p class="header-desc">Enter your debts (balance, interest rate, minimum payment) and compare snowball vs. avalanche payoff strategies — get a month-by-month timeline and see how much interest you save.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="debt-status" class="glass-card debt-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Strategy Selector -->
+        <div class="strategy-selector">
+          <button id="btn-strategy-snowball" class="btn btn-primary strategy-btn active" data-strategy="snowball">❄️ Snowball</button>
+          <button id="btn-strategy-avalanche" class="btn btn-secondary strategy-btn" data-strategy="avalanche">🏔️ Avalanche</button>
+        </div>
+
+        <!-- Debt Input Table -->
+        <div class="debt-input-section glass-card">
+          <h3 style="margin-top: 0;">Your Debts</h3>
+          <table id="debt-input-table" class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 25%;">Debt Name</th>
+                <th style="width: 22%;">Balance ($)</th>
+                <th style="width: 22%;">Interest Rate (%)</th>
+                <th style="width: 20%;">Min Payment ($)</th>
+                <th style="width: 11%;"></th>
+              </tr>
+            </thead>
+            <tbody id="debt-rows">
+              <tr class="debt-row">
+                <td><input type="text" class="debt-name-input" placeholder="e.g. Student Loan" style="width: 100%;"></td>
+                <td><input type="number" step="0.01" min="0" class="form-input" placeholder="10000" data-field="balance"></td>
+                <td><input type="number" step="0.01" min="0" class="form-input" placeholder="5.5" data-field="rate"></td>
+                <td><input type="number" step="0.01" min="0" class="form-input" placeholder="200" data-field="minPayment"></td>
+                <td><button class="btn btn-ghost btn-sm remove-debt-row" title="Remove">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+            <button id="add-debt-btn" class="btn btn-ghost">+ Add Debt</button>
+            <button id="btn-load-sample" class="btn btn-ghost btn-sm">Load Sample Data</button>
+          </div>
+        </div>
+
+        <!-- Extra Payment -->
+        <div class="extra-payment-section glass-card">
+          <label for="extra-payment-input" style="font-weight: 600;">Extra Monthly Payment ($):</label>
+          <input type="number" id="extra-payment-input" class="form-input" placeholder="0" min="0" step="10" value="0" style="max-width: 200px; margin-left: 0.5rem;">
+        </div>
+
+        <!-- Calculate Button -->
+        <button id="calculate-debts-btn" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">Calculate Payoff</button>
+
+        <!-- Results Section -->
+        <div id="debt-results-section" style="display: none; margin-top: 2rem;">
+          <!-- Summary Cards -->
+          <div class="summary-cards">
+            <div class="summary-card glass-card">
+              <div class="summary-label">Payoff Time</div>
+              <div id="result-months" class="summary-value"></div>
+            </div>
+            <div class="summary-card glass-card">
+              <div class="summary-label">Total Interest</div>
+              <div id="result-total-interest" class="summary-value"></div>
+            </div>
+            <div class="summary-card glass-card">
+              <div class="summary-label">Total Paid</div>
+              <div id="result-total-paid" class="summary-value"></div>
+            </div>
+            <div class="summary-card glass-card interest-saved-card">
+              <div class="summary-label">Interest Saved (vs. other)</div>
+              <div id="result-interest-saved" class="summary-value saved-positive"></div>
+            </div>
+          </div>
+
+          <!-- Payoff Order -->
+          <div class="glass-card" style="margin-top: 1rem;">
+            <h3>Payoff Order</h3>
+            <div id="payoff-order-list" class="payoff-order"></div>
+          </div>
+
+          <!-- Month-by-Month Schedule -->
+          <div class="glass-card" style="margin-top: 1rem;">
+            <h3>Month-by-Month Payoff Schedule</h3>
+            <div class="table-scroll">
+              <table id="debt-schedule-table" class="data-table compact">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Total Balance</th>
+                    <th>Interest This Month</th>
+                    <th>Total Interest Paid</th>
+                  </tr>
+                </thead>
+                <tbody id="debt-schedule-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Strategy Comparison -->
+          <div class="glass-card" style="margin-top: 1rem;">
+            <h3>Snowball vs. Avalanche Comparison</h3>
+            <div id="strategy-comparison"></div>
+          </div>
+                  <!-- Snowball vs Avalanche Side-by-Side -->
+          <div class="glass-card" style="margin-top: 1rem;">
+            <h3>Snowball Strategy</h3>
+            <div id="debt-results-container" style="display: none;"></div>
+          <div class="glass-card" style="margin-top: 1rem;">
+            <h3>Summary Comparison</h3>
+            <div id="comparison-summary"></div>
+          </div>
+          <div class="glass-card" style="margin-top: 1rem;">
+            <h3>Snowball Strategy</h3>
+            <div id="snowball-section"></div>
+          </div>
+          </div>
+          <div class="glass-card" style="margin-top: 1rem;">
+            <h3>Avalanche Strategy</h3>
+            <div id="avalanche-section"></div>
+          </div>
+</div>
+      </main>
+
+
+      <!-- Rent vs. Buy Home Calculator -->
+      <main id="rent-vs-buy-calculator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-rent-buy-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Rent vs. Buy Home Calculator</h1>
+          <p class="header-desc">Compare the true cost of renting vs buying a home over your planned holding period — includes mortgage, appreciation, property tax, insurance, and closing costs.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="rent-buy-status" class="glass-card rent-buy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Form -->
+        <form id="rent-buy-form" class="glass-card">
+          <h3 style="margin-top: 0;">Purchase Details</h3>
+          <div class="input-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <label for="home-price">Home Price ($)</label>
+              <input type="number" id="home-price" class="form-input" placeholder="350000" min="10000" step="1000" value="350000">
+            </div>
+            <div>
+              <label for="down-payment-pct">Down Payment (%)</label>
+              <input type="number" id="down-payment-pct" class="form-input" placeholder="20" min="0" max="100" step="1" value="20">
+            </div>
+            <div>
+              <label for="mortgage-rate">Mortgage Rate (%)</label>
+              <input type="number" id="mortgage-rate" class="form-input" placeholder="6.5" min="0" max="25" step="0.125" value="6.5">
+            </div>
+            <div>
+              <label for="loan-term-years">Loan Term (years)</label>
+              <input type="number" id="loan-term-years" class="form-input" placeholder="30" min="5" max="40" step="1" value="30">
+            </div>
+            <div>
+              <label for="closing-costs-pct">Closing Costs (%)</label>
+              <input type="number" id="closing-costs-pct" class="form-input" placeholder="3" min="0" max="10" step="0.5" value="3">
+            </div>
+            <div>
+              <label for="appreciation-rate">Annual Appreciation (%)</label>
+              <input type="number" id="appreciation-rate" class="form-input" placeholder="3" min="-10" max="20" step="0.5" value="3">
+            </div>
+            <div>
+              <label for="property-tax-pct">Annual Property Tax (%)</label>
+              <input type="number" id="property-tax-pct" class="form-input" placeholder="1.2" min="0" max="5" step="0.1" value="1.2">
+            </div>
+            <div>
+              <label for="insurance-annual">Annual Insurance ($)</label>
+              <input type="number" id="insurance-annual" class="form-input" placeholder="1500" min="0" step="100" value="1500">
+            </div>
+          </div>
+
+          <h3 style="margin-top: 2rem;">Renting Details</h3>
+          <div class="input-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <label for="monthly-rent">Monthly Rent ($)</label>
+              <input type="number" id="monthly-rent" class="form-input" placeholder="2000" min="0" step="50" value="2000">
+            </div>
+            <div>
+              <label for="rent-escalation">Annual Rent Increase (%)</label>
+              <input type="number" id="rent-escalation" class="form-input" placeholder="2" min="-10" max="20" step="0.5" value="2">
+            </div>
+            <div>
+              <label for="holding-years">Holding Period (years)</label>
+              <input type="number" id="holding-years" class="form-input" placeholder="10" min="1" max="40" step="1" value="10">
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+            <button type="button" id="btn-calculate-rentbuy" class="btn btn-primary btn-lg" style="flex: 1;">Calculate</button>
+            <button type="button" id="btn-load-sample-rentbuy" class="btn btn-ghost">Load Sample Data</button>
+          </div>
+        </form>
+
+        <!-- Results Section -->
+        <div id="rent-buy-results" style="display: none; margin-top: 2rem;"></div>
+      </main>
+
+<!-- PDF Page Extractor -->
+      <main id="pdf-page-extractor-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-pdf-extractor-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">PDF Page Extractor</h1>
+          <p class="header-desc">Upload a PDF and select which pages to keep — extract specific page ranges into a new standalone PDF file, all in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="pdf-status" class="glass-card pdf-extractor-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Upload Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">Upload PDF</h3>
+          <input type="file" id="pdf-upload" accept=".pdf,application/pdf" class="form-input file-input" style="max-width: 400px;">
+        </div>
+
+        <!-- Page Selection Section -->
+        <div class="glass-card" style="margin-top: 1rem;">
+          <h3>Select Pages to Extract</h3>
+          <p class="text-muted">Pages not selected will be excluded from the output.</p>
+          <div id="pdf-actions" style="margin-bottom: 1rem;"></div>
+          <div id="pdf-page-selection"></div>
+        </div>
+
+        <!-- Extract Button -->
+        <button id="btn-extract-pdf" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.5rem;">Extract Selected Pages</button>
+      </main>
+
+<!-- CSV to JSON Converter -->
+      <main id="csv-to-json-converter-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-csv-to-json-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">CSV to JSON Converter</h1>
+          <p class="header-desc">Paste CSV data or upload a .csv file — convert it to formatted JSON with header detection and type inference, all in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="csv-status" class="glass-card csv-converter-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">CSV Data</h3>
+          <textarea id="csv-input" class="form-textarea" rows="12" placeholder="Paste your CSV data here...&#10;&#10;Example:&#10;Name, Age, City&#10;Alice, 30, New York&#10;Bob, 25, San Francisco"></textarea>
+          <div class="text-muted" style="margin-top: 0.5rem;">Or upload a .csv file:</div>
+          <input type="file" id="csv-file-upload" accept=".csv,text/csv" class="form-input file-input" style="max-width: 300px; margin-top: 0.5rem;">
+        </div>
+
+        <!-- Options Section -->
+        <div class="glass-card" style="margin-top: 1rem;">
+          <h3 style="margin-top: 0;">Options</h3>
+          <div class="form-group">
+            <label for="has-headers">
+              <input type="checkbox" id="has-headers" checked> First row contains headers (column names)
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="delimiter-select">Delimiter:</label>
+            <select id="delimiter-select" class="form-input" style="max-width: 200px;">
+              <option value=",">Comma (,)</option>
+              <option value=";">Semicolon (;)</option>
+              <option value="	">Tab</option>
+              <option value="|">Pipe (|)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Convert Button -->
+        <button id="btn-convert-csv" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.5rem;">Convert to JSON</button>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>JSON Output</h3>
+          <textarea id="json-output" class="form-textarea output-area" rows="12" readonly placeholder="Converted JSON will appear here..."></textarea>
+          <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+            <button id="btn-copy-json" class="btn btn-ghost">Copy to Clipboard</button>
+            <button id="btn-download-json" class="btn btn-ghost">Download as .json</button>
+          </div>
+        </div>
+      </main>
+
+<!-- JSON Pretty Printer & Minifier -->
+      <main id="json-pretty-printer-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-json-formatter-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">JSON Pretty Printer & Minifier</h1>
+          <p class="header-desc">Paste JSON or upload a .json file — format it with indentation or compress to one line, validate syntax, and copy/download the result.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="json-status" class="glass-card json-formatter-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">JSON Input</h3>
+          <textarea id="json-input" class="form-textarea" rows="14" placeholder="Paste your JSON here...&#10;&#10;Example:&#10;{&quot;name&quot;:&quot;John&quot;,&quot;age&quot;:30,&quot;city&quot;:&quot;New York&quot;}"></textarea>
+          <div class="text-muted" style="margin-top: 0.5rem;">Or upload a .json file:</div>
+          <input type="file" id="json-file-upload" accept=".json,application/json" class="form-input file-input" style="max-width: 300px; margin-top: 0.5rem;">
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; align-items: center;">
+          <button id="btn-pretty-print" class="btn btn-primary">Pretty Print</button>
+          <button id="btn-minify" class="btn btn-secondary">Minify</button>
+          <div class="form-group" style="margin-left: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <label for="indent-select">Indent:</label>
+            <select id="indent-select" class="form-input" style="max-width: 80px;">
+              <option value="2">2 spaces</option>
+              <option value="4">4 spaces</option>
+              <option value="tab">Tab</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>Output</h3>
+          <textarea id="json-output" class="form-textarea output-area" rows="14" readonly placeholder="Formatted or minified JSON will appear here..."></textarea>
+          <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+            <button id="btn-copy-json-output" class="btn btn-ghost">Copy to Clipboard</button>
+            <button id="btn-download-json" class="btn btn-ghost">Download as .json</button>
+          </div>
+        </div>
+      </main>
+
+<!-- Color Palette Generator -->
+      <main id="color-palette-generator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-color-palette-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Color Palette Generator</h1>
+          <p class="header-desc">Upload an image and extract a harmonious color palette using k-means clustering on pixel data. All processing happens in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="palette-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">Upload Image</h3>
+          <img id="palette-image-input" src="" alt="Preview" style="max-width: 100%; max-height: 300px; margin-bottom: 1rem; display: none;">
+          <input type="file" id="palette-file-upload" accept="image/*" class="form-input file-input">
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 1rem; padding-left: 1.5rem;">
+          <button id="btn-generate-palette" class="btn btn-primary">Generate Palette</button>
+        </div>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>Palette Preview</h3>
+          <div id="palette-output" style="min-height: 200px;"></div>
+        </div>
+      </main>
+
+<!-- QR Code Generator & Scanner -->
+      <main id="qr-code-generator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-qrcg-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">QR Code Generator & Scanner</h1>
+          <p class="header-desc">Generate QR codes from text/URLs with customizable colors/sizes, or scan QR codes from uploaded images. All processing happens in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="qrcg-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">Generate QR Code</h3>
+          <input type="text" id="qrcg-input" class="form-input" placeholder="Enter text or URL..." style="width: 100%; max-width: 500px;">
+          <div style="margin-top: 1rem; display: flex; gap: 1rem; align-items: center;">
+            <label for="qrcg-size">Size:</label>
+            <input type="number" id="qrcg-size" class="form-input" value="256" min="100" max="1000" style="width: 80px;">
+            <label for="qrcg-bg-color">Background:</label>
+            <input type="color" id="qrcg-bg-color" class="form-input" value="#ffffff" style="width: 50px; height: 30px;">
+            <label for="qrcg-fg-color">Foreground:</label>
+            <input type="color" id="qrcg-fg-color" class="form-input" value="#000000" style="width: 50px; height: 30px;">
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 1rem; padding-left: 1.5rem; display: flex; gap: 0.5rem;">
+          <button id="btn-qrcg-generate" class="btn btn-primary">Generate QR Code</button>
+          <button id="btn-qrcg-download" class="btn btn-secondary">Download PNG</button>
+        </div>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>QR Code Preview</h3>
+          <canvas id="qrcg-canvas" width="256" height="256" style="border: 1px solid #ccc; max-width: 100%;"></canvas>
+        </div>
+      </main>
+
+<!-- Base64 Encoder & Decoder -->
+      <main id="base64-encoder-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-base64-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Base64 Encoder & Decoder</h1>
+          <p class="header-desc">Encode text/files to Base64 or decode Base64 back to original format; supports file upload for binary data. All processing happens in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="b64-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">Input</h3>
+          <textarea id="b64-input" class="form-textarea" rows="12" placeholder="Enter text to encode or Base64 data to decode..."></textarea>
+          <div class="text-muted" style="margin-top: 0.5rem;">Or upload a file:</div>
+          <input type="file" id="b64-file-upload" accept="*/*" class="form-input file-input">
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 1rem; padding-left: 1.5rem; display: flex; gap: 0.5rem;">
+          <button id="btn-encode-base64" class="btn btn-primary">Encode to Base64</button>
+          <button id="btn-decode-base64" class="btn btn-secondary">Decode from Base64</button>
+        </div>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>Output</h3>
+          <textarea id="b64-output" class="form-textarea output-area" rows="12" readonly placeholder="Encoded/decoded result will appear here..."></textarea>
+        </div>
+      </main>
+
+<!-- Markdown to HTML Converter -->
+      <main id="markdown-to-html-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-markdown-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Markdown to HTML Converter</h1>
+          <p class="header-desc">Paste Markdown text and get rendered HTML output with live preview panel. All processing happens in your browser using marked.js.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="md-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">Markdown Input</h3>
+          <textarea id="md-input" class="form-textarea" rows="16" placeholder="# Hello World&#10;&#10;Write your **Markdown** here..."></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 1rem; padding-left: 1.5rem; display: flex; gap: 0.5rem;">
+          <button id="btn-convert-md" class="btn btn-primary">Convert to HTML</button>
+          <button id="btn-copy-html" class="btn btn-secondary">Copy HTML</button>
+        </div>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>HTML Output</h3>
+          <textarea id="md-output" class="form-textarea output-area" rows="16" readonly placeholder="Converted HTML will appear here..."></textarea>
+        </div>
+      </main>
+
+<!-- JSON Path Tester -->
+      <main id="jsonpath-tester-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-jsonpath-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">JSON Path Tester</h1>
+          <p class="header-desc">Input JSON data and test JSONPath queries against it; shows matched nodes with path visualization. Uses jsonpath-plus library, all processing happens in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="jsonpath-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">JSON Data</h3>
+          <textarea id="jsonpath-json-input" class="form-textarea" rows="14" placeholder='{"key": "value"}'></textarea>
+        </div>
+
+        <!-- Query Section -->
+        <div class="glass-card" style="margin-top: 1rem;">
+          <h3 style="margin-top: 0;">JSONPath Query</h3>
+          <input type="text" id="jsonpath-query-input" class="form-input" placeholder="$..author or $.store.book[0].title">
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 1rem; padding-left: 1.5rem;">
+          <button id="btn-test-JSONPath" class="btn btn-primary">Test Query</button>
+        </div>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>Results</h3>
+          <div id="jsonpath-output" style="min-height: 200px; padding: 1rem;"></div>
+        </div>
+      </main>
+
+<!-- Regex Tester with Live Preview -->
+      <main id="regex-live-preview-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="regex-live-preview-back-btn" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Regex Tester with Live Preview</h1>
+          <p class="header-desc">Paste regex pattern + sample text, see matches highlighted in real-time with capture group breakdown. Uses native RegExp API, all processing happens in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="regex-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Input Section -->
+        <div class="glass-card">
+          <h3 style="margin-top: 0;">Regex Pattern</h3>
+          <input type="text" id="regex-pattern-input" class="form-input" placeholder="\b[A-Z]{2}\d{4}" style="font-family: monospace; font-size: 1rem;">
+        </div>
+
+        <!-- Text Input Section -->
+        <div class="glass-card" style="margin-top: 1rem;">
+          <h3 style="margin-top: 0;">Sample Text</h3>
+          <textarea id="regex-text-input" class="form-textarea" rows="12" placeholder="Enter sample text to test the regex pattern against..."></textarea>
+        </div>
+
+        <!-- Output Section -->
+        <div class="glass-card" style="margin-top: 1.5rem;">
+          <h3>Results</h3>
+          <div id="regex-output" style="min-height: 200px; padding: 1rem;"></div>
+        </div>
+      </main>
+
+<!-- Random Data Generator -->
+      <main id="random-data-generator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-random-data-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Random Data Generator</h1>
+        </div>
+
+        <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+          <h3 style="margin-top: 0; color: #a5b4fc;">Generate Fake Data</h3>
+
+          <!-- Category Selection -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="name" checked> Names
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="address" checked> Addresses
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="email" checked> Emails
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="phone"> Phone Numbers
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="company"> Company Info
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="creditcard"> Credit Cards
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="ssn"> SSN (Fake)
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="dob"> Date of Birth
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="ip"> IP Address
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" value="url"> URLs
+            </label>
+          </div>
+
+          <!-- Options Row -->
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+              Count:
+              <input type="number" id="random-data-count" value="5" min="1" max="100" class="form-input" style="width: 80px;">
+            </label>
+
+            <label style="display: flex; align-items: center; gap: 0.5rem;">
+              Gender:
+              <select id="random-data-gender" class="form-select">
+                <option value="any">Any</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 1rem;">
+            <button id="random-data-generate-btn" class="btn btn-primary">Generate Data</button>
+            <button id="random-data-copy-btn" class="btn btn-ghost">Copy to Clipboard</button>
+          </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="random-data-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin-bottom: 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Output Area -->
+        <div class="glass-card" style="padding: 1.5rem;">
+          <h3 style="margin-top: 0; color: #a5b4fc;">Generated Data</h3>
+          <div id="random-data-output" style="min-height: 200px;"></div>
+        </div>
+      </main>
+
+<!-- Grainy Gradient / Noise Texture Generator -->
+      <main id="grainy-gradient-noise-texture-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-grainy-gradient-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Grainy Gradient / Noise Texture Generator</h1>
+          <p class="header-desc">Build a layered noise-over-gradient CSS/SVG background (the 2026 'grainy gradient' trend), with exportable CSS and PNG texture download. All generation happens in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="grainy-gradient-status" class="glass-card grainy-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Controls -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label for="grainy-gradient-preset-select" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Select Gradient Preset</label>
+              <select id="grainy-gradient-preset-select" class="input-custom glass-card" style="padding: 0.75rem;"></select>
+
+            </div>
+
+            <div>
+              <label for="grainy-gradient-noise-opacity" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Noise Opacity</label>
+              <input type="range" id="grainy-gradient-noise-opacity" class="input-custom glass-card" min="0" max="1" step="0.05" value="0.3" style="width: 100%;" />
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2" style="display: flex; gap: 0.75rem;">
+              <button id="btn-grainy-gradient-generate" class="btn btn-primary">🎨 Generate Preview</button>
+              <button id="btn-grainy-gradient-export-css" class="btn btn-secondary">📋 Export CSS</button>
+            </div>
+
+            <!-- Download Buttons -->
+            <div class="flex gap-2" style="display: flex; gap: 0.75rem;">
+              <button id="btn-grainy-gradient-download-png" class="btn btn-ghost">⬇️ Download PNG</button>
+              <button id="btn-grainy-gradient-download-svg" class="btn btn-ghost">⬇️ Download SVG</button>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Preview & Output -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">Preview</h3>
+
+            <div class="glass-card" style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 300px; margin-bottom: 1.5rem;">
+              <img id="grainy-gradient-result-image" src="" alt="Grainy Gradient Preview" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: var(--radius-sm);" />
+            </div>
+
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">Exported CSS Code</h3>
+
+            <div class="glass-card" style="flex: 1; padding: 1rem; overflow-y: auto; max-height: 400px;">
+              <pre id="grainy-gradient-css-output" style="font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; margin: 0; color: var(--text-secondary);">Click "Export CSS" to generate and copy CSS code.</pre>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- Film Grain & Vintage Photo Effects -->
+      <main id="film-grain-vintage-effects-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-film-grain-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">Film Grain & Vintage Photo Effects</h1>
+          <p class="header-desc">Apply procedural film-grain, halation, and color-cast presets (35mm, VHS, Polaroid, Sepia, Faded) to an image on canvas. No server uploads — all effects run in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="film-grain-status" class="glass-card film-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Upload & Preset Selection -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Upload Image</label>
+              <input type="file" id="film-grain-image-input" class="input-custom glass-card" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff" />
+              <div id="film-grain-filename-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">No file selected</div>
+
+              <!-- Image Preview -->
+              <div id="film-grain-preview-container" style="margin-top: 1rem; display: none;">
+                <img id="film-grain-preview" src="" alt="Preview" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: var(--radius-sm);" />
+              </div>
+
+            </div>
+
+            <!-- Preset Selection -->
+            <div>
+              <label for="film-grain-preset-select" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Select Preset</label>
+              <select id="film-grain-preset-select" class="input-custom glass-card" style="padding: 0.75rem;">
+                <!-- Options populated by JavaScript -->
+              </select>
+
+              <!-- Apply Effect Button -->
+              <button id="btn-film-grain-apply" class="btn btn-primary mt-2">🎞️ Apply Effect</button>
+
+            </div>
+
+          </div>
+
+          <!-- Right Column: Result Output -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">Result</h3>
+
+            <div class="glass-card" style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 300px;">
+              <img id="film-grain-result-canvas" src="" alt="Film Grain Result" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: var(--radius-sm);" />
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- AI Neural Style Transfer -->
+      <main id="ai-neural-style-transfer-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-style-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">AI Neural Style Transfer</h1>
+          <p class="header-desc">Upload a photo and pick an artistic style (Mosaic, Candy, Pointillism, etc.), then apply an on-device ONNX model via WebGPU to repaint the image. Runs entirely in your browser.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="style-transfer-status" class="glass-card style-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Upload & Style Selection -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Upload Photo</label>
+              <input type="file" id="style-image-input" class="input-custom glass-card" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff" />
+              <div id="style-filename-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">No file selected</div>
+
+              <!-- Image Preview -->
+              <div id="style-image-preview-container" style="margin-top: 1rem; display: none;">
+                <img id="style-image-preview" src="" alt="Preview" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: var(--radius-sm);" />
+              </div>
+
+            </div>
+
+            <!-- Style Selection -->
+            <div>
+              <label for="style-select" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Select Style</label>
+              <select id="style-select" class="input-custom glass-card" style="padding: 0.75rem;">
+                <option value="mosaic">Mosaic</option>
+                <option value="candy">Candy</option>
+                <option value="pointillism">Pointillism</option>
+                <option value="udnie">Udnie (Picasso)</option>
+              </select>
+
+              <!-- Apply Style Button -->
+              <button id="btn-style-apply" class="btn btn-primary mt-2">🎨 Apply Style</button>
+
+            </div>
+
+          </div>
+
+          <!-- Right Column: Result Output -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">Result</h3>
+
+            <div class="glass-card" style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 300px;">
+              <img id="style-result-canvas" src="" alt="Style Transfer Result" style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: var(--radius-sm);" />
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- AI Visual Question Answering -->
+      <main id="ai-visual-question-answering-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-vqa-back" class="btn btn-ghost btn-sm">← Back</button>
+          <h1 class="header-title">AI Visual Question Answering</h1>
+          <p class="header-desc">Upload an image, type a free-form question about it, and get an on-device VQA model's answer. Combines vision + language processing entirely in your browser via Transformers.js with WebGPU acceleration.</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="vqa-status" class="glass-card vqa-banner" style="display: none; padding: 0.8rem 1.2rem; margin: 0 1.5rem 1rem; font-size: 0.9rem;"></div>
+
+        <!-- Main Content -->
+        <div style="padding: 1.5rem; display: flex; gap: 2rem;">
+          <!-- Left Column: Upload & Question Input -->
+          <div class="panel-controls" style="flex: 0 0 45%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+              <label style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Upload Image</label>
+              <input type="file" id="vqa-image-input" class="input-custom glass-card" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.tiff" />
+              <div id="vqa-filename-display" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">No file selected</div>
+
+              <!-- Image Preview -->
+              <div id="vqa-image-preview-container" style="margin-top: 1rem; display: none;">
+                <img id="vqa-image-preview" src="" alt="Preview" style="width: 100%; max-height: 300px; object-fit: contain; border-radius: var(--radius-sm);" />
+              </div>
+
+            </div>
+
+            <!-- Question Input -->
+            <div>
+              <label for="vqa-question-input" style="font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.5rem;">Ask a Question</label>
+              <textarea id="vqa-question-input" class="input-custom glass-card" rows="3" placeholder="What do you see in this image? Describe the scene..."></textarea>
+
+              <!-- Ask Button -->
+              <button id="btn-vqa-ask" class="btn btn-primary mt-2">🔮 Ask AI</button>
+
+            </div>
+
+          </div>
+
+          <!-- Right Column: Answer Output -->
+          <div class="panel-workspace" style="flex: 1; display: flex; flex-direction: column;">
+            <h3 style="color: #8b5cf6; margin: 0 0 1rem 0;">Answer</h3>
+
+            <div id="vqa-output-container" class="glass-card" style="padding: 1.5rem; flex: 1;">
+              <p style="color: var(--text-secondary); font-size: 0.85rem;">Ask a question about the image to see the answer.</p>
+
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+      <div id="modal-privacy" class="modal-overlay-custom" style="display: none;">
+        <div class="modal-content-custom">
+          <div class="modal-header-custom">
+            <h3>🔒 Privacy Policy</h3>
           <button class="btn-close-modal" id="btn-close-privacy">✕</button>
         </div>
         <div class="modal-body-custom">
@@ -14897,6 +16892,19 @@ Supported browsers:
     <script src="/prettier-plugins/html.js"></script>
     <script src="/prettier-plugins/babel.js"></script>
     <script src="/prettier-plugins/postcss.js"></script>
+<script src="/src/debt-snowball-calculator-tool.js"></script>
+<script src="/src/rent-vs-buy-calculator-tool.js"></script>
+<script src="/src/pdf-page-extractor-tool.js"></script>
+<script src="/src/csv-to-json-converter-tool.js"></script>
+<script src="/src/json-pretty-printer-tool.js"></script>
+<script src="/src/color-palette-generator-tool.js"></script>
+<script src="/src/qr-code-generator-tool.js"></script>
+<script src="/src/base64-encoder-tool.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="/src/markdown-to-html-tool.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsonpath-plus/dist/browser/jsonpath-plus.min.js"></script>
+<script src="/src/json-path-tester-tool.js"></script>
+<script src="/src/regex-tester-tool.js"></script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
