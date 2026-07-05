@@ -2096,6 +2096,143 @@ export const TOOLS = [
     icon: '📋',
     uiClass: 'ready'
   },
+  {
+    id: 'debt-snowball-calculator',
+    title: 'Debt Snowball vs. Avalanche Payoff Calculator',
+    description: "Enter multiple debts (balance, rate, min payment), compare snowball vs. avalanche payoff order, output a month-by-month payoff timeline and total interest saved.",
+    keywords: ['debt snowball', 'avalanche method', 'loan payoff', 'interest calculator', 'debt free date', 'financial planning'],
+    tags: ['Finance', 'Calculator'],
+    category: 'Calculators',
+    icon: '\u{1F4B0}',
+    uiClass: 'ready'
+  },
+  {
+    id: 'rent-vs-buy-calculator',
+    title: 'Rent vs. Buy Home Calculator',
+    description: "Compare the total cost of renting vs buying a home over your planned holding period, accounting for mortgage interest, appreciation, property tax, insurance, and closing costs — all computed client-side.",
+    keywords: ['rent vs buy', 'home calculator', 'mortgage comparison', 'real estate decision', 'housing cost analyzer', 'financial planning'],
+    tags: ['Finance', 'Calculator'],
+    category: 'Calculators',
+    icon: '\u{1F3E0}',
+    uiClass: 'ready'
+  },
+  {
+    id: 'pdf-page-extractor',
+    title: 'PDF Page Extractor',
+    description: "Upload a PDF and select which pages to keep, extract specific page ranges into a new standalone PDF file, all in your browser.",
+    keywords: ['pdf extractor', 'page selector', 'pdf manipulation', 'select pages', 'combine pdf'],
+    tags: ['Document', 'Utility'],
+    category: 'Developer',
+    icon: '\u{1F4C4}',
+    uiClass: 'ready'
+  },
+  {
+    id: 'csv-to-json-converter',
+    title: 'CSV to JSON Converter',
+    description: "Paste or upload CSV data and convert it to formatted JSON with header detection and type inference, all in your browser.",
+    keywords: ['csv converter', 'json converter', 'data conversion', 'spreadsheet to json', 'csv parser'],
+    tags: ['Data', 'Converter'],
+    category: 'Developer',
+    icon: '\u{1F4C2}',
+    uiClass: 'ready'
+  },
+  {
+    id: 'json-pretty-printer',
+    title: 'JSON Pretty Printer & Minifier',
+    description: "Format minified JSON into readable indented output or compress pretty-printed JSON to one line; supports syntax validation, all in your browser.",
+    keywords: ['json formatter', 'json beautifier', 'json minifier', 'pretty print json', 'validate json'],
+    tags: ['Data', 'Formatter'],
+    category: 'Developer',
+    icon: '\u{1F4DD}',
+    uiClass: 'ready'
+  },
+
+  {
+    id: 'color-palette-generator',
+    title: 'Color Palette Generator',
+    description: "Upload an image and extract a harmonious color palette using k-means clustering on pixel data; all processing happens in your browser.",
+    keywords: ['color palette', 'extract colors', 'k-means clustering', 'image to colors', 'design palette'],
+    tags: ['Design', 'Color'],
+    category: 'Graphics',
+    icon: '\u{1F3A8}',
+    uiClass: 'ready'
+  },
+
+  {
+    id: 'qr-code-generator',
+    title: 'QR Code Generator & Scanner',
+    description: "Generate QR codes from text/URLs with customizable colors/sizes; also scan QR codes from uploaded images or webcam feed. All processing happens in your browser.",
+    keywords: ['qr code generator', 'qr scanner', 'barcode reader', 'qrcode', 'camera scanner'],
+    tags: ['Security', 'Utility'],
+    category: 'Quick Utilities',
+    icon: '\u{1F4CF}',
+    uiClass: 'ready'
+  },
+
+  {
+    id: 'base64-encoder',
+    title: 'Base64 Encoder/Decoder',
+    description: "Encode text/files to Base64 or decode Base64 back to original format; supports file upload for binary data. All processing happens in your browser.",
+    keywords: ['base64 encode', 'base64 decode', 'encode text', 'decode base64', 'file encoder'],
+    tags: ['Security', 'Utility'],
+    category: 'Quick Utilities',
+    icon: '\u{1F512}',
+    uiClass: 'ready'
+  },
+
+  {
+    id: 'markdown-to-html',
+    title: 'Markdown to HTML Converter',
+    description: "Paste Markdown text and get rendered HTML output with live preview panel. Uses marked.js parser, all processing happens in your browser.",
+    keywords: ['markdown converter', 'markdown to html', 'md to html', 'live preview', 'text formatter'],
+    tags: ['Text', 'Formatter'],
+    category: 'Quick Utilities',
+    icon: '\u{1F4DD}',
+    uiClass: 'ready'
+  },
+
+  {
+    id: 'json-path-tester',
+    title: 'JSON Path Tester',
+    description: "Input JSON data and test JSONPath queries against it; shows matched nodes with path visualization. Uses jsonpath-plus library, all processing happens in your browser.",
+    keywords: ['jsonpath tester', 'json query', 'jsonpath query', 'test jsonpath', 'json path explorer'],
+    tags: ['Data', 'Developer'],
+    category: 'Data & Analytics',
+    icon: '\u{1F50D}',
+    uiClass: 'ready'
+  },
+
+  {
+    id: 'regex-live-preview',
+    title: 'Regex Tester with Live Preview',
+    description: "Paste regex pattern + sample text, see matches highlighted in real-time with capture group breakdown. Uses native RegExp API, all processing happens in your browser.",
+    keywords: ['regex tester', 'regular expression', 'regex live preview', 'test regex', 'pattern matcher'],
+    tags: ['Developer', 'Utility'],
+    category: 'Data & Analytics',
+    icon: '\u{1F527}',
+    uiClass: 'ready'
+  },
+  {
+    id: 'random-data-generator',
+    title: 'Random Data Generator',
+    description: 'Generate realistic fake data for testing — names, addresses, emails, phone numbers, credit cards, SSNs, IPs, URLs. All generated client-side with no server round-trips.',
+    keywords: ['fake data', 'test data', 'random generator', 'mock data', 'dummy data', 'developer tools'],
+    tags: ['Developer', 'Utility'],
+    category: 'Data & Analytics',
+    icon: '\u{1F3B2}',
+    uiClass: 'ready'
+  },
+  {
+    id: 'apple-wallet-pass-generator',
+    title: 'Apple Wallet Membership Card Generator',
+    description: "Turn any physical membership or loyalty card into a real Apple Wallet pass — scan its barcode with your camera, upload a photo, or type it in, add a logo, then sign it with your own Apple Developer Pass Type ID certificate. Certificate and key never leave your browser.",
+    keywords: ['apple wallet', 'pkpass', 'membership card', 'loyalty card', 'digital wallet', 'wallet pass generator', 'barcode scanner', 'pass type id', 'wwdr certificate'],
+    tags: ['Security', 'Generator', 'Crypto'],
+    category: 'Security',
+    adTopics: ['Apple Developer Program', 'digital membership cards', 'loyalty program apps', 'business card printing'],
+    icon: '\u{1F3AB}',
+    uiClass: 'ready'
+  },
 ];
 
 // --- IN-TOOL AD RELEVANCE STANDARD ---

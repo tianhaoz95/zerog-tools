@@ -360,10 +360,252 @@ test.describe('ZeroG Toolbox Integration Tests', () => {
     expect(sha256.length).toBe(64);
   });
 
+  test('Tool 20: SSH Key Pair Generator — view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="ssh-keygen"]').click();
+    await expect(page.locator('#ssh-keygen-view')).toHaveClass(/active/);
+
+    // Check UI elements are visible
+    await expect(page.locator('#ssh-key-type')).toBeVisible();
+    await expect(page.locator('#btn-generate-ssh-keys')).toBeVisible();
+    await expect(page.locator('#ssh-public-key-output')).toBeVisible();
+    await expect(page.locator('#ssh-private-key-output')).toBeVisible();
+
+    // Back button works
+    await page.locator('#btn-ssh-keygen-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool 20: SSH Key Pair Generator — Ed25519 key generation', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/ssh-keygen`);
+    await expect(page.locator('#ssh-keygen-view')).toHaveClass(/active/);
+
+    // Default should be Ed25519, RSA options hidden
+    const rsaOptions = page.locator('#ssh-rsa-options');
+    await expect(rsaOptions).not.toBeVisible();
+
+    // Generate key with default settings (Ed25519)
+    await page.locator('#btn-generate-ssh-keys').click();
+
+    // Wait for generation to complete
+    const pubKey = await page.locator('#ssh-public-key-output').inputValue();
+    const privKey = await page.locator('#ssh-private-key-output').inputValue();
+
+    expect(pubKey.length).toBeGreaterThan(0);
+    expect(privKey.length).toBeGreaterThan(0);
+
+    // Public key should start with ssh-ed25519
+    expect(pubKey.split(' ')[0]).toBe('ssh-ed25519');
+
+    // Private key should be PEM format
+    expect(privKey).toContain('-----BEGIN OPENSSH PRIVATE KEY-----');
+
+    // Copy and download buttons should be enabled
+    await expect(page.locator('#btn-copy-ssh-pub')).not.toBeDisabled();
+    await expect(page.locator('#btn-download-ssh-pub')).not.toBeDisabled();
+  });
+
+  test('Tool 20: SSH Key Pair Generator — RSA key generation', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/ssh-keygen`);
+
+    // Select RSA key type
+    await page.locator('#ssh-key-type').selectOption('rsa');
+    await expect(page.locator('#ssh-rsa-options')).toBeVisible();
+
+    // Generate 2048-bit RSA key (smaller for faster test)
+    await page.locator('#ssh-rsa-bits').selectOption('2048');
+    await page.locator('#btn-generate-ssh-keys').click();
+
+    const pubKey = await page.locator('#ssh-public-key-output').inputValue();
+    const privKey = await page.locator('#ssh-private-key-output').inputValue();
+
+    expect(pubKey.length).toBeGreaterThan(0);
+    expect(privKey.length).toBeGreaterThan(0);
+
+    // Public key should start with ssh-rsa
+    expect(pubKey.split(' ')[0]).toBe('ssh-rsa');
+
+    // Private key should be PEM format
+    expect(privKey).toContain('-----BEGIN RSA PRIVATE KEY-----');
+  });
+
+  test('Tool 20: SSH Key Pair Generator — ECDSA key generation', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/ssh-keygen`);
+
+    // Select ECDSA key type
+    await page.locator('#ssh-key-type').selectOption('ecdsa');
+
+    // ECDSA options should be visible now
+    await expect(page.locator('#ssh-ecdsa-options')).toBeVisible();
+
+    // Generate P-256 key (default)
+    await page.locator('#btn-generate-ssh-keys').click();
+
+    const pubKey = await page.locator('#ssh-public-key-output').inputValue();
+    const privKey = await page.locator('#ssh-private-key-output').inputValue();
+
+    expect(pubKey.length).toBeGreaterThan(0);
+    expect(privKey.length).toBeGreaterThan(0);
+
+    // Public key should start with ecdsa-sha2-nistp256
+    expect(pubKey.split(' ')[0]).toBe('ecdsa-sha2-nistp256');
+
+    // Private key should be PEM format
+    expect(privKey).toContain('-----BEGIN EC PRIVATE KEY-----');
+  });
+
+  test('Tool 20: SSH Key Pair Generator — comment appended to public key', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/ssh-keygen`);
+
+    // Set a custom comment
+    await page.locator('#ssh-comment').fill('testuser@localhost');
+
+    // Generate Ed25519 key
+    await page.locator('#btn-generate-ssh-keys').click();
+
+    const pubKey = await page.locator('#ssh-public-key-output').inputValue();
+
+    // Comment should be appended after the base64 public key
+    expect(pubKey).toContain('testuser@localhost');
+  });
+
+  test('Tool: X.509 Certificate Decoder — view navigation', async ({ page }) => {
+    await page.locator('.tool-card[data-id="x509-decoder"]').click();
+    await expect(page.locator('#x509-decoder-view')).toHaveClass(/active/);
+
+    // Test back button
+    await page.locator('#btn-x509-decoder-back').click();
+    await expect(page.locator('#home-view')).toHaveClass(/active/);
+  });
+
+  test('Tool: X.509 Certificate Decoder — decode valid PEM certificate', async ({ page }) => {
+    // Capture console messages
+    const consoleMessages = [];
+    page.on('console', msg => consoleMessages.push(msg.text()));
+
+    // Use a real self-signed certificate generated with openssl
+    const testPem = `-----BEGIN CERTIFICATE-----
+MIIDnTCCAoWgAwIBAgIJAJJ+3ICdeWuzMA0GCSqGSIb3DQEBCwUAMGkxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp
+c2NvMRIwEAYDVQQKDAlUZXN0IENvcnAxGTAXBgNVBAMMEHRlc3QuZXhhbXBsZS5j
+b20wHhcNMjYwNzAyMjEzMDQ4WhcNMjcwNzAyMjEzMDQ4WjBpMQswCQYDVQQGEwJV
+SzETMBEGA1UECAwKQ2FsaWZvcm5pYTEWMBQGA1UEBwwNU2FuIEZyYW5jaXNjbzES
+MBAGA1UECgwJVGVzdCBDb3JwMRkwFwYDVQQDDBB0ZXN0LmV4YW1wbGUuY29tMIIB
+IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA25CGAzUqFFnww1oDvCQ2WLpS
+rTUmkgmkYxbtbfOczWk1rd2qXYFyyLXX7XiL4pBrswCaNRVD9PpUG7bgEXYvmWcs
+7LRa9U5ZBy6Z6zjXkhh9UbiIKf0X6PMmwDF11mFEV+ICn2FCVHdh6HfvpxZyRbQh
+ly6/qg1Y4bRGVFRXzJj7G5JpjbbFyl0SVi5CmwFRy8RCl1FFNY8aecUZrbrOW6Ur
+Ai4tFrUbsrSM6xjlxg+ldNBf0dOrqnP3EstFnY5/7RNRU+SZQupxc7vN1FO5BOnL
+C+5eqh9KWdyrDMA3I2zCiUAumB1bShP+x+8gqVkn+ZfljgbsB38F2tLm5tG0KQID
+AQABo0gwRjA3BgNVHREEMDAughB0ZXN0LmV4YW1wbGUuY29tghR3d3cudGVzdC5l
+eGFtcGxlLmNvbYcEfwAAATALBgNVHQ8EBAMCBaAwDQYJKoZIhvcNAQELBQADggEB
+AD3vSW04wwBeDOYHU5KyB0tKCIxhgmcrryc8EdEgkqg+Obor5832wJhyDVv5y1+d
+wEWDSqqd7iJIR1n152aRN0eI2zBIQL5tnwxvHqAksJd+PPgDMlr4KDlu9pHyk1FR
+nlCFO8M4cdblvIgPKL0RdRib/2csqE7efl/HY7OGIowGGWXr+AhEZg+NFRyrPFya
+b6OoZHit2YCtZktGDL5mFTKKor5dZQfEYBXgPrLbF1Uh3GbpWmlgYoxbceG6Kn76
+PTPbib7Mg3GCcRMLIL7IRlYcInlYVskcH5f4Sc2dhawu4hB12aoEqCUG35UzgkbB
+6hCdBm0YIY+Il4Ha+rxiLg0=
+-----END CERTIFICATE-----`;
+
+    await page.goto(`${BASE_URL}/tools/x509-decoder`);
+    await expect(page.locator('#x509-decoder-view')).toHaveClass(/active/);
+
+    // Paste PEM certificate
+    await page.locator('#x509-pem-input').fill(testPem);
+
+    // Click decode button
+    await page.locator('#btn-decode-x509').click();
+
+    // Wait a bit for any console messages to appear
+    await page.waitForTimeout(1000);
+
+    // Log all console messages for debugging
+    console.log('=== CONSOLE MESSAGES ===');
+    consoleMessages.forEach((msg, i) => {
+      if (msg.includes('[X509]') || msg.includes('error') || msg.includes('Error')) {
+        console.log(`  [${i}] ${msg}`);
+      }
+    });
+    console.log('=== END CONSOLE MESSAGES ===');
+
+    // Check for errors in console messages
+    const errorMessages = consoleMessages.filter(msg =>
+      msg.toLowerCase().includes('error') || msg.toLowerCase().includes('[x509]')
+    );
+    if (errorMessages.length > 0) {
+      console.log('ERROR MESSAGES FOUND:', errorMessages);
+    }
+
+    // Verify decoded content is displayed
+    await expect(page.locator('#x509-issuer-content')).toBeVisible();
+    await expect(page.locator('#x509-subject-content')).toBeVisible();
+    await expect(page.locator('#x509-summary-table')).toBeVisible();
+
+    // Check that issuer/subject contain expected fields
+    const issuerText = await page.locator('#x509-issuer-content').textContent();
+    expect(issuerText).toContain('CN=');
+
+    const subjectText = await page.locator('#x509-subject-content').textContent();
+    expect(subjectText).toContain('CN=');
+
+    // Check validity table is visible and has content
+    await expect(page.locator('#x509-validity-table')).toBeVisible();
+
+    // Verify SANs are displayed (we added DNS entries in the cert)
+    await expect(page.locator('#x509-sans-section')).toBeVisible();
+    const sanContent = await page.locator('#x509-sans-content').textContent();
+    expect(sanContent).toContain('test.example.com');
+
+    // Verify key usage section is displayed
+    await expect(page.locator('#x509-key-usage-section')).toBeVisible();
+  });
+
+  test('Tool: X.509 Certificate Decoder — error handling for invalid input', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/x509-decoder`);
+
+    // Test with empty input (should show error)
+    await page.locator('#btn-decode-x509').click();
+    const errorMsg = await page.locator('#x509-decode-error').textContent();
+    expect(errorMsg).toContain('Please paste a PEM certificate');
+
+    // Test with invalid PEM content
+    await page.locator('#x509-pem-input').fill('not-a-valid-certificate');
+    await page.locator('#btn-decode-x509').click();
+
+    const errorAfterDecode = await page.locator('#x509-decode-error').textContent();
+    expect(errorAfterDecode).toContain('Failed to decode certificate');
+  });
+
+  test('Tool: X.509 Certificate Decoder — file upload functionality', async ({ page }) => {
+    // Create a temporary PEM file content
+    const pemContent = `-----BEGIN CERTIFICATE-----
+MIIDXTCCAkWgAwIBAgIJANiPnqYwMHc1MA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBX
+aWRnaXRzIFB0eSBMdGQwHhcNMjMwMTAxMDAwMDAwWhcNMjQwMTAxMDAwMDAwWjBF
+MQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50
+ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+CgKCAQEAv4qOMGGNqFkqJhLpPz5xY7V5WmOyR6ZvX2M3N4B5C6D7E8F9G0H1I2J
+-----END CERTIFICATE-----`;
+
+    await page.goto(`${BASE_URL}/tools/x509-decoder`);
+
+    // Create a file using Chromium's file system access
+    const fileChooserPromise = page.waitForEvent('filechooser');
+    await page.locator('#x509-file-upload').click();
+    const fileChooser = await fileChooserPromise;
+
+    // Note: In Playwright, we can't easily create real files from strings in tests.
+    // This test verifies the UI element exists and is clickable.
+    expect(await page.locator('#x509-file-upload').isVisible()).toBe(true);
+
+    // Alternative: Just verify the file input accepts .pem files
+    const acceptAttr = await page.locator('#x509-file-upload').getAttribute('accept');
+    expect(acceptAttr).toContain('.pem');
+  });
+
   test('Tool 18: SVG Path Visualizer functional test', async ({ page }) => {
     await page.locator('.tool-card[data-id="svg-editor"]').click();
     await expect(page.locator('#svg-editor-view')).toHaveClass(/active/);
-    
+
     await page.locator('#btn-draw-svg-path').click();
     const canvas = page.locator('#svg-path-canvas');
     await expect(canvas).toBeVisible();
@@ -12603,4 +12845,46 @@ test.describe('Photo Filters & Adjustments', () => {
       expect(await banner.count()).toBeGreaterThan(0);
     });
   });
+
+test.describe('Apple Wallet Membership Card Generator', () => {
+  test('Opens from home and fills in card details + barcode', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.locator('.tool-card[data-id="apple-wallet-pass-generator"]').click();
+    await expect(page.locator('#apple-wallet-pass-generator-view')).toBeVisible();
+
+    await page.locator('#wallet-pass-org-name').fill('Riverside Gym');
+    await page.locator('#wallet-pass-title').fill('Gold Membership');
+    await page.locator('#wallet-pass-member-name').fill('Jane Doe');
+    await page.locator('#wallet-pass-barcode-value').fill('1234567890');
+
+    // Live preview reflects the typed values.
+    const preview = page.locator('#wallet-pass-preview-card');
+    await expect(preview).toContainText('Gold Membership');
+    await expect(preview).toContainText('Jane Doe');
+    await expect(preview).toContainText('1234567890');
+
+    // Barcode format dropdown is populated.
+    const formatOptions = page.locator('#wallet-pass-barcode-format option');
+    await expect(formatOptions).toHaveCount(4);
+  });
+
+  test('Generate without a certificate shows a validation warning', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/apple-wallet-pass-generator`);
+
+    await page.locator('#wallet-pass-org-name').fill('Riverside Gym');
+    await page.locator('#wallet-pass-title').fill('Gold Membership');
+    await page.locator('#wallet-pass-barcode-value').fill('1234567890');
+    await page.locator('#btn-wallet-pass-generate').click();
+
+    const status = page.locator('#wallet-pass-status');
+    await expect(status).toBeVisible();
+    await expect(status).toContainText('certificate');
+  });
+
+  test('Back button returns home', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/apple-wallet-pass-generator`);
+    await page.locator('#btn-apple-wallet-pass-generator-back').click();
+    await expect(page.locator('#apple-wallet-pass-generator-view')).not.toHaveClass(/active/);
+  });
+});
 

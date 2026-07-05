@@ -3668,3 +3668,295 @@ div[style*="color: var(--danger)"] {
   border-color: var(--primary);
   box-shadow: 0 0 0 1px var(--primary-glow);
 }
+
+/* ============================================================ */
+/* OpenAPI Explorer Styles                                      */
+/* ============================================================ */
+
+.openapi-path-group {
+  border-bottom: 1px solid var(--border, #2a2a2e);
+}
+
+.openapi-path-header:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.openapi-method-row:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.openapi-method-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  min-width: 52px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Validation result items */
+.openapi-validation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.openapi-validation-item.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.openapi-validation-item.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+/* Try-it builder styles */
+.openapi-tryit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.openapi-param-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.openapi-param-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.openapi-param-required-badge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.3rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 3px;
+}
+
+.openapi-response-schema {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 0.75rem;
+  background: var(--bg-preview, rgba(255, 255, 255, 0.03));
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+
+/* Endpoint details table */
+.openapi-params-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.openapi-params-table th,
+.openapi-params-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #2a2a2e);
+}
+
+.openapi-params-table th {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Scrollbar styling for tree */
+#openapi-endpoint-tree::-webkit-scrollbar,
+#openapi-validation-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#openapi-endpoint-tree::-webkit-scrollbar-thumb,
+#openapi-validation-list::-webkit-scrollbar-thumb {
+  background: var(--border, #2a2a2e);
+  border-radius: 3px;
+}
+
+/* Method color variants — already inline but providing fallback */
+.openapi-method-get    { color: #22c55e !important; }
+.openapi-method-post   { color: #3b82f6 !important; }
+.openapi-method-put    { color: #f59e0b !important; }
+.openapi-method-patch  { color: #a855f7 !important; }
+.openapi-method-delete { color: #ef4444 !important; }
+
+/* ============================================================ */
+/* JSON Schema Validator Styles                                 */
+/* ============================================================ */
+
+#json-schema-validator-view .input-custom {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+}
+
+#json-schema-validator-status-banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+#json-schema-validator-error-display div {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+}
+
+#json-schema-validator-code-display {
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.schema-template-btn {
+  transition: background 0.15s, transform 0.1s;
+}
+
+.schema-template-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ============================================================ */
+/* Apple Wallet Membership Card Generator Styles                */
+/* ============================================================ */
+
+.wallet-pass-status {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.wallet-pass-status--info    { background: rgba(59, 130, 246, 0.1);  border: 1px solid #3b82f6; color: #3b82f6; }
+.wallet-pass-status--success { background: rgba(34, 197, 94, 0.1);   border: 1px solid #22c55e; color: #22c55e; }
+.wallet-pass-status--warning { background: rgba(245, 158, 11, 0.1);  border: 1px solid #f59e0b; color: #f59e0b; }
+.wallet-pass-status--error   { background: rgba(239, 68, 68, 0.1);   border: 1px solid #ef4444; color: #ef4444; }
+
+.wallet-pass-fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.wallet-pass-fieldset legend {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  padding: 0 0.4rem;
+}
+
+.wallet-pass-file-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.wallet-pass-file-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.wallet-pass-logo-preview {
+  display: none;
+  max-width: 80px;
+  max-height: 80px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.3rem;
+}
+
+.wallet-pass-camera-wrap {
+  display: none;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.wallet-pass-camera-wrap video {
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: #000;
+}
+
+.wallet-pass-preview-card {
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  font-family: var(--font-body);
+}
+
+.wallet-pass-preview-header {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.wallet-pass-preview-logo {
+  max-height: 32px;
+  max-width: 140px;
+  object-fit: contain;
+}
+
+.wallet-pass-preview-org {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+
+.wallet-pass-preview-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.wallet-pass-preview-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.wallet-pass-preview-barcode {
+  margin-top: auto;
+  text-align: center;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem;
+  word-break: break-all;
+}
+
+.wallet-pass-download-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
