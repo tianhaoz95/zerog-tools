@@ -37,6 +37,13 @@ trap cleanup INT TERM EXIT
 # Perform pre-startup port cleanup
 cleanup_ports
 
+# Kill stray build watchers from previous sessions. Two concurrent
+# `vite build --watch` processes race on dist/ (each empties it before
+# writing), which serves half-built pages and blanks the app.
+pkill -f "$(pwd)/node_modules/.bin/vite build --watch" 2>/dev/null
+pkill -f "npm exec vite build --watch" 2>/dev/null
+sleep 1
+
 # Ensure dependencies are installed
 if [ ! -d "node_modules" ]; then
   echo "node_modules not found. Installing dependencies..."

@@ -31,10 +31,19 @@ ZeroG Toolbox is a serverless, browser-native utility kit running entirely clien
 │   ├── transcribe.worker.js # Whisper speech-to-text resampled audio worker (WASM)
 │   ├── main.js            # Core JS (UI orchestration, canvas math, Web Crypto)
 │   └── style.css          # Vanilla CSS custom variables, layouts, and animations
+├── archive/               # Record of past plan executions (see below)
 ├── dev-server.sh          # Port-cleaning dev orchestrator shell script
 ├── firebase.json          # Emulator configuration with COOP/COEP headers
 └── .firebaserc            # Preconfigured demo-toolbox project ID
 ```
+
+### Archive of Past Plan Executions
+`./archive/<YYYY-MM-DD>/` keeps a historical record of completed plans and their
+execution artifacts (finished todo backlogs, implementation summaries/reports).
+These files document work that already shipped — treat them as read-only
+history, not as current state or an active backlog. When a plan document in the
+repo root (e.g. a `todo.md` backlog or an implementation report) is fully
+executed, move it into a dated archive folder instead of deleting it.
 
 ### Style & Styling Guidelines
 *   **Vanilla CSS**: Strictly use custom variables (`--primary`, `--radius-md`) and flexbox/grid. Avoid CSS utilities or Tailwind unless explicitly requested.
