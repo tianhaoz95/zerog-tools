@@ -16986,6 +16986,121 @@ Supported browsers:
         </div>
       </main>
 
+      <!-- Google Wallet Membership Card Generator -->
+      <main id="google-wallet-pass-generator-view" class="view">
+        <div class="tool-view-header glass-card">
+          <button id="btn-google-wallet-pass-generator-back" class="btn btn-ghost btn-sm">← Back</button>
+          <div class="header-text">
+            <h1 class="header-title">Google Wallet Membership Card Generator</h1>
+            <p class="header-desc">Turn a physical membership or loyalty card into a real Google Wallet pass — scan or type the barcode, add your card details, and sign it with your own Google Cloud service account key. Everything happens in your browser; the key never leaves your device.</p>
+          </div>
+        </div>
+
+        <div id="gwallet-status" class="wallet-pass-status" style="display:none; margin: 0 1.5rem 1.5rem;"></div>
+
+        <div class="tool-body-split" style="padding: 0 1.5rem 1.5rem;">
+          <div class="controls-panel">
+
+            <fieldset class="wallet-pass-fieldset">
+              <legend>Card Details</legend>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="gwallet-org-name">Organization Name</label>
+                  <input type="text" id="gwallet-org-name" placeholder="e.g. Riverside Gym" />
+                </div>
+                <div class="form-group">
+                  <label for="gwallet-title">Card Title</label>
+                  <input type="text" id="gwallet-title" placeholder="e.g. Gold Membership" />
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="gwallet-member-name">Member Name (optional)</label>
+                  <input type="text" id="gwallet-member-name" placeholder="e.g. Jane Doe" />
+                </div>
+                <div class="form-group">
+                  <label for="gwallet-member-id">Member ID (optional)</label>
+                  <input type="text" id="gwallet-member-id" placeholder="e.g. 000123456" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="gwallet-bg-color">Background Color</label>
+                <input type="color" id="gwallet-bg-color" value="#1a73e8" />
+              </div>
+              <div class="form-group">
+                <label for="gwallet-logo-url">Logo Image URL (optional)</label>
+                <input type="text" id="gwallet-logo-url" placeholder="https://your-site.com/logo.png" />
+                <p class="empty-state-text" style="padding: 0; text-align: left; font-size: 0.75rem;">Google Wallet fetches the logo from a public URL — it can't be embedded like a file upload. Host your logo somewhere public (your own site, GitHub, etc.) and paste the direct image link here.</p>
+              </div>
+            </fieldset>
+
+            <fieldset class="wallet-pass-fieldset">
+              <legend>Barcode</legend>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="gwallet-barcode-format">Format</label>
+                  <select id="gwallet-barcode-format" class="input-custom"></select>
+                </div>
+                <div class="form-group">
+                  <label for="gwallet-barcode-value">Barcode Value</label>
+                  <input type="text" id="gwallet-barcode-value" placeholder="Type, scan, or upload a photo" />
+                </div>
+              </div>
+              <div class="wallet-pass-file-row">
+                <button type="button" id="btn-gwallet-scan-camera" class="btn btn-secondary btn-sm">📷 Scan with Camera</button>
+                <button type="button" id="btn-gwallet-upload-photo" class="btn btn-secondary btn-sm">🖼️ Upload Barcode Photo</button>
+                <input type="file" id="gwallet-photo-input" accept="image/*" style="display:none" />
+              </div>
+              <div id="gwallet-camera-wrap" class="wallet-pass-camera-wrap">
+                <video id="gwallet-camera-video" autoplay playsinline muted></video>
+                <canvas id="gwallet-camera-canvas" style="display:none;"></canvas>
+                <div class="wallet-pass-file-row">
+                  <button type="button" id="btn-gwallet-capture" class="btn btn-primary btn-sm">📸 Capture &amp; Decode</button>
+                  <button type="button" id="btn-gwallet-stop-camera" class="btn btn-ghost btn-sm">✕ Stop Camera</button>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="wallet-pass-fieldset">
+              <legend>Google Wallet Issuer (required)</legend>
+              <p class="empty-state-text" style="padding: 0; text-align: left;">Google Wallet passes require a free Google Wallet Business Console issuer account (subject to Google's approval — no $99/year fee like Apple) plus a Google Cloud service account key. Neither file is ever uploaded — signing happens locally in your browser.</p>
+              <div class="form-group">
+                <label for="gwallet-issuer-id">Issuer ID</label>
+                <input type="text" id="gwallet-issuer-id" placeholder="From Google Wallet Business Console" />
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="gwallet-class-suffix">Class ID Suffix</label>
+                  <input type="text" id="gwallet-class-suffix" placeholder="e.g. membership_class" />
+                </div>
+                <div class="form-group">
+                  <label for="gwallet-object-suffix">Object ID Suffix</label>
+                  <input type="text" id="gwallet-object-suffix" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="gwallet-service-account-input">Service Account Key (.json)</label>
+                <div class="wallet-pass-file-row">
+                  <input type="file" id="gwallet-service-account-input" accept=".json" />
+                  <span id="gwallet-service-account-name" class="wallet-pass-file-name"></span>
+                </div>
+              </div>
+            </fieldset>
+
+            <div class="form-row">
+              <button type="button" id="btn-gwallet-generate" class="btn btn-primary btn-block">🪪 Generate &amp; Sign Save Link</button>
+              <button type="button" id="btn-gwallet-reset" class="btn btn-ghost">Reset</button>
+            </div>
+          </div>
+
+          <div class="output-panel">
+            <label style="font-weight:600; font-size:0.85rem;">Live Preview</label>
+            <div id="gwallet-preview-card" class="wallet-pass-preview-card"></div>
+            <div id="gwallet-download-container" style="display:none; flex-direction: column; gap: 0.6rem;"></div>
+          </div>
+        </div>
+      </main>
+
       <div id="modal-privacy" class="modal-overlay-custom" style="display: none;">
         <div class="modal-content-custom">
           <div class="modal-header-custom">

@@ -9,6 +9,7 @@ import './pgp-tool.js';
 import './vapid-tool.js';
 import './sri-hash-tool.js';
 import './apple-wallet-pass-tool.js';
+import './google-wallet-pass-tool.js';
 import { marked } from 'marked';
 import { TOOLS, TAG_VOCABULARY, resolveAdContext } from './tools.data.js';
 import { TRIANGULATION } from './triangulation.data.js';
@@ -1364,6 +1365,9 @@ function navigateTo(viewId, opts = {}) {
   } else if (viewId === 'apple-wallet-pass-generator') {
     document.getElementById('apple-wallet-pass-generator-view').classList.add('active');
     window.resetWalletPassState?.();
+  } else if (viewId === 'google-wallet-pass-generator') {
+    document.getElementById('google-wallet-pass-generator-view').classList.add('active');
+    window.resetGWalletState?.();
   } else if (viewId === 'ai-noise-reducer') {
     document.getElementById('ai-noise-reducer-view').classList.add('active');
   } else if (viewId === 'silence-remover') {

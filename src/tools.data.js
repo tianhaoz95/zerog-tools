@@ -2233,6 +2233,17 @@ export const TOOLS = [
     icon: '\u{1F3AB}',
     uiClass: 'ready'
   },
+  {
+    id: 'google-wallet-pass-generator',
+    title: 'Google Wallet Membership Card Generator',
+    description: "Turn any physical membership or loyalty card into a real Google Wallet pass — scan its barcode with your camera, upload a photo, or type it in, then sign the save link with your own Google Cloud service account key. The key never leaves your browser.",
+    keywords: ['google wallet', 'save to google wallet', 'membership card', 'loyalty card', 'digital wallet', 'wallet pass generator', 'barcode scanner', 'google wallet issuer', 'service account jwt'],
+    tags: ['Security', 'Generator', 'Crypto'],
+    category: 'Security',
+    adTopics: ['Google Cloud Platform', 'digital membership cards', 'loyalty program apps', 'business card printing'],
+    icon: '\u{1FAAA}',
+    uiClass: 'ready'
+  },
 ];
 
 // --- IN-TOOL AD RELEVANCE STANDARD ---

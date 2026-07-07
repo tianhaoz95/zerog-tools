@@ -12888,3 +12888,49 @@ test.describe('Apple Wallet Membership Card Generator', () => {
   });
 });
 
+test.describe('Google Wallet Membership Card Generator', () => {
+  test('Opens from home and fills in card details + barcode', async ({ page }) => {
+    await page.goto(BASE_URL);
+    await page.locator('.tool-card[data-id="google-wallet-pass-generator"]').click();
+    await expect(page.locator('#google-wallet-pass-generator-view')).toBeVisible();
+
+    await page.locator('#gwallet-org-name').fill('Riverside Gym');
+    await page.locator('#gwallet-title').fill('Gold Membership');
+    await page.locator('#gwallet-member-name').fill('Jane Doe');
+    await page.locator('#gwallet-barcode-value').fill('1234567890');
+
+    const preview = page.locator('#gwallet-preview-card');
+    await expect(preview).toContainText('Gold Membership');
+    await expect(preview).toContainText('Jane Doe');
+    await expect(preview).toContainText('1234567890');
+
+    const formatOptions = page.locator('#gwallet-barcode-format option');
+    await expect(formatOptions).toHaveCount(4);
+
+    // Object ID suffix auto-fills on open.
+    const objectSuffix = await page.locator('#gwallet-object-suffix').inputValue();
+    expect(objectSuffix.length).toBeGreaterThan(0);
+  });
+
+  test('Generate without a service account key shows a validation warning', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/google-wallet-pass-generator`);
+
+    await page.locator('#gwallet-org-name').fill('Riverside Gym');
+    await page.locator('#gwallet-title').fill('Gold Membership');
+    await page.locator('#gwallet-barcode-value').fill('1234567890');
+    await page.locator('#gwallet-issuer-id').fill('3388000000012345');
+    await page.locator('#gwallet-class-suffix').fill('membership_class');
+    await page.locator('#btn-gwallet-generate').click();
+
+    const status = page.locator('#gwallet-status');
+    await expect(status).toBeVisible();
+    await expect(status).toContainText('service account');
+  });
+
+  test('Back button returns home', async ({ page }) => {
+    await page.goto(`${BASE_URL}/tools/google-wallet-pass-generator`);
+    await page.locator('#btn-google-wallet-pass-generator-back').click();
+    await expect(page.locator('#google-wallet-pass-generator-view')).not.toHaveClass(/active/);
+  });
+});
+
